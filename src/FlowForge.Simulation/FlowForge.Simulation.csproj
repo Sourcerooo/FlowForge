@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FlowForge.Domain\FlowForge.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Kpi\Entities\" />
+    <Folder Include="Kpi\ValueObjects\" />
+    <Folder Include="Scheduling\Entities\" />
+    <Folder Include="Tracking\Entities\Orders\" />
+  </ItemGroup>
+</Project>

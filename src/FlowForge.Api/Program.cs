@@ -1,16 +1,23 @@
 using FlowForge.Application;
 using FlowForge.Infrastructure;
 
-var builder = WebApplication.CreateBuilder(args);
+namespace FlowForge.Api;
 
-builder.Services
-    .AddApplication()
-    .AddInfrastructure();
+public class Program
+{
+  public static async Task Main(string[] args)
+  {
+    var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddEndpointsApiExplorer();
+    builder.Services
+        .AddApplication()
+        .AddInfrastructure();
 
-var app = builder.Build();
+    builder.Services.AddEndpointsApiExplorer();
 
-app.MapGet("/health", () => Results.Ok(new { status = "Healthy" }));
+    var app = builder.Build();
 
-app.Run();
+    app.MapGet("/health", () => Results.Ok(new { status = "Healthy" }));
+    app.Run();
+  }
+}

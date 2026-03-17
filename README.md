@@ -64,10 +64,7 @@ FlowForge follows a Clean Architecture style, extended with a dedicated simulati
 Target dependency direction:
 
 ```text
-Domain <- Application <- Infrastructure <- Delivery
-             ^
-             |
-        Simulation
+Domain <- Simulation <- Application <- Infrastructure <- Delivery
 ```
 
 Key idea:
@@ -81,7 +78,6 @@ Target high-level modules:
 - `FlowForge.Domain` -- domain concepts and business rules
 - `FlowForge.Simulation` -- discrete event engine and runtime state
 - `FlowForge.Application` -- use cases and orchestration
-- `FlowForge.Contracts` -- snapshot and shared DTO contracts
 - `FlowForge.Infrastructure` -- persistence, configuration, logging, exports
 - `FlowForge.Desktop` -- primary MVP client
 - `FlowForge.Api` -- early control and query host that should align with desktop contracts
@@ -94,6 +90,7 @@ Further detail is documented in `docs/Architecture.md`.
 The repository currently contains these projects:
 
 - `src/FlowForge.Domain/`
+- `src/FlowForge.Simulation/`
 - `src/FlowForge.Application/`
 - `src/FlowForge.Infrastructure/`
 - `src/FlowForge.Api/`
@@ -109,8 +106,6 @@ grow toward.
 
 Near-term structural additions:
 
-- `src/FlowForge.Simulation/`
-- `src/FlowForge.Contracts/`
 - `src/FlowForge.Desktop/`
 - `tests/FlowForge.Simulation.Tests/`
 

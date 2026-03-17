@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="960" viewBox="0 0 1600 960">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0c1117"/>
+      <stop offset="100%" stop-color="#121a23"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="960" fill="url(#bg)"/>
+  <rect x="24" y="24" width="1552" height="64" rx="12" fill="#141f2b" stroke="#233243"/>
+  <text x="48" y="64" font-family="Consolas, monospace" font-size="24" fill="#d2e4f5">TwinOpsRenderer :: 2D Debug View</text>
+  <text x="1220" y="64" font-family="Consolas, monospace" font-size="18" fill="#87bde8">sim=12:42:15  fps=144  ws=connected</text>
+
+  <rect x="24" y="108" width="300" height="828" rx="12" fill="#101822" stroke="#233243"/>
+  <text x="48" y="146" font-family="Consolas, monospace" font-size="22" fill="#cde4ff">Controls</text>
+  <rect x="48" y="168" width="252" height="40" fill="#1b3347" stroke="#4e7ca3"/>
+  <text x="70" y="194" font-family="Consolas, monospace" font-size="18" fill="#d9eefc">[SPACE] Run / Pause</text>
+  <rect x="48" y="222" width="252" height="40" fill="#2a2b1d" stroke="#8f8a4d"/>
+  <text x="70" y="248" font-family="Consolas, monospace" font-size="18" fill="#f0e8c0">[R] Reset scenario</text>
+  <rect x="48" y="276" width="252" height="120" fill="#141f2b" stroke="#233243"/>
+  <text x="68" y="308" font-family="Consolas, monospace" font-size="18" fill="#87bde8">Scenario</text>
+  <text x="68" y="338" font-family="Consolas, monospace" font-size="18" fill="#d2e4f5">Demand Spike West</text>
+  <text x="68" y="372" font-family="Consolas, monospace" font-size="16" fill="#9db2c6">incoming_orders=1200/h</text>
+
+  <rect x="344" y="108" width="938" height="620" rx="12" fill="#0f1822" stroke="#233243"/>
+  <text x="370" y="146" font-family="Consolas, monospace" font-size="22" fill="#cde4ff">Pipeline View</text>
+  <line x1="520" y1="420" x2="780" y2="420" stroke="#456a8c" stroke-width="6" stroke-dasharray="12 8"/>
+  <line x1="780" y1="420" x2="1020" y2="300" stroke="#456a8c" stroke-width="6" stroke-dasharray="12 8"/>
+  <line x1="780" y1="420" x2="1020" y2="540" stroke="#456a8c" stroke-width="6" stroke-dasharray="12 8"/>
+  <rect x="410" y="360" width="120" height="120" fill="#204866" stroke="#7eb8e8"/>
+  <text x="426" y="425" font-family="Consolas, monospace" font-size="24" fill="#dff4ff">IN</text>
+  <rect x="700" y="340" width="160" height="160" fill="#355e7e" stroke="#9ec7e8"/>
+  <text x="726" y="420" font-family="Consolas, monospace" font-size="28" fill="#f3f9ff">PICK</text>
+  <rect x="960" y="240" width="120" height="120" fill="#80512d" stroke="#ffcb97"/>
+  <text x="972" y="306" font-family="Consolas, monospace" font-size="24" fill="#fff2e1">PACK</text>
+  <rect x="960" y="480" width="120" height="120" fill="#2f6a49" stroke="#ade3c1"/>
+  <text x="966" y="546" font-family="Consolas, monospace" font-size="24" fill="#effff5">SHIP</text>
+  <rect x="570" y="560" width="520" height="120" fill="#131d28" stroke="#233243"/>
+  <text x="598" y="598" font-family="Consolas, monospace" font-size="20" fill="#cde4ff">Orders (animated rectangles)</text>
+  <rect x="610" y="620" width="28" height="16" fill="#7eb8e8"/>
+  <rect x="652" y="620" width="28" height="16" fill="#7eb8e8"/>
+  <rect x="694" y="620" width="28" height="16" fill="#ffcb97"/>
+  <rect x="736" y="620" width="28" height="16" fill="#ffcb97"/>
+  <rect x="778" y="620" width="28" height="16" fill="#ff9999"/>
+  <rect x="820" y="620" width="28" height="16" fill="#ade3c1"/>
+
+  <rect x="1302" y="108" width="274" height="300" rx="12" fill="#101822" stroke="#233243"/>
+  <text x="1328" y="146" font-family="Consolas, monospace" font-size="22" fill="#cde4ff">Metrics</text>
+  <text x="1328" y="196" font-family="Consolas, monospace" font-size="18" fill="#9db2c6">throughput: 1284/h</text>
+  <text x="1328" y="228" font-family="Consolas, monospace" font-size="18" fill="#9db2c6">lead_time: 28m</text>
+  <text x="1328" y="260" font-family="Consolas, monospace" font-size="18" fill="#9db2c6">pick_q: 240</text>
+  <text x="1328" y="292" font-family="Consolas, monospace" font-size="18" fill="#9db2c6">pack_q: 410</text>
+  <text x="1328" y="324" font-family="Consolas, monospace" font-size="18" fill="#9db2c6">ship_q: 102</text>
+
+  <rect x="1302" y="428" width="274" height="508" rx="12" fill="#101822" stroke="#233243"/>
+  <text x="1328" y="466" font-family="Consolas, monospace" font-size="22" fill="#cde4ff">Event Log</text>
+  <text x="1328" y="510" font-family="Consolas, monospace" font-size="16" fill="#f6d0d0">12:42:15 WARN west.pack.sla</text>
+  <text x="1328" y="540" font-family="Consolas, monospace" font-size="16" fill="#d2e4f5">12:42:14 INFO order.queued</text>
+  <text x="1328" y="570" font-family="Consolas, monospace" font-size="16" fill="#d2e4f5">12:42:13 INFO order.picking</text>
+  <text x="1328" y="600" font-family="Consolas, monospace" font-size="16" fill="#f0e8c0">12:42:12 WARN shipping.paused</text>
+  <text x="1328" y="630" font-family="Consolas, monospace" font-size="16" fill="#d2e4f5">12:42:11 INFO demand.spike</text>
+</svg>

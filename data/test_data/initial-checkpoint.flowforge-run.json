@@ -1,0 +1,117 @@
+{
+  "formatVersion": 1,
+  "runMetadata": {
+    "simulationRunId": "11111111-1111-1111-1111-111111111111",
+    "scenarioKey": "packing-shipping-initial",
+    "engineVersion": "dev",
+    "createdAtUtc": "2026-03-19T10:00:00Z",
+    "lastSavedAtUtc": "2026-03-19T10:00:00Z",
+    "createdBy": "OpenCode",
+    "tags": {
+      "purpose": "initial-state",
+      "dataset": "test"
+    }
+  },
+  "processConfiguration": {
+    "scenarioKey": "packing-shipping-initial",
+    "name": "Packing and Shipping Initial State",
+    "plannedDuration": "01:00:00",
+    "arrivalProfile": {
+      "generationWindow": "00:05:00",
+      "averageWorkItemsPerWindow": 1,
+      "maxWorkItemsPerWindow": 1
+    },
+    "stages": [
+      {
+        "stageId": "22222222-2222-2222-2222-222222222222",
+        "stageKey": "packing",
+        "displayName": "Packing",
+        "sequence": 10,
+        "stations": [
+          {
+            "stationId": "33333333-3333-3333-3333-333333333333",
+            "stageId": "22222222-2222-2222-2222-222222222222",
+            "stationKey": "packing-main",
+            "displayName": "Packing Main",
+            "workerCount": 1,
+            "averageProcessingTime": "00:03:00"
+          }
+        ]
+      },
+      {
+        "stageId": "44444444-4444-4444-4444-444444444444",
+        "stageKey": "shipping",
+        "displayName": "Shipping",
+        "sequence": 20,
+        "stations": [
+          {
+            "stationId": "55555555-5555-5555-5555-555555555555",
+            "stageId": "44444444-4444-4444-4444-444444444444",
+            "stationKey": "shipping-main",
+            "displayName": "Shipping Main",
+            "workerCount": 1,
+            "averageProcessingTime": "00:04:00"
+          }
+        ]
+      }
+    ]
+  },
+  "runOptions": {
+    "autoStart": false,
+    "publishSnapshots": false,
+    "snapshotInterval": null,
+    "retainSnapshotTimeline": false,
+    "notes": "Initial checkpoint before the first simulation step.",
+    "parameters": {
+      "mode": "test"
+    }
+  },
+  "runtimeState": {
+    "currentTime": "00:00:00",
+    "status": "Ready",
+    "nextSequenceNumber": 2,
+    "workItemsCreated": 0,
+    "workItemsCompleted": 0,
+    "workItemsInProgress": 0,
+    "stateBag": {
+      "description": "Initial runtime state before simulation start."
+    }
+  },
+  "eventQueue": [
+    {
+      "eventType": "SimulationEventsGenerateEvent",
+      "eventId": "66666666-6666-6666-6666-666666666666",
+      "simulationRunId": "11111111-1111-1111-1111-111111111111",
+      "scheduledTime": "00:00:00",
+      "eventKind": "SimulationEventsGenerate",
+      "processStage": "None",
+      "sortRank": 40,
+      "sequenceNumber": 1,
+      "processingToken": null,
+      "orderId": null,
+      "payload": {
+        "description": "Bootstrap generation event."
+      }
+    }
+  ],
+  "tracking": {
+    "workItems": [],
+    "stations": [],
+    "trackingBag": null
+  },
+  "kpiState": {
+    "workItemsCreated": 0,
+    "workItemsCompleted": 0,
+    "sumCompletedLeadTimes": "00:00:00",
+    "minLeadTime": null,
+    "maxLeadTime": null,
+    "currentWorkInProgress": 0,
+    "peakWorkInProgress": 0,
+    "aggregates": null
+  },
+  "snapshotState": {
+    "latestSnapshot": null,
+    "timeline": [],
+    "snapshotBag": null
+  }
+}
