@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  push:
+    branches:
+      - main
+      - master
+      - dev
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restore
+        run: dotnet restore "FlowForge.slnx"
+
+      - name: Build
+        run: dotnet build "FlowForge.slnx" --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test "FlowForge.slnx" --configuration Release --no-build
+
+      - name: Build API image
+        run: docker build -f ./src/FlowForge.Api/Dockerfile -t flowforge-api:ci .
+
+      - name: Build CLI image
+        run: docker build -f ./src/FlowForge.CLI/Dockerfile -t flowforge-cli:ci .

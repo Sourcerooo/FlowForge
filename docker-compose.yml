@@ -1,0 +1,19 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: ./src/FlowForge.Api/Dockerfile
+    image: flowforge-api:latest
+    container_name: flowforge-api
+    ports:
+      - "8080:8080"
+
+  cli:
+    build:
+      context: .
+      dockerfile: ./src/FlowForge.CLI/Dockerfile
+    image: flowforge-cli:latest
+    container_name: flowforge-cli
+    depends_on:
+      - api
+    command: ["wait"]
