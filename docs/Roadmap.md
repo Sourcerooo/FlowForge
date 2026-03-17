@@ -2,82 +2,178 @@
 
 ## Purpose
 
-This roadmap captures the planned evolution of the project at a milestone level.
-It is intentionally broader than the task list in `docs/Todo.md` and should answer the question:
-"What capabilities do we want to have next, and in which order?"
+This roadmap describes how FlowForge should evolve from the current repository scaffold into a
+digital twin product for fulfillment and logistics process simulation.
+
+It is intentionally broader than `docs/Todo.md`.
+The roadmap answers which product and architectural capabilities should come next and in what order.
 
 ## Planning Principles
 
-- prioritize business value over technical novelty
-- keep the dependency direction intact while adding features
-- deliver in thin vertical slices where possible
-- document major architectural changes before implementation starts
-- revise the roadmap regularly as the product scope changes
+- Deliver visible product value early, not framework complexity.
+- Keep the simulation core independent from UI, transport, and persistence.
+- Build thin vertical slices that can be demonstrated quickly.
+- Favor one strong desktop reference workflow before expanding to multiple clients.
+- Document architecture choices before broadening the implementation surface.
+
+## Product Direction
+
+FlowForge starts as a digital twin for a simple fulfillment flow:
+
+```text
+Order Source -> Picking -> Packing -> Shipping -> Completed
+```
+
+The MVP should let a user:
+
+- start, pause, and reset a simulation
+- observe queues, active orders, and worker utilization
+- identify bottlenecks visually
+- modify a small set of scenario parameters
+- understand throughput and lead time changes from those parameters
 
 ## Milestones
 
-### Milestone 1 -- Foundation
+### Milestone 1 -- Product Foundation
 
-Goal: turn the generated scaffold into a usable working baseline.
+Goal: replace the generic template baseline with a domain-specific simulation foundation.
 
-- define the first domain concepts and invariants
-- implement the first application use case
-- connect dependency injection registrations
-- decide on configuration, logging, and error handling basics
-- replace placeholder entry-point behavior in API and CLI
+- define the fulfillment domain language and invariants
+- introduce the target solution direction for `Simulation`, `Contracts`, and `Desktop`
+- implement the first discrete event runtime for the linear station flow
+- validate the engine through tests and CLI/debug execution
+- keep the repository documentation aligned with the new product vision
 
-### Milestone 2 -- Persistence and Integrations
+Exit criteria:
 
-Goal: connect the application to real external systems.
+- orders can move through the modeled process in code
+- the simulation can be executed without UI dependencies
+- the core architecture is documented and understandable
 
-- choose a persistence approach
-- implement repositories or data access services
-- add external provider abstractions where needed
-- create initial integration tests
-- document infrastructure boundaries and operational assumptions
+### Milestone 2 -- Application Boundary, Snapshot Contract, and Early API
 
-### Milestone 3 -- Delivery Workflows
+Goal: establish the stable contract between engine and clients.
 
-Goal: expose stable user or system-facing workflows.
+- expose start, pause, reset, and scenario-loading use cases
+- define immutable snapshot DTOs and KPI contracts shared between desktop and API where practical
+- introduce KPI collection for throughput, lead time, queue lengths, WIP, and utilization
+- formalize application interfaces for persistence and exports
+- add early API endpoints for simulation control and snapshot/KPI queries
+- add simulation-focused test coverage around runtime transitions and snapshot generation
 
-- expand API endpoints around meaningful use cases
-- add CLI commands for administration, automation, or maintenance
-- define request and response contracts
-- add validation, error mapping, and consistent result handling
-- review observability and operational diagnostics
+Exit criteria:
 
-### Milestone 4 -- Quality and Automation
+- one application service can drive the simulation lifecycle
+- one stable snapshot contract is available for desktop and API consumption
+- KPI values can be queried without coupling clients to internal runtime state
 
-Goal: improve confidence, repeatability, and maintainability.
+### Milestone 3 -- Desktop MVP
 
-- broaden test coverage for domain and application logic
-- add integration and end-to-end checks where valuable
-- harden CI and container workflows
-- establish release and versioning conventions
-- add deployment-specific documentation if required
+Goal: deliver the first demo-worthy client.
 
-### Milestone 5 -- Product Expansion
+- create the desktop shell and main simulation screen
+- render stations, queues, and active order flow
+- add controls for start, pause, reset, and parameter changes
+- present KPI cards and bottleneck highlighting
+- support smooth visual updates based on snapshot data
 
-Goal: prepare the solution for sustained growth.
+Exit criteria:
 
-- split modules further if responsibilities become too broad
-- add background processing or additional delivery projects when needed
-- review performance and scalability bottlenecks
-- introduce architecture decision records for major technical choices
-- refine roadmap and backlog around real product feedback
+- a non-developer can understand the process by using the desktop app
+- the product shows live system behavior, not just logs or raw data
+- backend and UI evolve through the snapshot contract instead of shared mutable state
+
+### Milestone 4 -- Scenario Management and Replay
+
+Goal: make the MVP reusable and easier to demonstrate.
+
+- add scenario presets and persistence
+- support export of run results or KPI summaries
+- introduce a simple timeline or replay view if it improves explainability
+- improve operational diagnostics and error handling
+- harden the workflow for repeated demo usage
+
+Exit criteria:
+
+- scenarios can be saved, loaded, and reused
+- simulation output is exportable for analysis or showcasing
+- the application supports repeatable demo flows with less manual setup
+
+### Milestone 5 -- Remote and Multi-Client Expansion
+
+Goal: prepare FlowForge for platform-style growth.
+
+- expand the early API into a fuller remote control and query surface
+- add realtime streaming for snapshots or live events
+- enable a web dashboard or another reference client
+- persist richer run history if cross-session analysis becomes valuable
+- review authentication, deployment, and operational requirements
+
+Exit criteria:
+
+- the backend can serve at least one out-of-process client
+- contracts remain client-neutral and stable
+- the product can evolve beyond a single local demo client
+
+### Milestone 6 -- Advanced Digital Twin Features
+
+Goal: move from a compelling MVP toward a richer operational platform.
+
+- add disturbances such as station outages or shipping stops
+- support more complex flows such as branching, rework, or priority orders
+- add comparative scenario analysis
+- extend KPI history and analytical views
+- explore optimization and forecasting only after the simulation foundation is stable
+
+Exit criteria:
+
+- the product supports more realistic operational variation
+- scenario comparison produces decision-support value
+- advanced analytics build on stable simulation primitives instead of ad hoc additions
+
+## Near-Term Release Themes
+
+### Release Theme A -- Make the Engine Real
+
+Focus:
+
+- model the first real domain
+- prove the runtime loop
+- remove generic-template thinking from the codebase
+
+### Release Theme B -- Make the Boundary Stable
+
+Focus:
+
+- standardize snapshots
+- separate simulation state from presentation state
+- define how the rest of the product consumes the engine
+
+### Release Theme C -- Make the Product Visible
+
+Focus:
+
+- deliver a polished desktop demo
+- show bottlenecks and live flow clearly
+- make interaction intuitive enough for feedback sessions
+
+## Risks and Watchpoints
+
+- Over-generalizing too early could delay the first usable demo.
+- Building multiple clients before stabilizing the snapshot contract could fragment progress.
+- Adding persistence or replay too early could complicate the runtime model.
+- Pushing API-first delivery too soon could slow down a desktop-first MVP.
+- Weak KPI definitions could make the simulation visually interesting but analytically shallow.
 
 ## Open Questions
 
-Use this section to capture strategic uncertainties before they become implementation blockers.
-
-- Which persistence technology best fits the product requirements?
-- Which external systems must be integrated first?
-- Does the CLI act mainly as a developer tool, an admin tool, or a batch-processing host?
-- Which deployment environments need to be supported initially?
-- What non-functional requirements are most critical: latency, throughput, traceability, or cost?
+- Should the first UI investment go exclusively into Avalonia, or should a minimal web dashboard be planned earlier?
+- Are disturbances part of the MVP story, or should the first release focus only on normal flow behavior?
+- Is scenario persistence enough for the MVP, or is saved run history already needed?
+- Does the CLI remain mainly a developer tool, or should it also support operational demo workflows?
 
 ## Revision Log
 
 | Date | Change |
 |---|---|
-| YYYY-MM-DD | Initial roadmap created from the project template |
+| 2026-03-17 | Replaced the generic template roadmap with a product roadmap for the FlowForge digital twin vision. |

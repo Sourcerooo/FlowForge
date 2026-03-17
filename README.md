@@ -1,166 +1,177 @@
 # FlowForge
 
-FlowForge is a .NET solution scaffold generated from a Clean Architecture template.
-The repository is organized around reusable libraries, executable entry points, automated tests,
-containerization assets, and starter documentation so a new project can move from bootstrap to
-feature work quickly.
+FlowForge is a digital twin and simulation project for operational process flows.
+The first product focus is a fulfillment pipeline where orders move through picking, packing, and
+shipping while the system exposes queues, utilization, throughput, and bottlenecks through a visual
+client.
 
-This README gives a concise overview of the solution layout, local setup, and the recommended first
-steps after generation.
+This repository currently contains the initial .NET solution scaffold and the first architecture
+documents for evolving it into that product.
 
 ## Table of Contents
 
-- [Description](#description)
-- [Project Vision](#project-vision)
-- [Architecture](#architecture)
-- [Installation](#installation)
-- [Project Layout](#project-layout)
-- [Development Workflow](#development-workflow)
+- [Vision](#vision)
+- [MVP Scope](#mvp-scope)
+- [Architecture Direction](#architecture-direction)
+- [Current Repository State](#current-repository-state)
+- [Planned Solution Evolution](#planned-solution-evolution)
+- [Development Setup](#development-setup)
 - [Documentation](#documentation)
-- [Next Steps](#next-steps)
+- [Next Decisions](#next-decisions)
 
-## Description
+## Vision
 
-This repository contains a modular .NET solution with the following goals:
+FlowForge is meant to become a visually strong and technically clean simulation application that
+makes operational flow behavior understandable.
 
-- keep business rules isolated from infrastructure details
-- provide clear project boundaries for maintainability and testability
-- support multiple entry points such as an API and a CLI
-- centralize package versions and build configuration at the repository root
-- offer a ready-to-use baseline for CI, Docker, and project documentation
-
-## Project Vision
-
-The generated structure is intended as a practical starting point rather than a rigid framework.
-It encourages a solution where domain logic stays independent, application logic coordinates use
-cases, infrastructure implements external concerns, and delivery projects expose the system through
-specific interfaces.
-
-The template is designed to evolve with the project:
-
-- start small with a minimal but well-structured codebase
-- add features without breaking dependency direction
-- scale from local development to automated build and test pipelines
-- keep architecture decisions visible in documentation instead of tribal knowledge
-
-## Architecture
-
-The solution follows a Clean Architecture style with explicit dependency direction:
+The initial domain is intentionally concrete:
 
 ```text
-Domain
-  ^
-  |
-Application
-  ^
-  |
-Infrastructure
-  ^         ^
-  |         |
-API       CLI
-
-Tests reference the layer they validate.
+Order Source -> Picking -> Packing -> Shipping -> Completed
 ```
 
-High-level responsibilities:
+The product should help answer questions such as:
 
-- `Domain` -- core business concepts, rules, value objects, domain services, domain events
-- `Application` -- use cases, orchestration, contracts, validation, DTOs, abstractions
-- `Infrastructure` -- persistence, external integrations, messaging, file access, adapters
-- `Api` -- HTTP entry point, endpoint composition, transport-specific configuration
-- `CLI` -- command-line entry point for automation, jobs, maintenance, or local tooling
-- `tests/*` -- layer-focused automated tests
+- Where is the current bottleneck?
+- How do queue lengths change over time?
+- What happens if processing times or worker counts change?
+- Which station is overloaded?
+- How long does an order need from entry to completion?
 
-Further details are documented in [`docs/Architecture.md`](docs/Architecture.md).
+The project is optimized for a small team, fast visible progress, and a strong demo path.
+The primary experience is desktop-first, but an API is planned early so both delivery paths can
+reuse the same core contracts and use cases.
 
-## Installation
+## MVP Scope
+
+The MVP should provide:
+
+- a discrete event simulation of the linear fulfillment process
+- configurable worker counts and processing times per station
+- immutable simulation snapshots as the backend-to-client contract
+- KPI tracking for throughput, lead time, WIP, queue lengths, and utilization
+- controls for start, pause, and reset
+- a desktop visualization that shows station state, active orders, and bottlenecks
+- an early API for shared control and query access
+
+The MVP explicitly avoids premature complexity such as microservices, forecasting, generic plugin
+engines, or advanced optimization.
+
+## Architecture Direction
+
+FlowForge follows a Clean Architecture style, extended with a dedicated simulation runtime.
+
+Target dependency direction:
+
+```text
+Domain <- Application <- Infrastructure <- Delivery
+             ^
+             |
+        Simulation
+```
+
+Key idea:
+
+- the simulation owns the mutable runtime state
+- clients never bind directly to mutable simulation internals
+- UI and external consumers work with immutable snapshots and use-case boundaries
+
+Target high-level modules:
+
+- `FlowForge.Domain` -- domain concepts and business rules
+- `FlowForge.Simulation` -- discrete event engine and runtime state
+- `FlowForge.Application` -- use cases and orchestration
+- `FlowForge.Contracts` -- snapshot and shared DTO contracts
+- `FlowForge.Infrastructure` -- persistence, configuration, logging, exports
+- `FlowForge.Desktop` -- primary MVP client
+- `FlowForge.Api` -- early control and query host that should align with desktop contracts
+- `FlowForge.CLI` -- debug, admin, and automation workflows
+
+Further detail is documented in `docs/Architecture.md`.
+
+## Current Repository State
+
+The repository currently contains these projects:
+
+- `src/FlowForge.Domain/`
+- `src/FlowForge.Application/`
+- `src/FlowForge.Infrastructure/`
+- `src/FlowForge.Api/`
+- `src/FlowForge.CLI/`
+- `tests/FlowForge.Domain.Tests/`
+- `tests/FlowForge.Application.Tests/`
+
+This means the documented product direction is ahead of the current code structure in some areas.
+That is intentional: the documentation now defines the target shape that the implementation should
+grow toward.
+
+## Planned Solution Evolution
+
+Near-term structural additions:
+
+- `src/FlowForge.Simulation/`
+- `src/FlowForge.Contracts/`
+- `src/FlowForge.Desktop/`
+- `tests/FlowForge.Simulation.Tests/`
+
+Recommended implementation sequence:
+
+1. Model the fulfillment domain and simulation runtime.
+2. Stabilize the snapshot and KPI contract.
+3. Build the first desktop visualization client.
+4. Add scenario persistence and replay/export support.
+5. Expand the early API further and move into broader multi-client delivery when the core demo is stable.
+
+## Development Setup
 
 ### Prerequisites
 
-- .NET SDK `10.0.200` or a compatible feature-band installation
-- Docker Desktop or a compatible Docker runtime if you want to build container images
-- GitHub repository access if you want to use the provided CI workflow
+- .NET SDK `10.0.200`
+- Docker Desktop or a compatible Docker runtime for container workflows
 
-### Initial setup
+### Basic commands
 
-1. Restore dependencies:
+Restore dependencies:
 
 ```bash
 dotnet restore "FlowForge.slnx"
 ```
 
-2. Build the solution:
+Build the solution:
 
 ```bash
 dotnet build "FlowForge.slnx"
 ```
 
-3. Run the tests:
+Run tests:
 
 ```bash
 dotnet test "FlowForge.slnx"
 ```
 
-### Run the entry points
-
-Start the API:
+Run the current API host:
 
 ```bash
 dotnet run --project "src/FlowForge.Api/FlowForge.Api.csproj"
 ```
 
-Run the CLI:
+Run the current CLI host:
 
 ```bash
 dotnet run --project "src/FlowForge.CLI/FlowForge.CLI.csproj"
 ```
 
-### Container workflow
-
-Build and run the container stack:
-
-```bash
-docker compose up --build
-```
-
-## Project Layout
-
-| Path | Description |
-|---|---|
-| `FlowForge.slnx` | Solution file for the full repository |
-| `src/FlowForge.Domain/` | Domain layer |
-| `src/FlowForge.Application/` | Application layer |
-| `src/FlowForge.Infrastructure/` | Infrastructure layer |
-| `src/FlowForge.Api/` | HTTP API host and Dockerfile |
-| `src/FlowForge.CLI/` | Command-line host and Dockerfile |
-| `tests/FlowForge.Domain.Tests/` | Domain tests |
-| `tests/FlowForge.Application.Tests/` | Application tests |
-| `docs/` | Architecture, roadmap, and task tracking |
-| `.github/workflows/ci.yml` | Build, test, and Docker validation in GitHub Actions |
-| `docker-compose.yml` | Local orchestration for API and CLI containers |
-
-## Development Workflow
-
-- Keep dependencies pointing inward toward `Domain`
-- Add new package versions through `Directory.Packages.props`
-- Prefer abstractions in `Application` and implementations in `Infrastructure`
-- Add tests alongside the layer that owns the behavior
-- Document architectural changes in `docs/Architecture.md`
-- Track upcoming work in `docs/Roadmap.md` and `docs/Todo.md`
-
 ## Documentation
 
-The `docs/` folder contains project-facing documentation with different purposes:
+- `docs/Architecture.md` -- target architecture, runtime model, boundaries, and key decisions
+- `docs/Roadmap.md` -- milestone-level product and architecture evolution
+- `docs/Todo.md` -- operational task list and pending architecture decisions
+- `docs/brainstorm/` -- source material, idea sketches, and mockups that informed the current direction
 
-| Document | Description |
-|---|---|
-| [`docs/Architecture.md`](docs/Architecture.md) | Current layer model, responsibilities, and extension guidance |
-| [`docs/Roadmap.md`](docs/Roadmap.md) | Medium-term milestones and planned capabilities |
-| [`docs/Todo.md`](docs/Todo.md) | Working task list for concrete next actions |
+## Next Decisions
 
-## Next Steps
+The most important open decisions at the moment are:
 
-1. Replace the placeholder services and entry-point code with your first real use case.
-2. Decide on infrastructure concerns such as persistence, authentication, and external integrations.
-3. Expand the tests around the first business-critical domain and application behaviors.
-4. Update the documentation so it reflects actual project decisions instead of the initial template.
+1. which contracts should be shared directly between desktop and API versus mapped per delivery host
+2. whether scenario persistence remains file-based for the MVP
+3. whether disturbances belong in the MVP or the first post-MVP expansion

@@ -84,6 +84,7 @@ Preferences and working rules for AI coding agents operating in this repository.
 - Update `docs/Architecture.md` when layer responsibilities or boundaries change.
 - Update `docs/Roadmap.md` for milestone-level planning changes.
 - Update `docs/Todo.md` for concrete next tasks and operational follow-up.
+- Whenever an architecture decision is made, a new todo appears, or new features are identified, update the relevant documentation immediately in the same work session.
 - Prefer documenting important decisions rather than relying on implicit repository knowledge.
 
 ---
