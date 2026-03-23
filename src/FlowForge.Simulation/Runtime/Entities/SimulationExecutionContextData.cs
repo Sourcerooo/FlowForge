@@ -14,7 +14,7 @@ public sealed class SimulationExecutionContextData
 
   public ITrackingSubjectStore TrackingSubjectStore { get; init; } = default!;
   public IWorkItemTrackingStore WorkItemTrackingStore { get; init; } = default!;
-  public IStageTrackingStore StationTrackingStore { get; init; } = default!;
+  public IStageTrackingStore StageTrackingStore { get; init; } = default!;
   public ISnapshotStore SnapshotStore { get; init; } = default!;
   public ISnapshotTimelineStore SnapshotTimelineStore { get; init; } = default!;
 }

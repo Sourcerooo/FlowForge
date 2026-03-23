@@ -1753,12 +1753,244 @@ This guarantees:
 
 The following interfaces are likely enough for the next design step:
 
-- `IOrderTrackingStore`
-- `IStationTrackingStore`
+- `ITrackingSubjectStore`
+- `IWorkItemTrackingStore`
+- `IStageTrackingStore`
+- `IStationTrackingStore` if station storage is split from stage aggregation in the implementation
 - `IKpiCollector`
 - `ISnapshotBuilder`
 - `ISnapshotStore`
 - `ISnapshotTimelineStore`
+- `IWorkItemProcessOrchestrator`
+- `IWorkItemTransitionPolicy`
+- `IProcessRoutingPolicy`
+
+#### Proposed work-item process orchestration model
+
+The next runtime step should introduce one explicit orchestration boundary for business-process
+transitions triggered by simulation events.
+
+Recommended rule:
+
+- event handlers stay thin and map one dequeued event to one orchestration method
+- orchestration lives in `IWorkItemProcessOrchestrator`
+- local state mutations stay on the runtime objects that own the affected data
+- scheduling of follow-up events stays outside tracking objects and is coordinated by the orchestrator
+
+Recommended responsibility split:
+
+| Component | Owns | Example responsibilities |
+|---|---|---|
+| `ISimulationEventHandler` | event entry point | validate event shape, call one orchestrator method, fail fast on missing runtime context |
+| `IWorkItemProcessOrchestrator` | use-case coordination for one process step | load run-scoped objects, validate current transition, call runtime-object methods, trigger scheduling, notify KPI collector |
+| `WorkItem` or `WorkItemRuntimeState` | current runtime state of one work item | update current status, current stage, current station, processing token, completion markers |
+| `WorkItemTracking` | factual timing and segment history of one work item | close current segment, open next segment, guard segment consistency |
+| `StationTracking` | mutable station-level runtime facts | reserve and release worker capacity, update queue and processing counters, accumulate durations, track peak busy workers |
+| `StageTracking` | mutable stage-level runtime aggregates | aggregate queue and processing facts across stations of one stage |
+| `IProcessRoutingPolicy` | next-step decision | resolve next stage or terminal completion |
+| `IWorkItemTransitionPolicy` | transition legality | validate allowed state transitions and token checks |
+| `IKpiCollector` | incremental KPI facts | record created, queued, started, completed, lead-time, and utilization facts |
+
+Recommended interpretation:
+
+- `IWorkItemProcessOrchestrator` is not a god object that manually edits every field itself
+- it coordinates the use case and delegates the actual mutation to the object that owns the data
+- runtime objects should therefore be behavior-rich and protect their own invariants instead of becoming passive data bags
+- snapshot DTOs and checkpoint documents remain passive contracts and should not gain runtime behavior
+
+#### Proposed behavior placement rule
+
+Recommended heuristic:
+
+- if the question is "how does this one runtime object change consistently?", put the method on that object
+- if the question is "how do multiple runtime objects participate in one event-driven use case?", put the coordination in the orchestrator
+
+Recommended examples:
+
+- `WorkItemTracking.StartProcessing(...)` belongs on `WorkItemTracking`
+- `StationTracking.CompleteProcessing(...)` belongs on `StationTracking`
+- `StageTracking.RecordProcessingCompleted(...)` belongs on `StageTracking`
+- `IWorkItemProcessOrchestrator.CompleteProcessingAsync(...)` coordinates the full processing-complete use case across all of them
+
+This avoids both extremes:
+
+- an anemic model where every invariant leaks into services
+- a giant runtime object that schedules events, updates KPIs, and mutates unrelated collaborators directly
+
+#### Proposed orchestration interfaces
+
+The next implementation step should introduce explicit simulation-side contracts for process
+orchestration and routing.
+
+Recommended baseline shape:
+
+```csharp
+public interface IWorkItemProcessOrchestrator
+{
+    Task CreateFromGenerationAsync(
+        CreateWorkItemFromGenerationCommand command,
+        CancellationToken cancellationToken = default);
+
+    Task QueueForStageAsync(
+        QueueWorkItemCommand command,
+        CancellationToken cancellationToken = default);
+
+    Task StartProcessingAsync(
+        StartProcessingCommand command,
+        CancellationToken cancellationToken = default);
+
+    Task CompleteProcessingAsync(
+        CompleteProcessingCommand command,
+        CancellationToken cancellationToken = default);
+
+    Task CompleteWorkItemAsync(
+        CompleteWorkItemCommand command,
+        CancellationToken cancellationToken = default);
+}
+
+public interface IWorkItemTransitionPolicy
+{
+    void EnsureCanQueue(WorkItemRuntimeState workItem, QueueWorkItemCommand command);
+    void EnsureCanStartProcessing(WorkItemRuntimeState workItem, StartProcessingCommand command);
+    void EnsureCanCompleteProcessing(WorkItemRuntimeState workItem, CompleteProcessingCommand command);
+    void EnsureCanCompleteWorkItem(WorkItemRuntimeState workItem, CompleteWorkItemCommand command);
+}
+
+public interface IProcessRoutingPolicy
+{
+    RoutingDecision GetNextStep(
+        ProcessConfiguration processConfiguration,
+        StageId completedStageId);
+}
+```
+
+Recommended command direction:
+
+```csharp
+public sealed record CreateWorkItemFromGenerationCommand(
+    SimulationRunId SimulationRunId,
+    TimeSpan OccurredAt,
+    OrderId OrderId,
+    StageId FirstStageId,
+    StationId? PreferredStationId);
+
+public sealed record QueueWorkItemCommand(
+    SimulationRunId SimulationRunId,
+    TrackingSubjectId TrackingSubjectId,
+    TimeSpan OccurredAt,
+    StageId StageId,
+    StationId StationId);
+
+public sealed record StartProcessingCommand(
+    SimulationRunId SimulationRunId,
+    TrackingSubjectId TrackingSubjectId,
+    TimeSpan OccurredAt,
+    StageId StageId,
+    StationId StationId,
+    long ProcessingToken);
+
+public sealed record CompleteProcessingCommand(
+    SimulationRunId SimulationRunId,
+    TrackingSubjectId TrackingSubjectId,
+    TimeSpan OccurredAt,
+    StageId StageId,
+    StationId StationId,
+    long ProcessingToken);
+
+public sealed record CompleteWorkItemCommand(
+    SimulationRunId SimulationRunId,
+    TrackingSubjectId TrackingSubjectId,
+    TimeSpan OccurredAt);
+```
+
+Recommended note:
+
+- the exact command payloads may still evolve
+- the important architectural boundary is that handlers pass one explicit command into the orchestrator instead of mutating tracking stores ad hoc
+
+#### Proposed runtime-object method direction
+
+Recommended baseline behavior on mutable runtime objects:
+
+```csharp
+public sealed class WorkItemRuntimeState
+{
+    public void QueueForStage(TimeSpan occurredAt, StageId stageId, StationId stationId);
+    public void StartProcessing(TimeSpan occurredAt, StageId stageId, StationId stationId, long processingToken);
+    public void CompleteProcessing(TimeSpan occurredAt, StageId stageId, StationId stationId, long processingToken);
+    public void CompleteWorkItem(TimeSpan occurredAt);
+}
+
+public sealed class WorkItemTracking
+{
+    public void EnterQueue(TimeSpan occurredAt, StageId stageId, StationId stationId);
+    public void StartProcessing(TimeSpan occurredAt, StageId stageId, StationId stationId, long processingToken);
+    public void CompleteProcessing(TimeSpan occurredAt, StageId stageId, StationId stationId, long processingToken);
+    public void CompleteWorkItem(TimeSpan occurredAt);
+}
+
+public sealed class StationTracking
+{
+    public void Enqueue(TimeSpan occurredAt, TrackingSubjectId trackingSubjectId);
+    public void StartProcessing(TimeSpan occurredAt, TrackingSubjectId trackingSubjectId, long processingToken);
+    public void CompleteProcessing(TimeSpan occurredAt, TrackingSubjectId trackingSubjectId, long processingToken);
+}
+
+public sealed class StageTracking
+{
+    public void Enqueue(TimeSpan occurredAt, StageId stageId, StationId stationId);
+    public void StartProcessing(TimeSpan occurredAt, StageId stageId, StationId stationId);
+    public void CompleteProcessing(TimeSpan occurredAt, StageId stageId, StationId stationId);
+}
+```
+
+Recommended rule:
+
+- remove technical setter-style methods such as `SetCurrentStatus`, `SetCurrentStageId`, `SetCurrentStationId`, and similar mutation helpers from tracking APIs
+- replace them with explicit business/process methods that perform a valid transition in one step
+- this reduces the risk of partial and inconsistent intermediate state across work item, tracking, station, and stage objects
+
+#### Proposed `CompleteProcessing` orchestration flow
+
+`CompleteProcessing` is the clearest example of why orchestration and local mutation should be split.
+
+Recommended orchestration sequence:
+
+1. load the current `WorkItemRuntimeState`, `WorkItemTracking`, `StationTracking`, and `StageTracking`
+2. validate `StageId`, `StationId`, current status, and `ProcessingToken` through `IWorkItemTransitionPolicy`
+3. call `WorkItemRuntimeState.CompleteProcessing(...)` to update the work-item head state
+4. call `WorkItemTracking.CompleteProcessing(...)` to close the active processing segment and establish the next factual state
+5. call `StationTracking.CompleteProcessing(...)` to update station counters, durations, and worker occupancy
+6. call `StageTracking.CompleteProcessing(...)` to update stage-level aggregates
+7. call `IKpiCollector` to record incremental KPI facts caused by the completed processing step
+8. resolve the next route through `IProcessRoutingPolicy`
+9. schedule either the next `WorkItemQueueEvent` or the terminal `WorkItemCompleteEvent` through `ISimulationScheduler`
+
+Recommended architectural consequence:
+
+- all of those effects belong to the same use case
+- not all of them belong to the same class
+- the orchestrator owns the sequence; each runtime object owns its own internal mutation logic
+
+#### Proposed handler-to-orchestrator flow
+
+Recommended interaction model:
+
+```text
+SimulationRunner
+  -> IEventDispatcher
+  -> ProcessingCompleteEventHandler
+  -> IWorkItemProcessOrchestrator.CompleteProcessingAsync(command)
+  -> WorkItemRuntimeState / WorkItemTracking / StationTracking / StageTracking
+  -> IKpiCollector
+  -> ISimulationScheduler
+```
+
+Recommended rule:
+
+- handlers should not directly manipulate raw tracking stores in a piecemeal way
+- handlers should not know how segments are closed, how worker occupancy is released, or how stage aggregates are maintained
+- those responsibilities must stay behind the orchestrator and the runtime objects it coordinates
 
 ---
 
@@ -2255,6 +2487,48 @@ flowchart LR
     B --> N[Next GenerateSimulationEvent]
 ```
 
+Recommended runtime handling model for that chain:
+
+```text
+GenerateSimulationEventHandler
+  -> IWorkItemProcessOrchestrator.CreateFromGenerationAsync(...)
+
+WorkItemQueueEventHandler
+  -> IWorkItemProcessOrchestrator.QueueForStageAsync(...)
+
+ProcessingStartEventHandler
+  -> IWorkItemProcessOrchestrator.StartProcessingAsync(...)
+
+ProcessingCompleteEventHandler
+  -> IWorkItemProcessOrchestrator.CompleteProcessingAsync(...)
+
+WorkItemCompleteEventHandler
+  -> IWorkItemProcessOrchestrator.CompleteWorkItemAsync(...)
+```
+
+Recommended internal flow for `ProcessingCompleteEvent`:
+
+```text
+ProcessingCompleteEvent dequeued
+  -> handler builds CompleteProcessingCommand
+  -> orchestrator loads runtime objects for work item, station, and stage
+  -> transition policy validates status, stage, station, and processing token
+  -> work item head state is completed for the current processing step
+  -> work item tracking closes the active processing segment
+  -> station tracking releases busy capacity and updates completion metrics
+  -> stage tracking updates aggregate metrics
+  -> KPI collector records incremental facts
+  -> routing policy resolves next stage or terminal completion
+  -> scheduler enqueues WorkItemQueueEvent or WorkItemCompleteEvent
+```
+
+Recommended modeling rule:
+
+- the handler remains a thin event adapter
+- the orchestrator owns use-case sequencing
+- runtime objects own their local mutation rules
+- follow-up event creation is coordinated through the scheduler and never by mutating the raw queue directly
+
 Recommended review criteria for this model:
 
 - Is explicit queue state useful enough for KPI and UI clarity?
@@ -2383,6 +2657,8 @@ tests/
 | 2026-03-19 | Create one `SimulationExecutionContext` per simulation run and construct it fully before calling `RunAsync`. | Run construction and run execution should stay separate so ownership, testing, and lifecycle boundaries remain explicit. |
 | 2026-03-19 | Allow one concrete `SimulationQueue` implementation to back both `ISimulationEventQueue` and `ISimulationScheduler`, but expose only the scheduler view to handlers. | One shared queue instance preserves consistent ordering, while segregated interfaces keep dequeue access out of handler code. |
 | 2026-03-19 | Keep checkpoint document models in `FlowForge.Simulation` and place the checkpoint storage port in `FlowForge.Application`. | The document shape belongs to simulation-owned state mapping, while save/load orchestration is application-facing and persistence implementation still belongs to infrastructure. |
+| 2026-03-20 | Introduce `IWorkItemProcessOrchestrator` as the simulation-side coordination boundary for event-driven process steps. | Queue, start, completion, routing, KPI updates, and follow-up scheduling belong to one use case, but the detailed mutations still belong to the runtime objects that own their data. |
+| 2026-03-20 | Keep `WorkItemTracking`, `StationTracking`, and `StageTracking` as behavior-rich mutable runtime models instead of passive DTO-like state bags. | These objects must protect local invariants such as segment closure, worker release, and aggregate consistency, while handlers remain thin and services avoid field-by-field mutation. |
 
 ---
 
