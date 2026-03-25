@@ -1,6 +1,6 @@
 using FlowForge.Domain.ProcessModel.ValueObjects;
 
-namespace FlowForge.Simulation.Runtime.Entities;
+namespace FlowForge.Domain.ProcessModel.Entities;
 
 public sealed record StationDefinition(
   StationId StationId,

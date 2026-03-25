@@ -1,4 +1,4 @@
-namespace FlowForge.Simulation.Runtime.Entities;
+namespace FlowForge.Domain.ProcessModel.ValueObjects;
 
 public readonly record struct ProcessConfigurationId(Guid Value)
 {

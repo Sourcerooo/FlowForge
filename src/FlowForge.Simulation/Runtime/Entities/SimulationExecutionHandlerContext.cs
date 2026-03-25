@@ -1,3 +1,4 @@
+using FlowForge.Domain.ProcessModel.Entities;
 using FlowForge.Simulation.Kpi.Contracts;
 using FlowForge.Simulation.Runtime.Enums;
 using FlowForge.Simulation.Runtime.ValueObjects;

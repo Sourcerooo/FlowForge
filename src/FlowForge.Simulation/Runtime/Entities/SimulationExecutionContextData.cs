@@ -1,3 +1,4 @@
+using FlowForge.Domain.ProcessModel.Entities;
 using FlowForge.Simulation.Runtime.Enums;
 using FlowForge.Simulation.Scheduling.Contracts;
 using FlowForge.Simulation.Snapshots.Contracts;

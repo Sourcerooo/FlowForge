@@ -1,4 +1,3 @@
-using FlowForge.Domain.ProcessModel.ValueObjects;
 using FlowForge.Simulation.Events.Contracts;
 using FlowForge.Simulation.Events.Enums;
 using FlowForge.Simulation.Events.SimulationEvents;
@@ -16,7 +15,7 @@ internal sealed class SimulationEventDispatcher(IEnumerable<ISimulationEventHand
     SimulationExecutionHandlerContext context,
     CancellationToken cancellationToken)
   {
-    StageId? stageId = null;
+    //StageId? stageId = null;
     var handler = _eventHandler.GetValueOrDefault(simulationEvent.EventKind);
     if (handler != null)
     {

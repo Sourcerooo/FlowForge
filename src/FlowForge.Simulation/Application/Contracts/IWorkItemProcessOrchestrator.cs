@@ -2,7 +2,7 @@ using FlowForge.Simulation.Events.SimulationEvents;
 using FlowForge.Simulation.Runtime.Entities;
 using FlowForge.Simulation.Tracking.ValueObjects;
 
-namespace FlowForge.Simulation.Orchestration.Contracts;
+namespace FlowForge.Simulation.Application.Contracts;
 
 public interface IWorkItemProcessOrchestrator
 {
