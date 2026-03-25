@@ -3,7 +3,7 @@ using FlowForge.Simulation.Runtime.Entities;
 
 namespace FlowForge.Simulation.Events.Contracts;
 
-public interface IEventDispatcher
+public interface ISimulationEventDispatcher
 {
   public Task DispatchAsync(
     SimulationEvent simulationEvent,

@@ -2,11 +2,12 @@ using FlowForge.Simulation.Events.SimulationEvents;
 using FlowForge.Simulation.Events.ValueObjects;
 using FlowForge.Simulation.Orchestration.Contracts;
 using FlowForge.Simulation.Runtime.Entities;
+using FlowForge.Simulation.Scheduling.Contracts;
 using FlowForge.Simulation.Tracking.ValueObjects;
 
 namespace FlowForge.Simulation.Application.Services;
 
-public sealed class WorkItemProcessOrchestrator : IWorkItemProcessOrchestrator
+public sealed class WorkItemProcessOrchestrator(ISimulationEventScheduler EventScheduler) : IWorkItemProcessOrchestrator
 {
   public void CompleteProcessing(
     TrackingSubjectId trackingSubject,
@@ -44,7 +45,7 @@ public sealed class WorkItemProcessOrchestrator : IWorkItemProcessOrchestrator
 
     //Determine next stage
     var nextStage = workItemResult.Value.CurrentStage;
-    context.Service.Scheduler.Schedule(
+    EventScheduler.Schedule(
       new WorkItemQueueEvent(
           SimulationEventId.NewId(),
           simulationEvent.SimulationRunId,

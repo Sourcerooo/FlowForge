@@ -4,13 +4,11 @@ namespace FlowForge.Simulation.Runtime.Entities;
 
 public sealed class SimulationExecutionContext(
   SimulationRunId simulationRundId,
-  SimulationExecutionContextData data,
-  SimulationExecutionContextService service
+  SimulationExecutionContextData data
   )
 {
   public SimulationRunId SimulationRunId { get; init; } = simulationRundId;
   public SimulationExecutionContextData Data { get; init; } = data;
-  public SimulationExecutionContextService Service { get; init; } = service;
 
   public SimulationExecutionHandlerContext CreateHandlerContext() => new()
   {
@@ -18,12 +16,9 @@ public sealed class SimulationExecutionContext(
     ProcessConfiguration = Data.ProcessConfiguration,
     Metadata = Data.Metadata,
     State = Data.State,
-    Scheduler = Service.Scheduler,
     TrackingSubjectStore = Data.TrackingSubjectStore,
     WorkItemTrackingStore = Data.WorkItemTrackingStore,
-    StationTrackingStore = Data.StationTrackingStore,
-    KpiCollector = Service.KpiCollector,
-    SnapshotBuilder = Service.SnapshotBuilder,
+    StageTrackingStore = Data.StageTrackingStore,
     SnapshotStore = Data.SnapshotStore,
     SnapshotTimelineStore = Data.SnapshotTimelineStore
   };

@@ -9,7 +9,7 @@ public interface ISimulationState
 public record class SimulationState : ISimulationState
 {
   private TimeSpan _currentTimeElapsed;
-  private long _sequenceNumber = 0;
+  private long _sequenceNumber;
   public void AdvanceTo(TimeSpan toTime)
   {
     _currentTimeElapsed = toTime;

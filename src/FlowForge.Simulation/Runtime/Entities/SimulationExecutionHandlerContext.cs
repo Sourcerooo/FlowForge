@@ -13,10 +13,10 @@ public sealed class SimulationExecutionHandlerContext
   public ProcessConfiguration ProcessConfiguration { get; init; } = default!;
   public SimulationMetadata Metadata { get; init; } = default!;
   public SimulationState State { get; init; } = default!;
-  public ISimulationScheduler Scheduler { get; init; } = default!;
+  public ISimulationEventScheduler Scheduler { get; init; } = default!;
   public ITrackingSubjectStore TrackingSubjectStore { get; init; } = default!;
   public IWorkItemTrackingStore WorkItemTrackingStore { get; init; } = default!;
-  public IStageTrackingStore StationTrackingStore { get; init; } = default!;
+  public IStageTrackingStore StageTrackingStore { get; init; } = default!;
   public IKpiCollector KpiCollector { get; init; } = default!;
   public ISnapshotBuilder SnapshotBuilder { get; init; } = default!;
   public ISnapshotStore SnapshotStore { get; init; } = default!;

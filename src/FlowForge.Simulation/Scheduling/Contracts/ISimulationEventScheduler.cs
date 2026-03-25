@@ -1,9 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+using FlowForge.Simulation.Events.SimulationEvents;
 
 namespace FlowForge.Simulation.Scheduling.Contracts;
 
-internal interface ISimulationEventScheduler
+public interface ISimulationEventScheduler
 {
+  public void Schedule(SimulationEvent simulationEvent);
 }

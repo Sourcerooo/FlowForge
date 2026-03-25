@@ -1,3 +1,7 @@
+using FlowForge.Simulation.Events.SimulationEvents;
+using FlowForge.Simulation.Runtime.Entities;
+using FlowForge.Simulation.Tracking.ValueObjects;
+
 namespace FlowForge.Simulation.Orchestration.Contracts;
 
 public interface IWorkItemProcessOrchestrator
@@ -6,7 +10,9 @@ public interface IWorkItemProcessOrchestrator
   public void QueueForStage();
   public void StartProcessing();
   public void PutOnHold();
-  public void CompleteProcessing();
+  public void CompleteProcessing(TrackingSubjectId trackingSubject,
+    SimulationEvent simulationEvent,
+    SimulationExecutionContext context);
   public void CompleteWorkItem();
 
 }

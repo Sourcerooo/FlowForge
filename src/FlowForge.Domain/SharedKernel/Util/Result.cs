@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace FlowForge.Domain.SharedKernel.Util;
 
 public readonly record struct Result
@@ -6,13 +8,19 @@ public readonly record struct Result
   public bool IsFailure => !IsSuccess;
   public Exception? Exception { get; }
 
-  private Result(bool isSuccess, Exception exception)
+  private Result(bool isSuccess, Exception? exception)
     => (IsSuccess, Exception) = (isSuccess, exception);
 
   public static Result Success() => new(true, default);
   public static Result Failure(Exception exception) => new(false, exception);
 }
 
+
+[SuppressMessage(
+  "Design",
+  "CA1000:Do not declare static members on generic types",
+  Justification = "Result<T> intentionally exposes static factory methods for a fluent and expressive result API."
+)]
 public readonly record struct Result<T>
 {
   public bool IsSuccess { get; }
