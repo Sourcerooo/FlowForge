@@ -34,11 +34,11 @@ Dieses Dokument enthaelt bewusst keine unmittelbaren Umsetzungstickets, sondern 
 
 ## Zukuenftige Architekturentscheidungen
 
-### Persistenzrichtung nach dem JSON-MVP
+### Persistenzrichtung nach dem In-Memory-MVP
 
-- Zielbild: entscheiden, ob nach dem MVP eine relationale oder andere persistente Speicherung fuer Szenarien, Runs oder Auswertungen sinnvoll ist.
-- Nutzen: vorbereitetes Wachstum ueber lokale JSON-Dateien hinaus.
-- Ausloeser fuer Entscheidung: wenn Szenarioverwaltung, Mehrbenutzerfaehigkeit oder laengere Run-Historien relevant werden.
+- Zielbild: nach dem stabilen In-Memory-Runtime-Slice entscheiden, welches persistente Format fuer Szenarien, Runs oder Auswertungen sinnvoll ist.
+- Nutzen: das Runtime-Modell kann erst ohne Persistenzdruck stabilisiert werden, bevor ein dauerhaftes Speicherformat festgezogen wird.
+- Ausloeser fuer Entscheidung: wenn Szenarioverwaltung, wiederholbare Startkonfigurationen oder laengere Run-Historien wirklich gebraucht werden.
 - Relevante Dokumente: `docs/architecture/components/infrastructure.md`, `docs/architecture/design/checkpoints.md`
 
 ### Snapshot-Publikationsstrategie verfeinern

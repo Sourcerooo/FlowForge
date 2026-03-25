@@ -1,6 +1,6 @@
 # Checkpoint Design
 
-This document is normative for checkpoint-oriented save and load flows.
+This document is normative for checkpoint-oriented save and load flows once checkpoint persistence is introduced.
 
 ## Boundary Rule
 

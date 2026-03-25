@@ -4,8 +4,9 @@ Arbeitsdokument fuer konkrete naechste Aufgaben.
 Dieses Dokument enthaelt nur Aufgaben, die direkt umgesetzt, vorbereitet oder abgeschlossen werden koennen.
 
 Langfristige Vorhaben, spaetere Entscheidungen und groessere Zielbilder liegen in `docs/Vision.md`.
+Abgeschlossene Aufgaben werden aus dieser Datei nach `docs/DoneTasks.md` verschoben.
 
-**Legende Status:** `Offen` · `In Arbeit` · `Blockiert`
+**Legende Status:** `Offen` · `In Arbeit` · `Blockiert` · `Erledigt`
 
 ## Priorisierung
 
@@ -18,13 +19,9 @@ Langfristige Vorhaben, spaetere Entscheidungen und groessere Zielbilder liegen i
 | ID | Status | Aufgabe | Konkreter naechster Schritt | Referenz |
 |---|---|---|---|---|
 | T001 | Offen | Domain-`ProcessConfiguration` im Domain-Layer anlegen | `ProcessConfiguration`, `ArrivalProfileDefinition`, `StageDefinition` und `StationDefinition` in `FlowForge.Domain` einfuehren und Grundinvarianten mit modellieren | `docs/architecture/design/scenario-configuration.md` |
-| T002 | Offen | JSON-Szenarioformat als Persistence-Modell umsetzen | JSON-Modelle und Validierung fuer `scenarioKey`, `arrivalProfile`, `stages` und `stations` in `FlowForge.Infrastructure` anlegen | `docs/architecture/design/scenario-configuration.md` |
 | T003 | Offen | Szenario-Import in Domain-Mapping ueberfuehren | Externe Stage-/Station-Keys in GUID-basierte Domain-Konfiguration normalisieren und Mapping-Regeln kapseln | `docs/architecture/design/scenario-configuration.md` |
-| T004 | Offen | `SimulationExecutionContext` und `SimulationExecutionHandlerContext` anlegen | Run-scoped Context-Typen und `ISimulationRunFactory` gemaess Design in `FlowForge.Simulation` einfuehren | `docs/architecture/design/simulation-execution-context.md` |
-| T005 | Offen | Queue- und Scheduler-Schnittstellen anlegen | `ISimulationEventQueue`, `ISimulationScheduler` und eine erste run-scoped Queue-Implementierung mit zentraler Sortierung einfuehren | `docs/architecture/design/simulation-runner.md`, `docs/architecture/design/simulation-events.md` |
-| T006 | Offen | Basis fuer Simulationsevents definieren | `SimulationEvent`, `EventKind`, `EventSortRank` und erste konkrete Eventtypen fuer Generate, Queue, Start, Complete und Snapshot anlegen | `docs/architecture/design/simulation-events.md` |
-| T007 | Offen | Dispatcher- und Registry-Basis anlegen | `EventRoutingKey`, `IEventDispatcher`, `IEventHandlerRegistry` und die erste Lookup-Logik implementieren | `docs/architecture/design/simulation-dispatching.md` |
-| T008 | Offen | `SimulationRunner` implementieren | Dequeue-Loop, Zeitfortschritt und Dispatch-Aufruf mit CancellationToken in `FlowForge.Simulation` umsetzen | `docs/architecture/design/simulation-runner.md` |
+| T004 | In Arbeit | `SimulationExecutionContext` und `SimulationExecutionHandlerContext` anpassen | Laufende Context-Refaktorierung abschliessen: Service-Sammlung aus `SimulationExecutionContext` entfernen, run-scoped Daten zusammenfuehren und DI-Uebergabe in Runner, Dispatcher und Handlern sauber abschliessen | `docs/architecture/design/simulation-execution-context.md`, `docs/architecture/design/simulation-runner.md` |
+| T013 | Offen | Registrierung von Handler-Instanzen umsetzen | Immutable Registry aus DI-registrierten `ISimulationEventHandler`-Instanzen aufbauen und den Dispatcher ueber `EventRoutingKey` daran anbinden | `docs/architecture/design/simulation-dispatching.md`, `docs/architecture/design/simulation-execution-context.md` |
 | T009 | Offen | `WorkItemTracking` auf Segmentmodell umstellen | Segmentbasierte Tracking-Struktur mit `TrackingSegmentType` und `CurrentProcessingToken` als Runtime-Modell einfuehren oder vorhandene Struktur angleichen | `docs/architecture/design/scenario-configuration.md` |
 | T010 | Offen | `StationTracking` und `StageTracking` einfuehren | Konkrete Tracking-Typen fuer Stations- und Stage-Aggregation mit kumulativen Kennzahlen anlegen | `docs/architecture/design/scenario-configuration.md` |
 | T011 | Offen | `IWorkItemProcessOrchestrator` und Commands anlegen | Orchestrator-Interface sowie Queue-, Start- und Complete-Commands in `FlowForge.Simulation` definieren | `docs/architecture/design/simulation-orchestration.md` |
@@ -34,6 +31,7 @@ Langfristige Vorhaben, spaetere Entscheidungen und groessere Zielbilder liegen i
 
 | ID | Status | Aufgabe | Konkreter naechster Schritt | Referenz |
 |---|---|---|---|---|
+| T002 | Offen | JSON-Szenarioformat als Persistence-Modell umsetzen | Wieder aufnehmen, sobald der In-Memory-Runtime-Slice stabil ist; dann JSON-Modelle und Validierung fuer `scenarioKey`, `arrivalProfile`, `stages` und `stations` in `FlowForge.Infrastructure` anlegen | `docs/architecture/design/scenario-configuration.md`, `docs/Vision.md` |
 | T020 | Offen | Snapshot-Root-DTOs anlegen | `SimulationSnapshot`, `ProcessSnapshot`, `StationSnapshot`, `WorkItemSnapshot`, `KpiSnapshot` und `SnapshotMetadata` als erste Contracts definieren | `docs/architecture/design/snapshots-and-kpis.md` |
 | T021 | Offen | Latest-Snapshot-Store und Timeline-Store einfuehren | Atomaren Latest-Snapshot-Swap und einfache In-Memory-Timeline fuer einen Run implementieren | `docs/architecture/design/snapshots-and-kpis.md` |
 | T022 | Offen | `KpiCollectorState` als kompakte Aggregatbasis einfuehren | Kernfelder fuer Created, Completed, Lead Time, WIP und Trend-Buffer als Runtime-Komponente definieren | `docs/architecture/design/snapshots-and-kpis.md` |

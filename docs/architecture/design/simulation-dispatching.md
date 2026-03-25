@@ -25,6 +25,7 @@ Recommended dispatcher behavior:
 - inspect stage or process metadata
 - resolve the matching handler from an immutable registry
 - fail fast for missing required handlers
+- receive the registry itself through dependency injection instead of pulling it from `SimulationExecutionContext`
 
 ## Dispatcher Contract Direction
 
@@ -44,7 +45,8 @@ public interface IEventHandlerRegistry
 
 ## Registration Flow
 
-- handler registrations are assembled when the run is created
+- handler instances are registered through dependency injection
+- the registry is built from the registered handler instances when the runtime composition is created
 - the registry is immutable for the full lifetime of the run
 - the dispatcher performs lookup and invocation only
 - missing required handlers fail fast because silent dropping would corrupt the run

@@ -47,7 +47,7 @@ The architecture documentation is split by responsibility and level of detail.
 - Architecture style: Clean Architecture with explicit inward dependency direction
 - Core execution model: event-driven simulation runtime with immutable read snapshots
 - Delivery hosts: API, CLI, and planned desktop application
-- Persistence direction: JSON-first scenario and checkpoint persistence for MVP
+- Persistence direction: in-memory-first runtime for the early MVP, with scenario and checkpoint persistence added after the core runtime stabilizes
 - Testing direction: unit tests close to the owning layer, with integration tests added where boundaries are crossed
 
 ## High-Level Architecture
@@ -111,7 +111,7 @@ Desktop Client   API Host   CLI Host
 - `Domain` owns business concepts and process configuration, not transport or persistence concerns.
 - `Simulation` owns mutable runtime state and the main event loop.
 - `Application` orchestrates use cases and shared contracts; it does not own runtime mutation logic.
-- `Infrastructure` implements technical adapters, persistence, serialization, and operational services.
+- `Infrastructure` implements technical adapters, later persistence and serialization concerns, and operational services.
 - Delivery hosts stay thin and delegate behavior inward.
 - UI and API consumers must read immutable snapshots and must never bind directly to mutable simulation internals.
 - The MVP remains concrete and fulfillment-oriented instead of becoming a generic simulation platform too early.
@@ -121,7 +121,7 @@ Desktop Client   API Host   CLI Host
 - `FlowForge.Domain`: process configuration, domain concepts, value objects, and invariants
 - `FlowForge.Simulation`: event queue, runner, dispatcher, runtime state, tracking, KPIs, snapshot publication
 - `FlowForge.Application`: start/query/save/load use cases, result models, validation, and ports
-- `FlowForge.Infrastructure`: scenario loading, checkpoint storage, export, mapping, diagnostics support
+- `FlowForge.Infrastructure`: scenario loading and checkpoint storage when introduced, export, mapping, diagnostics support
 - `FlowForge.Api`: thin HTTP host for control and query access
 - `FlowForge.CLI`: thin command-line host for debug, admin, and operational workflows
 - `FlowForge.Desktop`: planned primary MVP visualization host

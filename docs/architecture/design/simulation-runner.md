@@ -9,7 +9,7 @@ StartSimulation use case
   -> load ProcessConfiguration
   -> call ISimulationRunFactory.Create(processConfiguration, options)
   -> factory builds SimulationExecutionContext
-  -> factory enqueues first GenerateSimulationEvent through ISimulationScheduler
+  -> bootstrapper or run factory enqueues first GenerateSimulationEvent through ISimulationScheduler
   -> application calls ISimulationRunner.RunAsync(executionContext, cancellationToken)
 ```
 
@@ -18,6 +18,7 @@ Recommended rule:
 - `RunAsync` receives a fully initialized context
 - construction and bootstrap stay separate from execution
 - the queue is run-scoped and owned operationally by `SimulationRunner`
+- scheduler and dispatcher dependencies are injected into the classes that use them instead of being carried in the context as a service bag
 
 ## Queue Ownership
 
@@ -32,7 +33,7 @@ Recommended component split:
 
 | Component | Owns | May do | Must not do |
 |---|---|---|---|
-| `SimulationRunner` | main execution loop, dequeue step, simulation-time advancement, run lifecycle | dequeue due events, call dispatcher, stop when queue is empty or cancelled | expose the mutable queue to delivery or application layers |
+| `SimulationRunner` | main execution loop, dequeue step, simulation-time advancement, run lifecycle | dequeue due events from `SimulationExecutionContext.EventQueue`, call dispatcher, stop when queue is empty or cancelled | expose the mutable queue to delivery or application layers |
 | `ISimulationScheduler` | controlled queue write access | assign `SequenceNumber`, apply `SortRank`, enqueue follow-up events | dequeue events or mutate runtime state directly |
 | `IEventDispatcher` | routing one dequeued event to the correct handler pipeline | resolve handler from registry and invoke it | own the main loop or queue ordering |
 | `ISimulationEventHandler<TEvent>` | mutation logic for one routed event kind or context | update state and tracking, schedule follow-up events through the scheduler | read or write the raw queue directly |
@@ -81,7 +82,7 @@ public sealed class SimulationRunner : ISimulationRunner
             cancellationToken.ThrowIfCancellationRequested();
 
             context.State.AdvanceTo(nextEvent.ScheduledTime);
-            await context.Dispatcher.DispatchAsync(
+            await _dispatcher.DispatchAsync(
                 nextEvent,
                 context.CreateHandlerContext(),
                 cancellationToken);
@@ -97,6 +98,7 @@ Recommended rule:
 - the main dequeue-and-dispatch loop lives in `FlowForge.Simulation`
 - the application layer starts or stops the runner through a use case, but does not host the loop itself
 - API, CLI, and desktop trigger lifecycle use cases and consume snapshots or results
+- injected runtime collaborators such as dispatcher remain outside the execution context and are owned by their runtime services
 
 ## Runner Lifecycle Semantics
 

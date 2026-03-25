@@ -48,9 +48,10 @@ public sealed record StationDefinition(
 - internal runtime identities are GUID-based and generated during import
 - external authored keys remain for traceability and diagnostics
 
-## Scenario JSON Shape
+## Scenario Authoring Direction
 
-For MVP, the preferred authored format is hierarchical JSON.
+The current runtime slice stays in-memory first.
+When external scenario persistence is introduced, the preferred authored format is hierarchical JSON.
 
 Recommended example:
 

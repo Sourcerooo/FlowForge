@@ -62,6 +62,7 @@ docs/
       2026-03-17-simulation-and-snapshots.md
       2026-03-19-runtime-model-and-configuration.md
       2026-03-20-process-orchestration.md
+      2026-03-25-in-memory-runtime-and-context-di.md
 ```
 
 ## Document Rules
