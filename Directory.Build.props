@@ -10,6 +10,11 @@
     <NoWarn>$(NoWarn);CA1711;CA1805;CA1303;CA1515;CA1591;IDE0028</NoWarn>
   </PropertyGroup>
 
+  <ItemGroup>
+    <CompilerVisibleProperty Include="RootNamespace" />
+    <CompilerVisibleProperty Include="ProjectDir" />
+  </ItemGroup>
+
   <PropertyGroup Condition="$([System.String]::Copy('$(MSBuildProjectName)').EndsWith('.Tests'))">
     <IsPackable>false</IsPackable>
   </PropertyGroup>
