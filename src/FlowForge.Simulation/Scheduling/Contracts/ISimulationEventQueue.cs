@@ -4,5 +4,8 @@ namespace FlowForge.Simulation.Scheduling.Contracts;
 
 public interface ISimulationEventQueue
 {
-  public bool TryDequeue(out SimulationEvent nextEvent);
+  public bool TryDequeue(out SimulationEvent? nextEvent);
+  public SimulationEvent? Peek();
+
+  public void Queue(SimulationEvent nextEvent);
 }

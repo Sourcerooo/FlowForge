@@ -109,7 +109,6 @@ csharp_style_throw_expression = true:error
 csharp_style_var_when_type_is_apparent = true:suggestion
 
 dotnet_diagnostic.IDE0011.severity = error
-dotnet_diagnostic.IDE0028.severity = none
 dotnet_diagnostic.IDE0032.severity = error
 dotnet_diagnostic.IDE0040.severity = error
 dotnet_diagnostic.IDE0044.severity = error
@@ -121,9 +120,6 @@ dotnet_diagnostic.IDE0130.severity = error
 dotnet_diagnostic.IDE0210.severity = error
 dotnet_diagnostic.IDE0290.severity = error
 dotnet_diagnostic.IDE0300.severity = error
-dotnet_diagnostic.CA1303.severity = none
-dotnet_diagnostic.CA1515.severity = none
-dotnet_diagnostic.CS1591.severity = none
 
 dotnet_naming_rule.interfaces_must_start_with_i.severity = error
 dotnet_naming_rule.interfaces_must_start_with_i.symbols = interfaces

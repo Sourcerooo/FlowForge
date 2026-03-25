@@ -1,4 +1,4 @@
-namespace FlowForge.Domain.Orders.Enum;
+namespace FlowForge.Domain.Orders.Enums;
 
 public enum OrderStatus
 {

@@ -1,4 +1,4 @@
-namespace FlowForge.Simulation.Runtime.Entities;
+namespace FlowForge.Domain.Scenarios.Entities;
 
 public sealed record ArrivalProfileDefinition(
   TimeSpan GenerationWindow,

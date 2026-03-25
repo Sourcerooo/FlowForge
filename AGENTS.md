@@ -81,9 +81,23 @@ Preferences and working rules for AI coding agents operating in this repository.
 ## Documentation Expectations
 
 - Update `README.md` when setup, execution, or repository structure changes.
-- Update `docs/Architecture.md` when layer responsibilities or boundaries change.
+- Keep architecture documentation split by level:
+  - `docs/Architecture.md` for tech stack, high-level architecture, components, dependencies, and core rules only
+  - `docs/architecture/components/*.md` for component responsibilities and boundaries
+  - `docs/architecture/design/*.md` for interfaces, technical contracts, state ownership, and data flows
+  - `docs/architecture/examples/*.md` for non-normative examples and reference implementations
+  - `docs/architecture/decisions/*.md` for accepted architecture decisions
+  - `docs/architecture/glossary.md` for canonical terminology
+- Update `docs/Architecture.md` when layer responsibilities, component boundaries, dependency direction, or the high-level tech stack changes.
+- Update the matching file in `docs/architecture/components/` when a component gains or changes responsibilities.
+- Update the matching file in `docs/architecture/design/` when interfaces, DTOs, runtime flows, checkpoint models, or implementation-facing design decisions change.
+- Update `docs/architecture/examples/` only for illustrative material; do not store binding rules there.
+- Add new accepted architecture decisions to `docs/architecture/decisions/` instead of extending one large decision log.
 - Update `docs/Roadmap.md` for milestone-level planning changes.
-- Update `docs/Todo.md` for concrete next tasks and operational follow-up.
+- Update `docs/Todo.md` for concrete next tasks and operational follow-up only.
+- Use `docs/DoneTasks.md` for tasks that are already completed.
+- When a task is completed, remove it from `docs/Todo.md` and move it to `docs/DoneTasks.md` in the same work session.
+- Update `docs/Vision.md` for longer-term work, future decisions, and non-immediate follow-up topics.
 - Whenever an architecture decision is made, a new todo appears, or new features are identified, update the relevant documentation immediately in the same work session.
 - Prefer documenting important decisions rather than relying on implicit repository knowledge.
 

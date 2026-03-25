@@ -1,4 +1,7 @@
-namespace FlowForge.Simulation.Runtime.Entities;
+using FlowForge.Domain.ProcessModel.ValueObjects;
+using FlowForge.Domain.Scenarios.Entities;
+
+namespace FlowForge.Domain.ProcessModel.Entities;
 
 public sealed record ProcessConfiguration(
   ProcessConfigurationId ProcessConfigurationId,
