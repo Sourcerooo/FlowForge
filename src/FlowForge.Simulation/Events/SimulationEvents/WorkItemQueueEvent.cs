@@ -1,5 +1,5 @@
 using FlowForge.Domain.Orders.ValueObjects;
-using FlowForge.Domain.ProcessModel.ValueObjects;
+using FlowForge.Domain.Process.ValueObjects;
 using FlowForge.Simulation.Events.Enums;
 using FlowForge.Simulation.Events.ValueObjects;
 using FlowForge.Simulation.Runtime.ValueObjects;

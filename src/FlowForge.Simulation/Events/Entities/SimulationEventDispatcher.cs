@@ -1,6 +1,7 @@
 using FlowForge.Simulation.Events.Contracts;
 using FlowForge.Simulation.Events.Enums;
 using FlowForge.Simulation.Events.SimulationEvents;
+using FlowForge.Simulation.Events.ValueObjects;
 using FlowForge.Simulation.Runtime.Entities;
 
 namespace FlowForge.Simulation.Events.Entities;

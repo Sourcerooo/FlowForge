@@ -1,6 +1,6 @@
-using FlowForge.Domain.ProcessModel.ValueObjects;
+using FlowForge.Domain.Process.ValueObjects;
 
-namespace FlowForge.Domain.ProcessModel.Entities;
+namespace FlowForge.Domain.Process.Entities;
 
 public sealed record StageDefinition(
   StageId StageId,

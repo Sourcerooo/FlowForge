@@ -1,5 +1,4 @@
-using System.Collections.Concurrent;
-using FlowForge.Domain.ProcessModel.ValueObjects;
+using FlowForge.Domain.Process.ValueObjects;
 using FlowForge.Domain.SharedKernel.Util;
 using FlowForge.Simulation.Tracking.Contracts;
 using FlowForge.Simulation.Tracking.Entities.WorkItems;
@@ -10,8 +9,8 @@ namespace FlowForge.Simulation.Tracking.Services;
 
 public sealed class WorkItemTrackingStore : IWorkItemTrackingStore
 {
-  private readonly ConcurrentDictionary<TrackingSubjectId, WorkItemTracking> _workItemTrackings
-    = new ConcurrentDictionary<TrackingSubjectId, WorkItemTracking>();
+  private readonly Dictionary<TrackingSubjectId, WorkItemTracking> _workItemTrackings
+    = new Dictionary<TrackingSubjectId, WorkItemTracking>();
 
   public Result<WorkItemTracking> GetWorkItemTracking(TrackingSubjectId trackingSubjectId)
   {

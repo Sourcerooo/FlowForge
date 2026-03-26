@@ -8,7 +8,7 @@ internal sealed class SimulationEventPriorityQueue : ISimulationEventQueue
   private readonly PriorityQueue<SimulationEvent, SimulationEventPriorityQueueKey> _priorityQueue = new PriorityQueue<SimulationEvent, SimulationEventPriorityQueueKey>();
   public SimulationEvent? Peek()
   {
-    return _priorityQueue.Peek();
+    return _priorityQueue.TryPeek(out SimulationEvent? simEvent, out SimulationEventPriorityQueueKey _) ? simEvent : null;
   }
   public void Queue(SimulationEvent nextEvent)
   {

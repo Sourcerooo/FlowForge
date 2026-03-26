@@ -1,4 +1,4 @@
-using FlowForge.Domain.ProcessModel.ValueObjects;
+using FlowForge.Domain.Process.ValueObjects;
 using FlowForge.Simulation.Tracking.Enums;
 using FlowForge.Simulation.Tracking.ValueObjects;
 
