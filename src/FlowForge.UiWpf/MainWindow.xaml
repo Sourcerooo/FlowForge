@@ -12,7 +12,11 @@
         MinWidth="1280"
         MinHeight="820"
         WindowStartupLocation="CenterScreen"
-        Background="{DynamicResource AppShellBrush}">
+        Background="{DynamicResource AppShellBrush}"
+        UseLayoutRounding="True"
+        SnapsToDevicePixels="True"
+        TextOptions.TextFormattingMode="Display"
+        TextOptions.TextRenderingMode="ClearType">
     <Window.Triggers>
         <EventTrigger RoutedEvent="Window.Loaded">
             <BeginStoryboard>
@@ -129,7 +133,7 @@
                         <TextBlock Style="{StaticResource SidebarHeaderStyle}" Text="Workspace" />
                         <Border Grid.Row="1" Margin="{StaticResource SidebarPanelMargin}" Style="{StaticResource CompactPanelStyle}">
                             <StackPanel>
-                                <TextBlock FontFamily="Bahnschrift" FontSize="15" FontWeight="SemiBold" Foreground="White" Text="{Binding CurrentWorkspaceTitle}" />
+                                <TextBlock FontFamily="Bahnschrift" FontSize="15" FontWeight="SemiBold" Foreground="{DynamicResource NavForegroundBrush}" Text="{Binding CurrentWorkspaceTitle}" />
                                 <TextBlock Margin="{StaticResource WorkspaceDescriptionMargin}" TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource CompactPanelForegroundBrush}" Text="{Binding CurrentWorkspaceDescription}" />
                             </StackPanel>
                         </Border>
@@ -156,14 +160,14 @@
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
                                     <TextBlock FontFamily="Segoe Fluent Icons" Foreground="{DynamicResource PrimaryAccentBrush}" Text="&#xE81E;" />
-                                    <TextBlock Grid.Column="1" Margin="10,0,0,0" Foreground="White" Text="Scenario A" />
-                                    <TextBlock Grid.Column="2" FontFamily="Segoe Fluent Icons" Foreground="White" Text="&#xE70D;" />
+                                    <TextBlock Grid.Column="1" Margin="10,0,0,0" Foreground="{DynamicResource NavForegroundBrush}" Text="Scenario A" />
+                                    <TextBlock Grid.Column="2" FontFamily="Segoe Fluent Icons" Foreground="{DynamicResource NavForegroundBrush}" Text="&#xE70D;" />
                                 </Grid>
                             </Border>
                             <Border Style="{StaticResource CompactPanelStyle}">
                                 <StackPanel>
                                     <TextBlock Foreground="{DynamicResource CompactPanelForegroundBrush}" Text="Mock state" />
-                                    <TextBlock Margin="{StaticResource WorkspaceDescriptionMargin}" FontFamily="Bahnschrift" FontWeight="SemiBold" Foreground="White" Text="{Binding SimulationModeLabel}" />
+                                    <TextBlock Margin="{StaticResource WorkspaceDescriptionMargin}" FontFamily="Bahnschrift" FontWeight="SemiBold" Foreground="{DynamicResource NavForegroundBrush}" Text="{Binding SimulationModeLabel}" />
                                     <TextBlock Margin="0,4,0,0" TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource CompactPanelForegroundBrush}" Text="{Binding SimulationModeDetail}" />
                                 </StackPanel>
                             </Border>
@@ -171,7 +175,16 @@
                     </Grid>
                 </Border>
 
-                <ContentControl Grid.Column="2" Content="{Binding CurrentScreen}" />
+                <Border Grid.Column="2"
+                        x:Name="ScreenContentHost"
+                        Background="Transparent"
+                        Opacity="1"
+                        RenderTransformOrigin="0.5,0.5">
+                    <Border.RenderTransform>
+                        <TranslateTransform Y="0" />
+                    </Border.RenderTransform>
+                    <ContentControl Content="{Binding CurrentScreen}" />
+                </Border>
             </Grid>
         </Grid>
     </Border>

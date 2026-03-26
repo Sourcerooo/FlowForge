@@ -5,6 +5,14 @@
         <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}" />
         <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
         <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Effect">
+            <Setter.Value>
+                <DropShadowEffect BlurRadius="18"
+                                  ShadowDepth="0"
+                                  Opacity="0.18"
+                                  Color="{Binding Source={StaticResource CardShadowColorBrush}, Path=Color}" />
+            </Setter.Value>
+        </Setter>
     </Style>
 
     <Style x:Key="SidebarStyle" TargetType="Border" BasedOn="{StaticResource SectionCardStyle}">
@@ -18,11 +26,19 @@
         <Setter Property="BorderBrush" Value="{DynamicResource CompactPanelBorderBrush}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="Background" Value="{DynamicResource CompactPanelBackgroundBrush}" />
+        <Setter Property="Effect">
+            <Setter.Value>
+                <DropShadowEffect BlurRadius="10"
+                                  ShadowDepth="0"
+                                  Opacity="0.10"
+                                  Color="{Binding Source={StaticResource CardShadowColorBrush}, Path=Color}" />
+            </Setter.Value>
+        </Setter>
     </Style>
 
     <Style x:Key="ToolbarButtonBaseStyle" TargetType="Button">
         <Setter Property="Padding" Value="{StaticResource ToolbarButtonPadding}" />
-        <Setter Property="FontFamily" Value="Bahnschrift" />
+        <Setter Property="FontFamily" Value="Segoe UI" />
         <Setter Property="FontSize" Value="14" />
         <Setter Property="FontWeight" Value="SemiBold" />
         <Setter Property="Cursor" Value="Hand" />
@@ -97,7 +113,7 @@
         <Setter Property="BorderBrush" Value="Transparent" />
         <Setter Property="BorderThickness" Value="0" />
         <Setter Property="Foreground" Value="{DynamicResource NavForegroundBrush}" />
-        <Setter Property="FontFamily" Value="Bahnschrift" />
+        <Setter Property="FontFamily" Value="Segoe UI" />
         <Setter Property="FontSize" Value="14" />
         <Setter Property="Template">
             <Setter.Value>
@@ -158,6 +174,12 @@
                             BorderBrush="{Binding BorderBrush}"
                             BorderThickness="1.5"
                             CornerRadius="{StaticResource CardCornerRadius}">
+                        <Border.Effect>
+                            <DropShadowEffect BlurRadius="12"
+                                              ShadowDepth="0"
+                                              Opacity="0.18"
+                                              Color="{Binding Source={StaticResource CardShadowColorBrush}, Path=Color}" />
+                        </Border.Effect>
                         <ContentPresenter />
                     </Border>
                     <ControlTemplate.Triggers>
@@ -189,6 +211,12 @@
                             BorderBrush="{Binding BorderBrush}"
                             BorderThickness="1"
                             CornerRadius="{StaticResource SmallCardCornerRadius}">
+                        <Border.Effect>
+                            <DropShadowEffect BlurRadius="10"
+                                              ShadowDepth="0"
+                                              Opacity="0.14"
+                                              Color="{Binding Source={StaticResource CardShadowColorBrush}, Path=Color}" />
+                        </Border.Effect>
                         <ContentPresenter />
                     </Border>
                     <ControlTemplate.Triggers>

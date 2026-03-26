@@ -30,9 +30,25 @@
                 <TextBlock Style="{StaticResource SectionTitleStyle}" Text="Alert Detail" />
                 <TextBlock Margin="0,18,0,0" FontFamily="Bahnschrift" FontSize="22" FontWeight="SemiBold" Foreground="{DynamicResource StrongTextBrush}" Text="{Binding SelectedAlert.Title}" />
                 <TextBlock Margin="0,10,0,0" Foreground="{DynamicResource MutedTextBrush}" TextWrapping="Wrap" Text="{Binding SelectedAlert.Description}" />
+                <Border Margin="0,14,0,0" Padding="12" CornerRadius="12" Background="{DynamicResource PanelSurfaceBrush}" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="1">
+                    <StackPanel>
+                        <TextBlock Foreground="{DynamicResource MutedTextBrush}" Text="Impacted Stage" />
+                        <TextBlock Margin="0,4,0,0" FontWeight="SemiBold" Foreground="{DynamicResource StrongTextBrush}" Text="{Binding SelectedAlert.TargetStageName}" />
+                    </StackPanel>
+                </Border>
                 <Border Margin="0,18,0,0" Padding="16" CornerRadius="12" Background="{Binding SelectedAlert.Background}" BorderBrush="{Binding SelectedAlert.BorderBrush}" BorderThickness="1">
                     <TextBlock Foreground="{DynamicResource StrongTextBrush}" Text="Operators should inspect the selected stage detail and compare mitigation options before resuming playback." TextWrapping="Wrap" />
                 </Border>
+                <Button Margin="0,18,0,0"
+                        Style="{StaticResource ToolbarButtonPrimaryStyle}"
+                        HorizontalAlignment="Left"
+                        Command="{Binding DataContext.FocusStageInOverviewCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                        CommandParameter="{Binding SelectedAlert.TargetStageName}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Margin="0,0,8,0" FontFamily="Segoe Fluent Icons" Text="&#xE71B;" />
+                        <TextBlock Text="Focus Stage In Flow" />
+                    </StackPanel>
+                </Button>
             </StackPanel>
         </Border>
     </Grid>

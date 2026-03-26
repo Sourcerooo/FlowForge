@@ -43,6 +43,7 @@ public sealed class MainWindowViewModel : ObservableObject
         OpenRecommendationsCommand = new DelegateCommand(_ => ShowRecommendationsScreen());
         OpenAlertsCommand = new DelegateCommand(_ => ShowAlertsScreen());
         ReturnToOverviewCommand = new DelegateCommand(_ => SelectNavigation(NavigationItems[0]));
+        FocusStageInOverviewCommand = new DelegateCommand(parameter => FocusStageInOverview(parameter as string));
 
         CurrentWorkspaceTitle = NavigationItems[0].Label;
         CurrentWorkspaceDescription = NavigationItems[0].Description;
@@ -69,6 +70,8 @@ public sealed class MainWindowViewModel : ObservableObject
     public ICommand OpenAlertsCommand { get; }
 
     public ICommand ReturnToOverviewCommand { get; }
+
+    public ICommand FocusStageInOverviewCommand { get; }
 
     public object CurrentScreen
     {
@@ -200,6 +203,18 @@ public sealed class MainWindowViewModel : ObservableObject
         _settingsScreen = SettingsScreenViewModel.CreateSample();
         _recommendationsScreen = RecommendationsScreenViewModel.CreateSample(_overviewScreen.Recommendations);
     }
+
+    private void FocusStageInOverview(string? stageName)
+    {
+        if (string.IsNullOrWhiteSpace(stageName))
+        {
+            return;
+        }
+
+        SelectNavigation(NavigationItems[0]);
+        _overviewScreen.SelectStageByName(stageName);
+        _overviewScreen.AddEvent($"Focused {stageName} from side panel", "Focus", AppTheme.InfoSurfaceBrushKey, AppTheme.PrimaryAccentBrushKey, false);
+    }
 }
 
 public sealed class OverviewScreenViewModel : ObservableObject
@@ -213,6 +228,8 @@ public sealed class OverviewScreenViewModel : ObservableObject
     public ObservableCollection<StageSummaryViewModel> Stages { get; } = new();
 
     public ObservableCollection<MetricViewModel> KpiMetrics { get; } = new();
+
+    public ObservableCollection<HeroMetricViewModel> HeroMetrics { get; } = new();
 
     public ObservableCollection<TrendSeriesViewModel> TrendSeries { get; } = new();
 
@@ -296,13 +313,53 @@ public sealed class OverviewScreenViewModel : ObservableObject
                 new WorkerViewModel("W3", "Idle", B("WorkerIdleAccentBrush"), B("WorkerIdleBackgroundBrush")),
             ]));
 
+        viewModel.Stages.Add(new StageSummaryViewModel(
+            "Stage 40",
+            "Quality",
+            "QA-A",
+            "Queue 6",
+            "1 / 3 busy",
+            "Avg 01:40",
+            "28% utilization",
+            B("StageNeutralBackgroundBrush"),
+            B("PrimaryStageBorderBrush"),
+            B("SuccessBrush"),
+            true,
+            [
+                new WorkerViewModel("W1", "Busy", B("SuccessBrush"), B("PrimaryWorkerBackgroundBrush")),
+                new WorkerViewModel("W2", "Idle", B("WorkerIdleAccentBrush"), B("WorkerIdleBackgroundBrush")),
+                new WorkerViewModel("W3", "Idle", B("WorkerIdleAccentBrush"), B("WorkerIdleBackgroundBrush")),
+            ]));
+
+        viewModel.Stages.Add(new StageSummaryViewModel(
+            "Stage 50",
+            "Dispatch",
+            "Dispatch-A",
+            "Queue 4",
+            "2 / 3 busy",
+            "Avg 01:10",
+            "52% utilization",
+            B("SourceNodeBackgroundBrush"),
+            B("SourceNodeBorderBrush"),
+            B("PanelHeaderBrush"),
+            false,
+            [
+                new WorkerViewModel("W1", "Busy", B("PanelHeaderBrush"), B("PrimaryWorkerBackgroundBrush")),
+                new WorkerViewModel("W2", "Busy", B("PanelHeaderBrush"), B("PrimaryWorkerBackgroundBrush")),
+                new WorkerViewModel("W3", "Idle", B("WorkerIdleAccentBrush"), B("WorkerIdleBackgroundBrush")),
+            ]));
+
         viewModel.SelectStage(viewModel.Stages[0]);
 
-        viewModel.KpiMetrics.Add(new MetricViewModel("Throughput", "1,284 orders/h", B("KpiThroughputBrush")));
+        viewModel.HeroMetrics.Add(new HeroMetricViewModel("Throughput", "1,284", "orders/h", "Completed work items per simulated hour", B("KpiThroughputBrush"), B("InfoSurfaceBrush")));
+        viewModel.HeroMetrics.Add(new HeroMetricViewModel("Bottleneck", "Packing", "Stage 20", "Highest weighted queue pressure and utilization", B("WarningBrush"), B("WarningSurfaceBrush")));
+        viewModel.HeroMetrics.Add(new HeroMetricViewModel("WIP", "842", "active items", "Current work in progress across the process", B("PrimaryAccentBrush"), B("TrendBlueBackgroundBrush")));
+
         viewModel.KpiMetrics.Add(new MetricViewModel("Avg Lead Time", "228 min", B("StrongTextBrush")));
+        viewModel.KpiMetrics.Add(new MetricViewModel("Avg Queue Wait", "18.4 min", B("WarningBrush")));
+        viewModel.KpiMetrics.Add(new MetricViewModel("Avg Processing Time", "03:54", B("PrimaryAccentBrush")));
         viewModel.KpiMetrics.Add(new MetricViewModel("SLA Breach Risk", "High", B("DangerBrush")));
-        viewModel.KpiMetrics.Add(new MetricViewModel("Delayed Orders", "382", B("WarningBrush")));
-        viewModel.KpiMetrics.Add(new MetricViewModel("Capacity Usage", "78%", B("SuccessBrush")));
+        viewModel.KpiMetrics.Add(new MetricViewModel("Stage Utilization", "78%", B("SuccessBrush")));
 
         viewModel.TrendSeries.Add(new TrendSeriesViewModel("Picking Queue", PickingQueueSeries, B("PrimaryAccentBrush"), B("TrendBlueBackgroundBrush")));
         viewModel.TrendSeries.Add(new TrendSeriesViewModel("Packing Queue", PackingQueueSeries, B("SuccessBrush"), B("TrendGreenBackgroundBrush")));
@@ -320,13 +377,13 @@ public sealed class OverviewScreenViewModel : ObservableObject
         viewModel.EventEntries.Add(new EventEntryViewModel("12:38", "Packing station saturates", "Flow", B("SuccessSurfaceBrush"), B("SuccessBrush")));
         viewModel.EventEntries.Add(new EventEntryViewModel("12:42", "Alert raised", "Critical", B("DangerSurfaceBrush"), B("DangerBrush")));
 
-        viewModel.Alerts.Add(new AlertItemViewModel("West capacity degraded 30%", "Capacity drift at Stage 20 blocks downstream throughput.", "\uE814", B("DangerSurfaceBrush"), B("DangerBorderBrush"), B("DangerBrush")));
-        viewModel.Alerts.Add(new AlertItemViewModel("Packing queue near SLA breach", "Queue length exceeded forecast threshold for the active scenario.", "\uE7BA", B("WarningSurfaceBrush"), B("WarningBorderBrush"), B("WarningBrush")));
-        viewModel.Alerts.Add(new AlertItemViewModel("Shipping freeze spreading upstream", "Low dispatch throughput begins to starve order completion.", "\uE814", B("DangerSurfaceBrush"), B("DangerBorderBrush"), B("DangerBrush")));
+        viewModel.Alerts.Add(new AlertItemViewModel("West capacity degraded 30%", "Capacity drift at Stage 20 blocks downstream throughput.", "Packing", "\uE814", B("DangerSurfaceBrush"), B("DangerBorderBrush"), B("DangerBrush")));
+        viewModel.Alerts.Add(new AlertItemViewModel("Packing queue near SLA breach", "Queue length exceeded forecast threshold for the active scenario.", "Packing", "\uE7BA", B("WarningSurfaceBrush"), B("WarningBorderBrush"), B("WarningBrush")));
+        viewModel.Alerts.Add(new AlertItemViewModel("Shipping freeze spreading upstream", "Low dispatch throughput begins to starve order completion.", "Shipping", "\uE814", B("DangerSurfaceBrush"), B("DangerBorderBrush"), B("DangerBrush")));
 
-        viewModel.Recommendations.Add(new RecommendationItemViewModel("Predicted bottleneck in 9 min", "Picking and packing converge on the same constrained handoff lane.", B("PanelHeaderBrush")));
-        viewModel.Recommendations.Add(new RecommendationItemViewModel("Reroute 20% to Hub B", "Shift work mix to reduce queue pressure at Pack-A.", B("SuccessBrush")));
-        viewModel.Recommendations.Add(new RecommendationItemViewModel("Add temporary packing capacity", "Bring one reserve worker online for the active window.", B("PrimaryAccentBrush")));
+        viewModel.Recommendations.Add(new RecommendationItemViewModel("Predicted bottleneck in 9 min", "Picking and packing converge on the same constrained handoff lane.", "Picking", "Throughput +4% | Queue -8%", B("PanelHeaderBrush")));
+        viewModel.Recommendations.Add(new RecommendationItemViewModel("Reroute 20% to Hub B", "Shift work mix to reduce queue pressure at Pack-A.", "Packing", "Queue -12% | SLA risk medium", B("SuccessBrush")));
+        viewModel.Recommendations.Add(new RecommendationItemViewModel("Add temporary packing capacity", "Bring one reserve worker online for the active window.", "Packing", "Capacity +18% | Delay forecast stabilizes", B("PrimaryAccentBrush")));
 
         viewModel.AddEvent("Mockup initialized", "Info", AppTheme.SuccessSurfaceBrushKey, AppTheme.SuccessBrushKey, false);
         return viewModel;
@@ -346,6 +403,9 @@ public sealed class OverviewScreenViewModel : ObservableObject
 
         SelectedStage = stage;
     }
+
+    public void SelectStageByName(string stageName)
+        => SelectStage(Stages.FirstOrDefault(stage => string.Equals(stage.StageName, stageName, StringComparison.OrdinalIgnoreCase)));
 
     public void AddEvent(string title, string badgeText, string badgeBackgroundKey, string badgeForegroundKey, bool addTimelineMarker = true)
     {
@@ -518,12 +578,13 @@ public sealed class StageSummaryViewModel(
 
 public sealed record FlowNodeViewModel(string Title, string Value, string Subtitle, Brush Background, Brush BorderBrush, Brush AccentBrush);
 public sealed record WorkerViewModel(string Label, string Status, Brush AccentBrush, Brush BackgroundBrush);
+public sealed record HeroMetricViewModel(string Label, string Value, string Unit, string Context, Brush AccentBrush, Brush SurfaceBrush);
 public sealed record MetricViewModel(string Label, string Value, Brush ValueBrush);
 public sealed record TrendSeriesViewModel(string Title, IReadOnlyList<double> Points, Brush StrokeBrush, Brush BackgroundBrush);
 public sealed record TimelineEntryViewModel(double MarkerPosition, string TimeLabel, Brush MarkerBrush);
 public sealed record EventEntryViewModel(string TimeLabel, string Title, string BadgeText, Brush BadgeBackground, Brush BadgeForeground);
-public sealed record AlertItemViewModel(string Title, string Description, string IconGlyph, Brush Background, Brush BorderBrush, Brush IconBrush);
-public sealed record RecommendationItemViewModel(string Title, string Description, Brush BadgeBrush);
+public sealed record AlertItemViewModel(string Title, string Description, string TargetStageName, string IconGlyph, Brush Background, Brush BorderBrush, Brush IconBrush);
+public sealed record RecommendationItemViewModel(string Title, string Description, string TargetStageName, string ImpactPreview, Brush BadgeBrush);
 public sealed record ScenarioCardViewModel(string Title, string Status, string Description, Brush Background, Brush AccentBrush);
 public sealed record InfoCardViewModel(string Title, string Subtitle, string Description, Brush Background, Brush AccentBrush);
 

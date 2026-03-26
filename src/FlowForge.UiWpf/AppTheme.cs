@@ -49,16 +49,16 @@ public static class AppTheme
 
     public static SolidColorBrush ResolveBrush(string key) => key switch
     {
-        PrimaryAccentBrushKey => PrimaryAccentBrush,
-        SecondaryAccentBrushKey => SecondaryAccentBrush,
-        SuccessBrushKey => SuccessBrush,
-        DangerBrushKey => DangerBrush,
-        WarningBrushKey => WarningBrush,
-        InfoSurfaceBrushKey => InfoSurfaceBrush,
-        SuccessSurfaceBrushKey => SuccessSurfaceBrush,
-        DangerSurfaceBrushKey => DangerSurfaceBrush,
-        WarningSurfaceBrushKey => WarningSurfaceBrush,
-        _ => StrongTextBrush
+        PrimaryAccentBrushKey => ThemeManager.GetBrush("PrimaryAccentBrush"),
+        SecondaryAccentBrushKey => ThemeManager.GetBrush("SecondaryAccentBrush"),
+        SuccessBrushKey => ThemeManager.GetBrush("SuccessBrush"),
+        DangerBrushKey => ThemeManager.GetBrush("DangerBrush"),
+        WarningBrushKey => ThemeManager.GetBrush("WarningBrush"),
+        InfoSurfaceBrushKey => ThemeManager.GetBrush("InfoSurfaceBrush"),
+        SuccessSurfaceBrushKey => ThemeManager.GetBrush("SuccessSurfaceBrush"),
+        DangerSurfaceBrushKey => ThemeManager.GetBrush("DangerSurfaceBrush"),
+        WarningSurfaceBrushKey => ThemeManager.GetBrush("WarningSurfaceBrush"),
+        _ => ThemeManager.GetBrush("StrongTextBrush")
     };
 
     private static SolidColorBrush CreateBrush(string color)
