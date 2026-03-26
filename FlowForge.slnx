@@ -6,6 +6,7 @@
     <Project Path="src/FlowForge.Domain/FlowForge.Domain.csproj" />
     <Project Path="src/FlowForge.Infrastructure/FlowForge.Infrastructure.csproj" />
     <Project Path="src/FlowForge.Simulation/FlowForge.Simulation.csproj" />
+    <Project Path="src/FlowForge.UiWpf/FlowForge.UiWpf.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/FlowForge.Application.Tests/FlowForge.Application.Tests.csproj" />

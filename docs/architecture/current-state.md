@@ -13,7 +13,7 @@ It is informative and should not replace `docs/Todo.md` for task planning.
 | Infrastructure | Baseline exists | Persistence stays intentionally deferred while the current runtime remains in-memory; export is still pending |
 | API | Host exists | Still a placeholder control/query surface |
 | CLI | Host exists and usable | Best current place for early runtime debugging |
-| Desktop | Planned | Not yet present in the repository |
+| Desktop | Prototype exists | `FlowForge.UiWpf` provides a first mockup-aligned WPF shell; live application integration is still pending |
 | Testing | Domain and application test projects exist | Simulation and integration coverage are still missing |
 
 ## Component Snapshot
@@ -51,7 +51,7 @@ It is informative and should not replace `docs/Todo.md` for task planning.
 | Scenario loader and repository | Deferred | JSON schema validation, directory layout, and first repository adapter follow the in-memory-first runtime slice |
 | Export ownership and format | Planned | Application-facing export port and first export format |
 | Replay storage scope | Planned | Decide whether replay starts with snapshots, summaries, or deeper history |
-| Desktop snapshot consumption | Planned | In-process client adapter and snapshot update semantics |
+| Desktop snapshot consumption | Partial | WPF shell exists, but it still needs application-driven snapshot binding and lifecycle commands |
 | Demo scenario verification | Planned | Repeatable fixtures and expected KPI or process outcomes |
 | Packaging and release path | Planned | Delivery packaging strategy for desktop, API, CLI, and scenario assets |
 

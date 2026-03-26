@@ -4,6 +4,7 @@
 
 The delivery layer exposes FlowForge through concrete hosts.
 Desktop is the primary MVP experience, but API support starts early and the CLI remains valuable for debugging and operations.
+The current desktop host lives in `src/FlowForge.UiWpf/` and provides the first mockup-aligned shell for the simulation view.
 
 ## Desktop Host
 
@@ -15,6 +16,7 @@ Primary MVP client responsibilities:
 - highlight bottlenecks and notable system states
 
 Desktop must remain a thin consumer of application-facing contracts and published snapshots.
+The current WPF shell still uses local sample presentation data until the snapshot contract and use cases are wired through the application boundary.
 
 ## API Host
 

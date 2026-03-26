@@ -1,0 +1,39 @@
+<UserControl x:Class="FlowForge.UiWpf.Screens.RecommendationsScreen"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:FlowForge.UiWpf">
+    <Grid>
+        <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="16" /><ColumnDefinition Width="1.2*" /></Grid.ColumnDefinitions>
+        <Border Grid.Column="0" Style="{StaticResource ScreenPanelCardStyle}">
+            <StackPanel>
+                <TextBlock Style="{StaticResource SectionTitleStyle}" Text="Recommendation Queue" />
+                <ItemsControl Margin="0,18,0,0" ItemsSource="{Binding Recommendations}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="{x:Type local:RecommendationItemViewModel}">
+                            <Button Margin="{StaticResource ScreenListItemMargin}" Style="{StaticResource ListActionButtonStyle}" Background="{DynamicResource PanelSurfaceBrush}" BorderBrush="{DynamicResource DividerBrush}" Command="{Binding DataContext.SelectRecommendationCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}">
+                                <Grid>
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                    <Ellipse Width="18" Height="18" Fill="{Binding BadgeBrush}" />
+                                    <StackPanel Grid.Column="1" Margin="12,0,0,0">
+                                        <TextBlock Foreground="{DynamicResource StrongTextBrush}" Text="{Binding Title}" />
+                                        <TextBlock Margin="0,4,0,0" FontSize="12" Foreground="{DynamicResource MutedTextBrush}" TextWrapping="Wrap" Text="{Binding Description}" />
+                                    </StackPanel>
+                                </Grid>
+                            </Button>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </Border>
+        <Border Grid.Column="2" Style="{StaticResource ScreenPanelCardStyle}">
+            <StackPanel>
+                <TextBlock Style="{StaticResource SectionTitleStyle}" Text="Recommendation Detail" />
+                <TextBlock Margin="0,18,0,0" FontFamily="Bahnschrift" FontSize="22" FontWeight="SemiBold" Foreground="{DynamicResource StrongTextBrush}" Text="{Binding SelectedRecommendation.Title}" />
+                <TextBlock Margin="0,10,0,0" Foreground="{DynamicResource MutedTextBrush}" TextWrapping="Wrap" Text="{Binding SelectedRecommendation.Description}" />
+                <Border Margin="0,18,0,0" Padding="16" CornerRadius="12" Background="{DynamicResource InfoSurfaceBrush}" BorderBrush="{Binding SelectedRecommendation.BadgeBrush}" BorderThickness="1">
+                    <TextBlock Foreground="{DynamicResource StrongTextBrush}" Text="This screen can later host side-by-side impact estimates, required actions and apply/reject decisions." TextWrapping="Wrap" />
+                </Border>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

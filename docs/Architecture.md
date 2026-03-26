@@ -46,7 +46,7 @@ The architecture documentation is split by responsibility and level of detail.
 - Language and runtime: C# on .NET using the SDK and framework versions defined in `global.json`
 - Architecture style: Clean Architecture with explicit inward dependency direction
 - Core execution model: event-driven simulation runtime with immutable read snapshots
-- Delivery hosts: API, CLI, and planned desktop application
+- Delivery hosts: API, CLI, and a WPF desktop application
 - Persistence direction: in-memory-first runtime for the early MVP, with scenario and checkpoint persistence added after the core runtime stabilizes
 - Testing direction: unit tests close to the owning layer, with integration tests added where boundaries are crossed
 
@@ -124,7 +124,7 @@ Desktop Client   API Host   CLI Host
 - `FlowForge.Infrastructure`: scenario loading and checkpoint storage when introduced, export, mapping, diagnostics support
 - `FlowForge.Api`: thin HTTP host for control and query access
 - `FlowForge.CLI`: thin command-line host for debug, admin, and operational workflows
-- `FlowForge.Desktop`: planned primary MVP visualization host
+- `FlowForge.UiWpf`: current WPF desktop visualization host for the MVP path
 
 Detailed responsibilities live in:
 
@@ -184,7 +184,7 @@ FlowForge.Domain
   <- FlowForge.Simulation
      <- FlowForge.Application
         <- FlowForge.Infrastructure
-           <- FlowForge.Api / FlowForge.CLI / FlowForge.Desktop
+           <- FlowForge.Api / FlowForge.CLI / FlowForge.UiWpf
 ```
 
 Rules to preserve:
@@ -234,7 +234,7 @@ src/
   FlowForge.Infrastructure
   FlowForge.Api
   FlowForge.CLI
-  FlowForge.Desktop
+  FlowForge.UiWpf
 
 tests/
   FlowForge.Domain.Tests

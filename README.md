@@ -79,7 +79,7 @@ Target high-level modules:
 - `FlowForge.Simulation` -- discrete event engine and runtime state
 - `FlowForge.Application` -- use cases and orchestration
 - `FlowForge.Infrastructure` -- persistence, configuration, logging, exports
-- `FlowForge.Desktop` -- primary MVP client
+- `FlowForge.UiWpf` -- current WPF-based desktop visualization host
 - `FlowForge.Api` -- early control and query host that should align with desktop contracts
 - `FlowForge.CLI` -- debug, admin, and automation workflows
 
@@ -95,25 +95,24 @@ The repository currently contains these projects:
 - `src/FlowForge.Infrastructure/`
 - `src/FlowForge.Api/`
 - `src/FlowForge.CLI/`
+- `src/FlowForge.UiWpf/`
 - `tests/FlowForge.Domain.Tests/`
 - `tests/FlowForge.Application.Tests/`
 
-This means the documented product direction is ahead of the current code structure in some areas.
-That is intentional: the documentation now defines the target shape that the implementation should
-grow toward.
+The desktop delivery path now has a first concrete shell in WPF, while application-facing
+simulation control and snapshot integration still need to catch up behind that UI.
 
 ## Planned Solution Evolution
 
 Near-term structural additions:
 
-- `src/FlowForge.Desktop/`
 - `tests/FlowForge.Simulation.Tests/`
 
 Recommended implementation sequence:
 
 1. Model the fulfillment domain and simulation runtime.
 2. Stabilize the snapshot and KPI contract.
-3. Build the first desktop visualization client.
+3. Bind the WPF desktop visualization to real application use cases and snapshots.
 4. Add scenario persistence and replay/export support.
 5. Expand the early API further and move into broader multi-client delivery when the core demo is stable.
 
@@ -154,6 +153,12 @@ Run the current CLI host:
 
 ```bash
 dotnet run --project "src/FlowForge.CLI/FlowForge.CLI.csproj"
+```
+
+Run the current WPF desktop host:
+
+```bash
+dotnet run --project "src/FlowForge.UiWpf/FlowForge.UiWpf.csproj"
 ```
 
 ## Documentation

@@ -1,0 +1,70 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:local="clr-namespace:FlowForge.UiWpf">
+    <SolidColorBrush x:Key="AppShellBrush" Color="#E8EEF8" />
+    <SolidColorBrush x:Key="AppSurfaceBrush" Color="#F7FAFD" />
+    <SolidColorBrush x:Key="CardBackgroundBrush" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="MetricPillBackgroundBrush" Color="#FFFFFF" />
+    <x:Static Member="local:AppTheme.PanelHeaderBrush" x:Key="PanelHeaderBrush" />
+    <x:Static Member="local:AppTheme.StrongTextBrush" x:Key="StrongTextBrush" />
+    <SolidColorBrush x:Key="MutedTextBrush" Color="#67768A" />
+    <SolidColorBrush x:Key="DividerBrush" Color="#D8E1EE" />
+    <SolidColorBrush x:Key="SoftBlueBorderBrush" Color="#D7E5F5" />
+    <SolidColorBrush x:Key="CanvasSurfaceBrush" Color="#FFFAFCFF" />
+    <SolidColorBrush x:Key="PanelSurfaceBrush" Color="#FFF9FBFE" />
+    <SolidColorBrush x:Key="SparklineCardBrush" Color="#FFF8FBFF" />
+    <SolidColorBrush x:Key="StageDetailSurfaceBrush" Color="#FFFFFFFF" />
+
+    <x:Static Member="local:AppTheme.PrimaryAccentBrush" x:Key="PrimaryAccentBrush" />
+    <x:Static Member="local:AppTheme.SecondaryAccentBrush" x:Key="SecondaryAccentBrush" />
+    <x:Static Member="local:AppTheme.SuccessBrush" x:Key="SuccessBrush" />
+    <x:Static Member="local:AppTheme.WarningBrush" x:Key="WarningBrush" />
+    <x:Static Member="local:AppTheme.DangerBrush" x:Key="DangerBrush" />
+    <x:Static Member="local:AppTheme.KpiThroughputBrush" x:Key="KpiThroughputBrush" />
+    <x:Static Member="local:AppTheme.TimelineBlueBrush" x:Key="TimelineBlueBrush" />
+    <x:Static Member="local:AppTheme.TimelineAccentBrush" x:Key="TimelineAccentBrush" />
+
+    <x:Static Member="local:AppTheme.InfoSurfaceBrush" x:Key="InfoSurfaceBrush" />
+    <x:Static Member="local:AppTheme.SuccessSurfaceBrush" x:Key="SuccessSurfaceBrush" />
+    <x:Static Member="local:AppTheme.WarningSurfaceBrush" x:Key="WarningSurfaceBrush" />
+    <x:Static Member="local:AppTheme.DangerSurfaceBrush" x:Key="DangerSurfaceBrush" />
+    <x:Static Member="local:AppTheme.WarningBorderBrush" x:Key="WarningBorderBrush" />
+    <x:Static Member="local:AppTheme.DangerBorderBrush" x:Key="DangerBorderBrush" />
+
+    <x:Static Member="local:AppTheme.SourceNodeBackgroundBrush" x:Key="SourceNodeBackgroundBrush" />
+    <x:Static Member="local:AppTheme.SourceNodeBorderBrush" x:Key="SourceNodeBorderBrush" />
+    <x:Static Member="local:AppTheme.StageNeutralBackgroundBrush" x:Key="StageNeutralBackgroundBrush" />
+    <x:Static Member="local:AppTheme.StageWarmBackgroundBrush" x:Key="StageWarmBackgroundBrush" />
+    <x:Static Member="local:AppTheme.PrimaryStageBorderBrush" x:Key="PrimaryStageBorderBrush" />
+    <x:Static Member="local:AppTheme.SecondaryStageBorderBrush" x:Key="SecondaryStageBorderBrush" />
+    <x:Static Member="local:AppTheme.PrimaryWorkerBackgroundBrush" x:Key="PrimaryWorkerBackgroundBrush" />
+    <x:Static Member="local:AppTheme.SecondaryWorkerBackgroundBrush" x:Key="SecondaryWorkerBackgroundBrush" />
+    <x:Static Member="local:AppTheme.WorkerIdleAccentBrush" x:Key="WorkerIdleAccentBrush" />
+    <x:Static Member="local:AppTheme.WorkerIdleBackgroundBrush" x:Key="WorkerIdleBackgroundBrush" />
+
+    <SolidColorBrush x:Key="SidebarBrush" Color="#32455E" />
+    <SolidColorBrush x:Key="SidebarBorderBrush" Color="#43546D" />
+    <SolidColorBrush x:Key="SidebarHoverBrush" Color="#435A7A" />
+    <SolidColorBrush x:Key="SidebarSelectedBrush" Color="#5878A7" />
+    <SolidColorBrush x:Key="CompactPanelBorderBrush" Color="#4A5B74" />
+    <SolidColorBrush x:Key="CompactPanelBackgroundBrush" Color="#2E4057" />
+    <SolidColorBrush x:Key="NavForegroundBrush" Color="#F4F8FD" />
+    <SolidColorBrush x:Key="CompactPanelForegroundBrush" Color="#D0DBE8" />
+
+    <SolidColorBrush x:Key="ToolbarBaseBrush" Color="#FFF8FBFF" />
+    <SolidColorBrush x:Key="ToolbarHoverBrush" Color="#FFF3F8FF" />
+    <SolidColorBrush x:Key="ToolbarPressedBrush" Color="#FFE8F1FD" />
+    <SolidColorBrush x:Key="ToolbarPrimaryBrush" Color="#F0F7FF" />
+    <SolidColorBrush x:Key="ToolbarPrimaryBorderBrush" Color="#BFD9F6" />
+    <SolidColorBrush x:Key="ToolbarHoverBorderBrush" Color="#AACDEF" />
+    <SolidColorBrush x:Key="ButtonShadowColorBrush" Color="#34547A" />
+    <SolidColorBrush x:Key="WindowShadowColorBrush" Color="#233755" />
+    <SolidColorBrush x:Key="CardShadowColorBrush" Color="#3D5C7C" />
+
+    <x:Static Member="local:AppTheme.TrendBlueBackgroundBrush" x:Key="TrendBlueBackgroundBrush" />
+    <x:Static Member="local:AppTheme.TrendGreenBackgroundBrush" x:Key="TrendGreenBackgroundBrush" />
+    <x:Static Member="local:AppTheme.TrendOrangeBrush" x:Key="TrendOrangeBrush" />
+    <x:Static Member="local:AppTheme.TrendOrangeBackgroundBrush" x:Key="TrendOrangeBackgroundBrush" />
+    <x:Static Member="local:AppTheme.TrendRedBrush" x:Key="TrendRedBrush" />
+    <x:Static Member="local:AppTheme.TrendRedBackgroundBrush" x:Key="TrendRedBackgroundBrush" />
+</ResourceDictionary>
