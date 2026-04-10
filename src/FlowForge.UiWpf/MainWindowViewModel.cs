@@ -225,6 +225,7 @@ public sealed class OverviewScreenViewModel : ObservableObject
     private static readonly ReadOnlyCollection<double> DelayForecastSeries = new([8d, 9d, 11d, 10d, 14d, 12d, 9d, 13d, 12d, 16d, 19d, 17d, 15d, 21d]);
 
     private int _nextTimelineMinute = 43;
+
     public ObservableCollection<StageSummaryViewModel> Stages { get; } = new();
 
     public ObservableCollection<MetricViewModel> KpiMetrics { get; } = new();
@@ -241,6 +242,8 @@ public sealed class OverviewScreenViewModel : ObservableObject
 
     public ObservableCollection<RecommendationItemViewModel> Recommendations { get; } = new();
 
+    public ObservableCollection<StageConnectionViewModel> StageConnections { get; } = new();
+
     public FlowNodeViewModel SourceNode { get; private set; } = null!;
 
     public StageSummaryViewModel SelectedStage
@@ -249,6 +252,12 @@ public sealed class OverviewScreenViewModel : ObservableObject
         private set => SetProperty(ref field, value);
     }
     = null!;
+
+    public bool IsTimelineExpanded
+    {
+        get;
+        set => SetProperty(ref field, value);
+    }
 
     public static OverviewScreenViewModel CreateSample()
     {
@@ -263,9 +272,11 @@ public sealed class OverviewScreenViewModel : ObservableObject
             "Stage 10",
             "Picking",
             "Pick-A",
+            42,
             "Queue 42",
             "2 / 3 busy",
             "Avg 03:10",
+            67,
             "67% utilization",
             B("StageNeutralBackgroundBrush"),
             B("PrimaryStageBorderBrush"),
@@ -281,9 +292,11 @@ public sealed class OverviewScreenViewModel : ObservableObject
             "Stage 20",
             "Packing",
             "Pack-A",
+            27,
             "Queue 27",
             "3 / 3 busy",
             "Avg 04:35",
+            91,
             "91% utilization",
             B("StageWarmBackgroundBrush"),
             B("SecondaryStageBorderBrush"),
@@ -299,9 +312,11 @@ public sealed class OverviewScreenViewModel : ObservableObject
             "Stage 30",
             "Shipping",
             "Ship-A",
+            11,
             "Queue 11",
             "1 / 3 busy",
             "Avg 02:15",
+            34,
             "34% utilization",
             B("SourceNodeBackgroundBrush"),
             B("PrimaryStageBorderBrush"),
@@ -317,9 +332,11 @@ public sealed class OverviewScreenViewModel : ObservableObject
             "Stage 40",
             "Quality",
             "QA-A",
+            6,
             "Queue 6",
             "1 / 3 busy",
             "Avg 01:40",
+            28,
             "28% utilization",
             B("StageNeutralBackgroundBrush"),
             B("PrimaryStageBorderBrush"),
@@ -335,9 +352,11 @@ public sealed class OverviewScreenViewModel : ObservableObject
             "Stage 50",
             "Dispatch",
             "Dispatch-A",
+            4,
             "Queue 4",
             "2 / 3 busy",
             "Avg 01:10",
+            52,
             "52% utilization",
             B("SourceNodeBackgroundBrush"),
             B("SourceNodeBorderBrush"),
@@ -348,6 +367,8 @@ public sealed class OverviewScreenViewModel : ObservableObject
                 new WorkerViewModel("W2", "Busy", B("PanelHeaderBrush"), B("PrimaryWorkerBackgroundBrush")),
                 new WorkerViewModel("W3", "Idle", B("WorkerIdleAccentBrush"), B("WorkerIdleBackgroundBrush")),
             ]));
+
+        ApplySnakeLayout(viewModel);
 
         viewModel.SelectStage(viewModel.Stages[0]);
 
@@ -387,6 +408,31 @@ public sealed class OverviewScreenViewModel : ObservableObject
 
         viewModel.AddEvent("Mockup initialized", "Info", AppTheme.SuccessSurfaceBrushKey, AppTheme.SuccessBrushKey, false);
         return viewModel;
+    }
+
+    private static void ApplySnakeLayout(OverviewScreenViewModel viewModel)
+    {
+        var positions = new[]
+        {
+            (190d, 18d),
+            (410d, 18d),
+            (630d, 18d),
+            (630d, 184d),
+            (410d, 184d),
+        };
+
+        for (var index = 0; index < viewModel.Stages.Count && index < positions.Length; index++)
+        {
+            viewModel.Stages[index].CanvasLeft = positions[index].Item1;
+            viewModel.Stages[index].CanvasTop = positions[index].Item2;
+        }
+
+        viewModel.StageConnections.Clear();
+        viewModel.StageConnections.Add(new StageConnectionViewModel(140, 78, 48, 24, FlowDirection.Right, viewModel.Stages[0].FlowBrush));
+        viewModel.StageConnections.Add(new StageConnectionViewModel(360, 78, 48, 24, FlowDirection.Right, viewModel.Stages[1].FlowBrush));
+        viewModel.StageConnections.Add(new StageConnectionViewModel(580, 78, 48, 24, FlowDirection.Right, viewModel.Stages[2].FlowBrush));
+        viewModel.StageConnections.Add(new StageConnectionViewModel(706, 138, 24, 44, FlowDirection.Down, viewModel.Stages[3].FlowBrush));
+        viewModel.StageConnections.Add(new StageConnectionViewModel(586, 244, 48, 24, FlowDirection.Left, viewModel.Stages[4].FlowBrush));
     }
 
     public void SelectStage(StageSummaryViewModel? stage)
@@ -546,9 +592,11 @@ public sealed class StageSummaryViewModel(
     string sequenceLabel,
     string stageName,
     string stationName,
+    int queueCount,
     string queueText,
     string workerSummary,
     string processingTimeText,
+    double utilizationPercent,
     string utilizationText,
     Brush background,
     Brush borderBrush,
@@ -559,22 +607,59 @@ public sealed class StageSummaryViewModel(
     public string SequenceLabel { get; } = sequenceLabel;
     public string StageName { get; } = stageName;
     public string StationName { get; } = stationName;
+    public int QueueCount { get; } = queueCount;
     public string QueueText { get; } = queueText;
     public string WorkerSummary { get; } = workerSummary;
     public string ProcessingTimeText { get; } = processingTimeText;
+    public double UtilizationPercent { get; } = utilizationPercent;
     public string UtilizationText { get; } = utilizationText;
     public Brush Background { get; } = background;
     public Brush BorderBrush { get; } = borderBrush;
     public Brush AccentBrush { get; } = accentBrush;
+    public Brush FlowBrush { get; } = utilizationPercent switch
+    {
+        < 30 => ThemeManager.GetBrush("SuccessBrush"),
+        < 70 => ThemeManager.GetBrush("WarningBrush"),
+        _ => ThemeManager.GetBrush("DangerBrush"),
+    };
     public bool HasNextStage { get; } = hasNextStage;
     public IReadOnlyList<WorkerViewModel> Workers { get; } = workers;
+    public QueuePackageViewModel[] QueuePackages { get; } = BuildQueuePackages(queueCount, accentBrush);
+
+    public double CanvasLeft { get; set; }
+
+    public double CanvasTop { get; set; }
 
     public bool IsSelected
     {
         get;
         set => SetProperty(ref field, value);
     }
+
+    private static QueuePackageViewModel[] BuildQueuePackages(int queueCount, Brush accentBrush)
+    {
+        var activeCount = Math.Clamp((int)Math.Ceiling(queueCount / 10d), 1, 5);
+        var packages = new QueuePackageViewModel[5];
+
+        for (var index = 0; index < packages.Length; index++)
+        {
+            packages[index] = new QueuePackageViewModel(index < activeCount, index < activeCount ? accentBrush : ThemeManager.GetBrush("DividerBrush"));
+        }
+
+        return packages;
+    }
 }
+
+public sealed record QueuePackageViewModel(bool IsActive, Brush Brush);
+
+public enum FlowDirection
+{
+    Right,
+    Left,
+    Down,
+}
+
+public sealed record StageConnectionViewModel(double CanvasLeft, double CanvasTop, double Width, double Height, FlowDirection Direction, Brush AccentBrush);
 
 public sealed record FlowNodeViewModel(string Title, string Value, string Subtitle, Brush Background, Brush BorderBrush, Brush AccentBrush);
 public sealed record WorkerViewModel(string Label, string Status, Brush AccentBrush, Brush BackgroundBrush);
