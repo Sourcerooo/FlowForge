@@ -109,7 +109,7 @@ Recommended KPI set:
 | Throughput | Completed work items per simulated time unit | `completed / elapsed simulated time` |
 | Average lead time | Mean duration from creation to completion | average across completed work items |
 | WIP | Work items currently not completed | `created - completed` or active count |
-| Queue length per stage | Work items currently waiting in a station queue | current queue count |
+| Queue length per stage | Work items currently waiting in the shared stage queue | current queue count |
 | Average queue wait per stage | Mean wait before processing starts | derived from tracking history |
 | Average processing time per stage | Mean actual processing duration | derived from completion history |
 | Utilization per stage | Busy worker time divided by available worker time | cumulative busy time over available time |

@@ -1,4 +1,6 @@
 using FlowForge.Simulation.Events.Contracts;
+using FlowForge.Simulation.Events.SimulationEvents;
+using FlowForge.Simulation.Events.ValueObjects;
 using FlowForge.Simulation.Runtime.Contracts;
 using FlowForge.Simulation.Runtime.Enums;
 using FlowForge.Simulation.Scheduling.Contracts;
@@ -7,13 +9,20 @@ namespace FlowForge.Simulation.Runtime.Entities;
 
 public sealed class SimulationRunner(
   ISimulationEventQueue EventQueue,
+  ISimulationEventScheduler Scheduler,
   ISimulationEventDispatcher Dispatcher)
   : ISimulationRunner
 {
   public async Task<SimulationRunResult> RunSimulation(SimulationExecutionContext context, CancellationToken cancellationToken)
   {
-
-    while (EventQueue.TryDequeue(out var nextEvent))
+    Scheduler.Schedule(
+        new SimulationEventsGenerateEvent(
+          SimulationEventId.NewId(),
+          context.SimulationRunId,
+          TimeSpan.FromSeconds(0),
+          context.Data.State.GetNextSequenceNumber())
+      );
+    while (EventQueue.TryDequeue(out var nextEvent) && context.Data.State.CurrentTime <= context.Data.ProcessConfiguration.PlannedDuration)
     {
       if (cancellationToken.IsCancellationRequested)
       {

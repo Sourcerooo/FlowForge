@@ -1,0 +1,10 @@
+using FlowForge.Simulation.Tracking.ValueObjects;
+
+namespace FlowForge.Simulation.Runtime.ValueObjects;
+
+public readonly record struct StationProcessingInfo(
+  TrackingSubjectId TrackingSubjectId,
+  int WorkerSlot,
+  TimeSpan StartedAt,
+  long ProcessingToken
+  );

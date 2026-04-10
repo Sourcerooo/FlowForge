@@ -100,7 +100,7 @@ WorkItemCompleteEventHandler
 ```text
 ProcessingCompleteEvent dequeued
   -> handler builds CompleteProcessingCommand
-  -> orchestrator loads runtime objects for work item, station, and stage
+  -> orchestrator loads runtime objects for work item, stage, and station
   -> transition policy validates state and processing token
   -> work item head state is updated
   -> work item tracking closes the active processing segment
@@ -109,4 +109,14 @@ ProcessingCompleteEvent dequeued
   -> KPI collector records incremental facts
   -> routing policy resolves next stage or terminal completion
   -> scheduler enqueues WorkItemQueueEvent or WorkItemCompleteEvent
+```
+
+The queueing side of the same flow is stage-owned:
+
+```text
+WorkItemQueueEvent dequeued
+  -> handler builds QueueWorkItemCommand
+  -> orchestrator appends StageQueueEntry to the target stage queue
+  -> stage dispatch checks all stations of the stage for free worker capacity
+  -> if any station can start work, scheduler enqueues ProcessingStartEvent with the selected StationId
 ```

@@ -4,10 +4,25 @@ using FlowForge.Simulation.Tracking.Contracts;
 using FlowForge.Simulation.Tracking.Entities.WorkItems;
 using FlowForge.Simulation.Tracking.Enums;
 using FlowForge.Simulation.Tracking.ValueObjects;
-
+using Microsoft.Extensions.Logging;
 namespace FlowForge.Simulation.Tracking.Services;
 
-public sealed class WorkItemTrackingStore : IWorkItemTrackingStore
+internal static partial class WorkItemTrackingStoreLog
+{
+  [LoggerMessage(
+    EventId = 1001,
+    Level = LogLevel.Information,
+    Message = "Tracking item added: TrackingItemId={TrackingSubjectId}, " +
+    "CreatedAt={CreatedAt}, Status={CurrentStatus}, Token={CurrentProcessingToken}")]
+  public static partial void TrackingItemAdded(
+    ILogger<WorkItemTrackingStore> logger,
+    TrackingSubjectId trackingSubjectId,
+    TimeSpan createdAt,
+    WorkItemStatus currentStatus,
+    long currentProcessingToken);
+}
+
+public sealed class WorkItemTrackingStore(ILogger<WorkItemTrackingStore> logger) : IWorkItemTrackingStore
 {
   private readonly Dictionary<TrackingSubjectId, WorkItemTracking> _workItemTrackings
     = new Dictionary<TrackingSubjectId, WorkItemTracking>();
@@ -32,6 +47,12 @@ public sealed class WorkItemTrackingStore : IWorkItemTrackingStore
       trackingSubjectId, createdAt, currentStatus, currentStageId, currentStationId,
       currentProcessingToken, completedAt);
     _workItemTrackings[trackingSubjectId] = tracking;
+    WorkItemTrackingStoreLog.TrackingItemAdded(logger,
+      tracking.TrackingSubjectId,
+      tracking.CreatedAt,
+      tracking.CurrentStatus,
+      tracking.CurrentProcessingToken);
+
     return tracking;
   }
 

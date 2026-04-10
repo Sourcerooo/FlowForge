@@ -1,12 +1,11 @@
 using FlowForge.Simulation.Events.Contracts;
 using FlowForge.Simulation.Events.Enums;
 using FlowForge.Simulation.Events.SimulationEvents;
-using FlowForge.Simulation.Events.ValueObjects;
 using FlowForge.Simulation.Runtime.Entities;
 
 namespace FlowForge.Simulation.Events.Entities;
 
-internal sealed class SimulationEventDispatcher(IEnumerable<ISimulationEventHandler> eventHandler) : ISimulationEventDispatcher, IEventHandlerRegistry
+internal sealed class SimulationEventDispatcher(IEnumerable<ISimulationEventHandler> eventHandler) : ISimulationEventDispatcher
 {
   private readonly Dictionary<EventKind, ISimulationEventHandler> _eventHandler
     = eventHandler.ToDictionary<ISimulationEventHandler, EventKind>(simulationEventHandler => simulationEventHandler.CanHandle());
@@ -23,7 +22,4 @@ internal sealed class SimulationEventDispatcher(IEnumerable<ISimulationEventHand
       await handler.Process(simulationEvent, context, cancellationToken);
     }
   }
-
-  public void Register(EventRoutingKey key, ISimulationEventHandler handler) => throw new NotImplementedException();
-  public ISimulationEventHandler Resolve(EventRoutingKey key) => throw new NotImplementedException();
 }

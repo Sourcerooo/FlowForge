@@ -19,7 +19,7 @@ Recommended rule:
 
 - queue states are explicit
 - processing states are explicit
-- movement between stations is represented by queue, start, and completion events plus station context
+- movement between stages is represented by queue, start, and completion events; station assignment happens only when a stage dispatches work to free capacity
 
 ## Orchestration Boundary
 
@@ -31,10 +31,11 @@ Recommended split:
 |---|---|
 | `ISimulationEventHandler` | event entry point |
 | `IWorkItemProcessOrchestrator` | cross-object coordination for one process step |
+| `StageRuntimeState` | shared stage queue, station availability view, and dispatch decisions |
 | `WorkItemRuntimeState` | current runtime head state |
 | `WorkItemTracking` | factual timing and segment history |
-| `StationTracking` | station-level counters, capacity, and durations |
-| `StageTracking` | aggregates across stations of one stage |
+| `StationTracking` | station-level processing counters, capacity, and durations |
+| `StageTracking` | stage-level queue facts and aggregates across stations |
 | `IWorkItemTransitionPolicy` | transition legality |
 | `IProcessRoutingPolicy` | next-step routing |
 | `IKpiCollector` | incremental KPI facts |
@@ -95,8 +96,7 @@ public sealed record QueueWorkItemCommand(
     SimulationRunId SimulationRunId,
     TrackingSubjectId TrackingSubjectId,
     TimeSpan OccurredAt,
-    StageId StageId,
-    StationId StationId);
+    StageId StageId);
 
 public sealed record StartProcessingCommand(
     SimulationRunId SimulationRunId,
@@ -120,15 +120,34 @@ public sealed record CompleteProcessingCommand(
 ```csharp
 public sealed class WorkItemRuntimeState
 {
-    public void QueueForStage(TimeSpan occurredAt, StageId stageId, StationId stationId);
+    public void QueueForStage(TimeSpan occurredAt, StageId stageId);
     public void StartProcessing(TimeSpan occurredAt, StageId stageId, StationId stationId, long processingToken);
     public void CompleteProcessing(TimeSpan occurredAt, StageId stageId, StationId stationId, long processingToken);
     public void CompleteWorkItem(TimeSpan occurredAt);
 }
+
+public sealed class StageRuntimeState
+{
+    public StageId StageId { get; }
+    public IReadOnlyDictionary<StationId, StationRuntimeState> Stations { get; }
+    public IReadOnlyCollection<StageQueueEntry> Queue { get; }
+
+    public void Enqueue(StageQueueEntry entry);
+    public StationId? TryReserveFreeStation(TimeSpan occurredAt);
+    public StageQueueEntry DequeueNext();
+}
+
+public sealed record StageQueueEntry(
+    TrackingSubjectId TrackingSubjectId,
+    TimeSpan QueuedAt,
+    long QueueSequenceNumber,
+    long WorkItemVersion);
 ```
 
 Recommended rule:
 
+- `StageRuntimeState` owns the shared backlog for all business-equivalent stations of one stage
+- station assignment is a runtime dispatch decision, not a queue placement decision
 - avoid technical setter-style APIs for runtime mutation
 - use explicit process methods that complete one valid transition in one step
 - this reduces inconsistent intermediate state across work item, tracking, station, and stage objects
@@ -142,14 +161,14 @@ SimulationRunner
   -> IEventDispatcher
   -> ProcessingCompleteEventHandler
   -> IWorkItemProcessOrchestrator.CompleteProcessingAsync(command)
-  -> WorkItemRuntimeState / WorkItemTracking / StationTracking / StageTracking
+  -> StageRuntimeState / WorkItemRuntimeState / WorkItemTracking / StationTracking / StageTracking
   -> IKpiCollector
   -> ISimulationScheduler
 ```
 
 Recommended `CompleteProcessing` sequence:
 
-1. load the current `WorkItemRuntimeState`, `WorkItemTracking`, `StationTracking`, and `StageTracking`
+1. load the current `StageRuntimeState`, `WorkItemRuntimeState`, `WorkItemTracking`, `StationTracking`, and `StageTracking`
 2. validate stage, station, current status, and `ProcessingToken` through `IWorkItemTransitionPolicy`
 3. call `WorkItemRuntimeState.CompleteProcessing(...)`
 4. call `WorkItemTracking.CompleteProcessing(...)`
@@ -159,9 +178,21 @@ Recommended `CompleteProcessing` sequence:
 8. resolve the next route through `IProcessRoutingPolicy`
 9. schedule the next `WorkItemQueueEvent` or terminal `WorkItemCompleteEvent` through `ISimulationScheduler`
 
+Recommended `QueueForStage` sequence:
+
+1. load the current `StageRuntimeState`, `WorkItemRuntimeState`, `WorkItemTracking`, and `StageTracking`
+2. validate that the work item may enter the requested stage
+3. append a `StageQueueEntry` to the stage-owned queue
+4. call `WorkItemRuntimeState.QueueForStage(...)`
+5. open a stage-level `QueueWait` segment on `WorkItemTracking`
+6. update stage-level queue facts on `StageTracking`
+7. if `StageRuntimeState` can reserve a free station worker, dequeue the oldest eligible `StageQueueEntry`
+8. schedule `ProcessingStartEvent` with the selected `StationId`
+
 Recommended modeling rule:
 
 - the handler remains a thin event adapter
 - the orchestrator owns use-case sequencing
 - runtime objects own local mutation and invariants
+- stage queues are runtime state, not tracking history and not event-scheduler entries
 - follow-up events are coordinated through the scheduler and never by direct queue mutation

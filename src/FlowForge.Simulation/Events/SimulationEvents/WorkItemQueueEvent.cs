@@ -16,4 +16,4 @@ public record WorkItemQueueEvent(
   long? ProcessingToken,
   OrderId? OrderId)
   : PackagingSimulationEvent(Id, SimulationRunId, ScheduledTime, EventSortRank.OrderQueue, SequenceNumber,
-    EventKind.OrderQueue, StageId, StationId, ProcessingToken, OrderId);
+    EventKind.WorkItemQueue, StageId, StationId, ProcessingToken, OrderId);

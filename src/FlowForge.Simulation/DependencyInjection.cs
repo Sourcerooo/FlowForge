@@ -1,5 +1,6 @@
 using FlowForge.Simulation.Events.Contracts;
 using FlowForge.Simulation.Events.Entities;
+using FlowForge.Simulation.Events.Handlers;
 using FlowForge.Simulation.Runtime.Contracts;
 using FlowForge.Simulation.Runtime.Entities;
 using FlowForge.Simulation.Scheduling.Contracts;
@@ -14,11 +15,13 @@ public static class DependencyInjection
 {
   public static IServiceCollection AddSimulation(this IServiceCollection services)
   {
-    services.AddSingleton<IWorkItemTrackingStore, WorkItemTrackingStore>();
-    services.AddSingleton<ISimulationEventQueue, SimulationEventPriorityQueue>();
-    services.AddSingleton<ISimulationEventScheduler, SimulationEventScheduler>();
-    services.AddSingleton<ISimulationRunner, SimulationRunner>();
-    services.AddSingleton<ISimulationEventDispatcher, SimulationEventDispatcher>();
+    services.AddScoped<IWorkItemTrackingStore, WorkItemTrackingStore>();
+    services.AddScoped<ISimulationEventQueue, SimulationEventPriorityQueue>();
+    services.AddScoped<ISimulationEventScheduler, SimulationEventScheduler>();
+    services.AddScoped<ISimulationRunner, SimulationRunner>();
+    services.AddScoped<ISimulationEventDispatcher, SimulationEventDispatcher>();
+    services.AddScoped<ISimulationEventHandler, SimulationEventsGenerateEventHandler>();
+    services.AddScoped<ISimulationEventHandler, WorkItemQueueEventHandler>();
     return services;
   }
 }

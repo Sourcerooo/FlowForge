@@ -146,7 +146,8 @@ Recommended meaning:
 
 Recommended consequences:
 
-- moving a work item from one parallel station queue to another closes one `QueueWait` segment and opens another
+- queue waiting is stage-scoped because one stage owns one shared backlog for all of its stations
+- a work item should not change queue segments merely because the eventual executing station changes
 - putting a work item on hold closes the active queue or processing segment and opens an `OnHold` segment
 - resuming from hold closes the `OnHold` segment and opens the next queue or processing segment
 - future rework remains representable without changing the model shape
@@ -182,7 +183,7 @@ Meaning:
 Recommended direction:
 
 - `StationTracking` owns cumulative facts for one concrete station
-- `StageTracking` aggregates over all stations belonging to the same stage
+- `StageTracking` owns shared stage queue facts and aggregates over all stations belonging to the same stage
 - KPI calculations can answer both stage-level and concrete-station questions
 
 Recommended shapes:
@@ -192,45 +193,78 @@ public sealed class StationTracking
 {
     public Guid StationId { get; init; }
     public Guid StageId { get; init; }
-    public long WorkItemsQueuedCount { get; private set; }
     public long WorkItemsStartedCount { get; private set; }
     public long WorkItemsCompletedCount { get; private set; }
     public long WorkItemsPlacedOnHoldCount { get; private set; }
     public long WorkItemsRequeuedCount { get; private set; }
-    public TimeSpan CumulativeQueueWait { get; private set; }
     public TimeSpan CumulativeProcessingTime { get; private set; }
     public TimeSpan CumulativeOnHoldTime { get; private set; }
     public TimeSpan CumulativeBusyTime { get; private set; }
-    public int PeakQueueLength { get; private set; }
     public int PeakBusyWorkers { get; private set; }
 }
 
 public sealed class StageTracking
 {
     public Guid StageId { get; init; }
+    public long WorkItemsQueuedCount { get; private set; }
+    public TimeSpan CumulativeQueueWait { get; private set; }
+    public int CurrentQueueLength { get; private set; }
+    public int PeakQueueLength { get; private set; }
     public IReadOnlyDictionary<Guid, StationTracking> Stations { get; }
 }
 ```
 
 Recommended meaning:
 
-- `StationTracking` owns cumulative facts for one concrete station queue or resource
-- `StageTracking` is an aggregation layer over multiple stations of the same logical stage
-- this enables both questions: how overloaded is one concrete station, and how expensive is the full stage
+- `StationTracking` owns cumulative facts for one concrete processing resource
+- `StageTracking` owns the shared queue behavior of the stage and aggregates over multiple stations of the same logical stage
+- this enables both questions: how overloaded is the full stage queue, and how utilized is one concrete station
+
+## Stage Runtime Queue
+
+Recommended direction:
+
+- the shared queue should be owned by a runtime object such as `StageRuntimeState`, not by `StageTracking`
+- `StageTracking` keeps cumulative facts and current queue counters for metrics, but not the authoritative queued item collection
+- `StationTracking` should not own queue membership because stations are business-equivalent execution areas inside a stage
+
+Recommended baseline shape:
+
+```csharp
+public sealed class StageRuntimeState
+{
+    public Guid StageId { get; init; }
+    public IReadOnlyDictionary<Guid, StationRuntimeState> Stations { get; }
+    public IReadOnlyCollection<StageQueueEntry> Queue { get; }
+}
+
+public sealed record StageQueueEntry(
+    Guid TrackingSubjectId,
+    TimeSpan QueuedAt,
+    long QueueSequenceNumber,
+    long WorkItemVersion);
+```
+
+Recommended queue content:
+
+- store `StageQueueEntry` values or an equivalent lightweight work-item reference object
+- include the work-item identity and queue-entered time so FIFO and queue-wait calculations remain deterministic
+- include a queue sequence or version field so stale queue entries can be detected after requeue or invalidation scenarios
+- do not store scheduled events inside the stage queue because events belong to the simulation scheduler, not to the operational backlog
 
 ## Aggregation Rules
 
 - work-item tracking stores exact factual segment history
 - station tracking aggregates facts per concrete station
-- stage tracking aggregates across stations belonging to the same logical stage
+- stage tracking aggregates shared queue facts and station facts for the same logical stage
 - KPI collector consumes aggregates rather than replaying full work-item history on every publish
 
 Recommended examples:
 
 - total queue time for one work item in one stage is the sum of all `QueueWait` segments matching the same `StageId`
-- total queue time for one work item in one station is the sum of all `QueueWait` segments matching the same `StationId`
+- queue wait is stage-level by default and should not depend on which concrete station later processes the work item
 - total on-hold time is the sum of all `OnHold` segments across all stages
-- average queue wait for a stage is the sum of queue waits over all stations in that stage divided by started-processing count in that stage
+- average queue wait for a stage is the sum of all stage-level `QueueWait` durations divided by started-processing count in that stage
 
 ## Update Ownership by Event
 
@@ -239,8 +273,8 @@ Recommended update ownership:
 | Event | `SimulationState` | `WorkItemTracking` | `StationTracking` | `IKpiCollector` |
 |---|---|---|---|---|
 | `GenerateSimulationEvent` | creates incoming work items | creates new tracking entries | no direct update | increments created and WIP counters if work items are materialized here |
-| `WorkItemQueueEvent` | pushes a work item into the target queue and updates current status or stage | closes prior transfer or hold segment if needed and opens a new `QueueWait` segment | increments queue count and updates peak queue length if needed | may refresh current bottleneck inputs |
-| `ProcessingStartEvent` | reserves worker capacity and updates active processing state | closes the active `QueueWait` segment, opens a `Processing` segment, increments `CurrentProcessingToken` | increments started count, adds realized queue wait, updates busy-worker peak | updates live stage activity metrics if needed |
+| `WorkItemQueueEvent` | pushes a work item into the target stage queue and updates current status or stage | closes prior transfer or hold segment if needed and opens a new `QueueWait` segment | no direct update yet beyond later station assignment | may refresh current bottleneck inputs |
+| `ProcessingStartEvent` | reserves worker capacity and updates active processing state | closes the active `QueueWait` segment, opens a `Processing` segment, increments `CurrentProcessingToken` | increments started count, updates busy-worker peak | updates live stage activity metrics including realized queue wait |
 | `ProcessingCompleteEvent` | releases worker capacity and updates runtime state | closes the active `Processing` segment and records realized processing duration | increments completed count, adds processing duration and busy time | updates stage metrics and lead-time inputs when relevant |
 | `WorkItemCompleteEvent` | marks the runtime work item complete or removes active runtime presence | sets completion markers and total lead time | no direct update beyond previous completion metrics | increments completed count, updates lead-time aggregates, updates WIP |
 

@@ -135,4 +135,5 @@ public sealed class WorkItemTracking(
       null);
   }
 
+  public override string? ToString() => $"TrackingSubjectId={TrackingSubjectId}, CreatedAt={CreatedAt}, CurrentStatus={CurrentStatus}, CurrentStage={CurrentStage}, CurrentStation={CurrentStation}, CurrentProcessingToken={CurrentProcessingToken}, CompletedAt={CompletedAt}, TotalLeadTime={TotalLeadTime}";
 }
