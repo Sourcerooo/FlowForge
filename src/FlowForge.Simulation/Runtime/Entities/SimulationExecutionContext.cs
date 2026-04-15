@@ -15,7 +15,10 @@ public sealed class SimulationExecutionContext(
     SimulationRunId = SimulationRunId,
     ProcessConfiguration = Data.ProcessConfiguration,
     Metadata = Data.Metadata,
-    State = Data.State
+    State = Data.State,
+    StageStore = new StageStore(Data.StageRuntimeStateStore, Data.StageTrackingStore),
+    WorkItemStore = new WorkItemStore(Data.WorkItemRuntimeStateStore, Data.WorkItemTrackingStore),
+    RoutingPolicy = Data.RoutingPolicy
   };
 
 }

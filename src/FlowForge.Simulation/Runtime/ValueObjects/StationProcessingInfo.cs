@@ -1,4 +1,4 @@
-using FlowForge.Simulation.Tracking.ValueObjects;
+using FlowForge.Domain.Orders.ValueObjects;
 
 namespace FlowForge.Simulation.Runtime.ValueObjects;
 

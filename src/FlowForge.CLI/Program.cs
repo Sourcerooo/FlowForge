@@ -3,13 +3,13 @@
 using System.Globalization;
 using FlowForge.Application;
 using FlowForge.Application.Checkpoints.Contracts;
-using FlowForge.Application.Simulation.Contracts;
+using FlowForge.Domain.Orders.ValueObjects;
 using FlowForge.Domain.Process.ValueObjects;
 using FlowForge.Infrastructure;
 using FlowForge.Simulation;
 using FlowForge.Simulation.Runtime.Contracts;
 using FlowForge.Simulation.Runtime.Entities;
-using FlowForge.Simulation.Tracking.ValueObjects;
+using FlowForge.Simulation.Runtime.ValueObjects;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Serilog;
@@ -99,13 +99,19 @@ public class Program
         { stationRuntimeState.StationId, stationRuntimeState }
       });
 
+    stageRuntimeState.Enqueue(new StageQueueEntry(t1, TimeSpan.FromSeconds(10)));
+    stageRuntimeState.Enqueue(new StageQueueEntry(t2, TimeSpan.FromSeconds(20)));
+    stageRuntimeState.Enqueue(new StageQueueEntry(t3, TimeSpan.FromSeconds(30)));
+    stageRuntimeState.Enqueue(new StageQueueEntry(t4, TimeSpan.FromSeconds(40)));
+
     var succ = false;
-    succ = stageRuntimeState.TryStartProcessing(t1, TimeSpan.FromSeconds(10), 1);
-    succ = stageRuntimeState.TryStartProcessing(t2, TimeSpan.FromSeconds(20), 2);
-    succ = stageRuntimeState.TryStartProcessing(t3, TimeSpan.FromSeconds(30), 3);
-    succ = stageRuntimeState.TryStartProcessing(t4, TimeSpan.FromSeconds(40), 4);
-    succ = stageRuntimeState.TryFinishProcessing(t2);
-    succ = stageRuntimeState.TryStartProcessing(t5, TimeSpan.FromSeconds(50), 4);
+    succ = stageRuntimeState.TryStartProcessing(TimeSpan.FromSeconds(10)).IsSuccess;
+    succ = stageRuntimeState.TryStartProcessing(TimeSpan.FromSeconds(20)).IsSuccess;
+    succ = stageRuntimeState.TryStartProcessing(TimeSpan.FromSeconds(30)).IsSuccess;
+    succ = stageRuntimeState.TryStartProcessing(TimeSpan.FromSeconds(40)).IsSuccess;
+    stageRuntimeState.CompleteProcessing(t2);
+    stageRuntimeState.Enqueue(new StageQueueEntry(t5, TimeSpan.FromSeconds(50)));
+    succ = stageRuntimeState.TryStartProcessing(TimeSpan.FromSeconds(50)).IsSuccess;
 
     /*var workItemTrackingService = serviceProvider.GetRequiredService<IWorkItemTrackingStore>();
     var trackingSubjectId = TrackingSubjectId.NewId();

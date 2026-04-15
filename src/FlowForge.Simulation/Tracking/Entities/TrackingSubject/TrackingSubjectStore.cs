@@ -1,5 +1,5 @@
+using FlowForge.Domain.Orders.ValueObjects;
 using FlowForge.Simulation.Tracking.Contracts;
-using FlowForge.Simulation.Tracking.ValueObjects;
 
 namespace FlowForge.Simulation.Tracking.Entities.TrackingSubject;
 

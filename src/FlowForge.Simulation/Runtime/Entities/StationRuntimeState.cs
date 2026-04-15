@@ -1,6 +1,6 @@
+using FlowForge.Domain.Orders.ValueObjects;
 using FlowForge.Domain.Process.ValueObjects;
 using FlowForge.Simulation.Runtime.ValueObjects;
-using FlowForge.Simulation.Tracking.ValueObjects;
 
 namespace FlowForge.Simulation.Runtime.Entities;
 
@@ -47,7 +47,7 @@ public sealed class StationRuntimeState(
   {
     try
     {
-      var processingInfo = _processingInfo.First(kvp => kvp.Value.TrackingSubjectId == trackingSubjectId).Value;
+      var processingInfo = GetProcessingInfo(trackingSubjectId);
       if (processingInfo.WorkerSlot < 0 || processingInfo.WorkerSlot >= WorkerCapacity)
       {
         throw new ArgumentOutOfRangeException($"StationRuntimeState->ReleaseWorker: Worker slot must be between 0 and {WorkerCapacity - 1}.");
@@ -58,6 +58,18 @@ public sealed class StationRuntimeState(
     catch (InvalidOperationException)
     {
       throw new ArgumentException($"StationRuntimeState->ReleaseWorker: No worker found for TrackingSubjectId {trackingSubjectId}.");
+    }
+  }
+
+  public StationProcessingInfo GetProcessingInfo(TrackingSubjectId trackingSubjectId)
+  {
+    try
+    {
+      return _processingInfo.First(kvp => kvp.Value.TrackingSubjectId == trackingSubjectId).Value;
+    }
+    catch (InvalidOperationException)
+    {
+      throw new ArgumentException($"StationRuntimeState->GetProcessingInfo: No worker found for TrackingSubjectId {trackingSubjectId}.");
     }
   }
 }

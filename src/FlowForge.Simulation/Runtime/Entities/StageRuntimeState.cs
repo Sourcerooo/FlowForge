@@ -1,10 +1,11 @@
+using FlowForge.Domain.Orders.ValueObjects;
 using FlowForge.Domain.Process.ValueObjects;
+using FlowForge.Domain.SharedKernel.Util;
 using FlowForge.Simulation.Runtime.ValueObjects;
-using FlowForge.Simulation.Tracking.ValueObjects;
 
 namespace FlowForge.Simulation.Runtime.Entities;
 
-public sealed class StageRuntimeState(
+public sealed partial class StageRuntimeState(
   StageId stageId,
   IReadOnlyDictionary<StationId, StationRuntimeState> stations
   )
@@ -30,29 +31,50 @@ public sealed class StageRuntimeState(
     return !Stations.Any(station => station.Value.HasFreeWorker);
   }
 
-  public bool TryStartProcessing(TimeSpan startedAt, long processingToken)
+  public Result<StageStartedProcess> TryStartProcessing(TimeSpan startedAt)
   {
+    if (!HasEntries())
+    {
+      return Result<StageStartedProcess>.Failure(new InvalidOperationException("Queue is empty. No task to start processing."));
+    }
     if (IsBusy())
     {
-      return false;
+      return Result<StageStartedProcess>.Failure(new InvalidOperationException("All workers are busy. Task could not be started"));
     }
     var entry = Dequeue();
     if (_processingStation.ContainsKey(entry.TrackingSubjectId))
     {
       throw new InvalidOperationException($"StageRuntimeState->TryStartProcessing: TrackingSubjectId {entry.TrackingSubjectId} is already processing at a station.");
     }
-    var stationId = TryReserveFreeStation(entry.TrackingSubjectId, startedAt, processingToken);
-    return stationId != null;
+    var stationId = TryReserveFreeStation(entry.TrackingSubjectId, startedAt, entry.ProcessingToken);
+    //If no station could be reserved (which can happen if the queue is not empty but all stations became busy since the IsBusy check),
+    //re-enqueue the entry and return false to indicate that processing could not be started.
+    if (stationId == null)
+    {
+      Enqueue(entry);
+      return Result<StageStartedProcess>.Failure(new InvalidOperationException("All workers are busy. Task could not be started"));
+    }
+    return Result<StageStartedProcess>.Success(new StageStartedProcess(entry.TrackingSubjectId, StageId, stationId.Value, entry.ProcessingToken));
   }
 
-  public bool TryFinishProcessing(TrackingSubjectId trackingSubjectId)
+  public void StopProcessing(TrackingSubjectId trackingSubjectId, TimeSpan currentTime)
   {
     if (!_processingStation.ContainsKey(trackingSubjectId))
     {
-      throw new InvalidOperationException($"StageRuntimeState->TryFinishProcessing: TrackingSubjectId {trackingSubjectId} is not currently processing at any station.");
+      throw new InvalidOperationException($"StageRuntimeState->StopProcessing: TrackingSubjectId {trackingSubjectId} is not currently processing at any station.");
+    }
+    var proccesingInfo = ReleaseStation(trackingSubjectId);
+    var newProcessingToken = proccesingInfo.ProcessingToken + 1;
+    Enqueue(new StageQueueEntry(trackingSubjectId, currentTime, newProcessingToken));
+  }
+
+  public void CompleteProcessing(TrackingSubjectId trackingSubjectId)
+  {
+    if (!_processingStation.ContainsKey(trackingSubjectId))
+    {
+      throw new InvalidOperationException($"StageRuntimeState->CompleteProcessing: TrackingSubjectId {trackingSubjectId} is not currently processing at any station.");
     }
     ReleaseStation(trackingSubjectId);
-    return true;
   }
   //---------------------------------- Private Methods ----------------------------------
   private readonly List<StationId> _stationOrder = [.. stations.Keys];
@@ -86,16 +108,22 @@ public sealed class StageRuntimeState(
     return null;
   }
 
-  private void ReleaseStation(TrackingSubjectId trackingSubjectId)
+  private StationProcessingInfo ReleaseStation(TrackingSubjectId trackingSubjectId)
   {
     if (!_processingStation.TryGetValue(trackingSubjectId, out var stationId))
     {
       throw new InvalidOperationException($"StageRuntimeState->ReleaseStation: TrackingSubjectId {trackingSubjectId} is not currently processing at any station.");
     }
     var station = Stations[stationId];
+    var processingToken = station.GetProcessingInfo(trackingSubjectId);
     station.ReleaseWorker(trackingSubjectId);
     _processingStation.Remove(trackingSubjectId);
+    return processingToken;
   }
 
+  private bool HasEntries()
+  {
+    return _queue.Count > 0;
+  }
 
 }

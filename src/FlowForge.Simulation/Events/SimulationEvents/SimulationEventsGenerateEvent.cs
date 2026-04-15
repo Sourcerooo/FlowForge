@@ -10,4 +10,4 @@ public record SimulationEventsGenerateEvent(
   TimeSpan ScheduledTime,
   long SequenceNumber)
   : PackagingSimulationEvent(Id, SimulationRunId, ScheduledTime, EventSortRank.SimulationEventsGenerate, SequenceNumber,
-    EventKind.SimulationEventsGenerate, null, null, null, null);
+    EventKind.SimulationEventsGenerate);

@@ -1,6 +1,6 @@
 using FlowForge.Simulation.Runtime.Entities;
 
-namespace FlowForge.Application.Simulation.Contracts;
+namespace FlowForge.Simulation.Runtime.Contracts;
 
 public interface ISimulationContextBuilder
 {

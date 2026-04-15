@@ -22,15 +22,15 @@ public sealed class SimulationRunner(
           TimeSpan.FromSeconds(0),
           context.Data.State.GetNextSequenceNumber())
       );
-    while (EventQueue.TryDequeue(out var nextEvent) && context.Data.State.CurrentTime <= context.Data.ProcessConfiguration.PlannedDuration)
+    while (EventQueue.TryDequeue(out var nextEvent)
+      && context.Data.State.CurrentTime <= context.Data.ProcessConfiguration.PlannedDuration
+      && nextEvent is not null
+      && nextEvent.ScheduledTime <= context.Data.ProcessConfiguration.PlannedDuration
+      )
     {
       if (cancellationToken.IsCancellationRequested)
       {
         return SimulationRunResult.Cancelled;
-      }
-      if (nextEvent is null)
-      {
-        continue;
       }
 
       context.Data.State.AdvanceTo(nextEvent.ScheduledTime);

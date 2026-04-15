@@ -1,8 +1,8 @@
+using FlowForge.Domain.Orders.ValueObjects;
 using FlowForge.Domain.Process.ValueObjects;
 using FlowForge.Domain.SharedKernel.Util;
 using FlowForge.Simulation.Tracking.Entities.WorkItems;
 using FlowForge.Simulation.Tracking.Enums;
-using FlowForge.Simulation.Tracking.ValueObjects;
 
 namespace FlowForge.Simulation.Tracking.Contracts;
 
@@ -25,7 +25,7 @@ public interface IWorkItemTrackingStore
   public Result SetCurrentStatus(TrackingSubjectId trackingSubjectId, WorkItemStatus status);
 
   public Result EnqueueWorkItem(TrackingSubjectId trackingSubjectId, TimeSpan currentTime);
-  public Result ProcessWorkItem(TrackingSubjectId trackingSubjectId, TimeSpan currentTime);
-  public Result StopWorkItem(TrackingSubjectId trackingSubjectId, TimeSpan currentTime);
+  public Result StartProcessingWorkItem(TrackingSubjectId trackingSubjectId, TimeSpan currentTime);
+  public Result StopProcessingWorkItem(TrackingSubjectId trackingSubjectId, TimeSpan currentTime);
   public Result CompleteWorkItem(TrackingSubjectId trackingSubjectId, TimeSpan completionTime);
 }

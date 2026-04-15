@@ -1,5 +1,4 @@
 using FlowForge.Domain.Orders.ValueObjects;
-using FlowForge.Domain.Process.ValueObjects;
 using FlowForge.Simulation.Events.Enums;
 using FlowForge.Simulation.Events.ValueObjects;
 using FlowForge.Simulation.Runtime.ValueObjects;
@@ -11,9 +10,7 @@ public record WorkItemCompleteEvent(
   SimulationRunId SimulationRunId,
   TimeSpan ScheduledTime,
   long SequenceNumber,
-  StageId? StageId,
-  StationId? StationId,
-  long? ProcessingToken,
-  OrderId? OrderId)
+  long ProcessingToken,
+  TrackingSubjectId TrackingSubjectId)
   : PackagingSimulationEvent(Id, SimulationRunId, ScheduledTime, EventSortRank.OrderComplete, SequenceNumber,
-    EventKind.WorkItemComplete, StageId, StationId, ProcessingToken, OrderId);
+    EventKind.WorkItemComplete);

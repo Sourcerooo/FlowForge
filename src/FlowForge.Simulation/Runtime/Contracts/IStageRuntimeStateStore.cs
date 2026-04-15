@@ -1,6 +1,8 @@
+using FlowForge.Domain.Orders.ValueObjects;
 using FlowForge.Domain.Process.ValueObjects;
+using FlowForge.Domain.SharedKernel.Util;
 using FlowForge.Simulation.Runtime.ValueObjects;
-using FlowForge.Simulation.Tracking.ValueObjects;
+using static FlowForge.Simulation.Runtime.Entities.StageRuntimeState;
 
 namespace FlowForge.Simulation.Runtime.Contracts;
 
@@ -14,13 +16,16 @@ public interface IStageRuntimeStateStore
 
   public bool IsBusy(StageId stageId);
 
-  public bool TryStartProcessing(
+  public Result<StageStartedProcess> TryStartProcessing(
+    StageId stageId,
+    TimeSpan startedAt);
+
+  public void StopProcessing(
     StageId stageId,
     TrackingSubjectId trackingSubjectId,
-    TimeSpan startedAt,
-    long processingToken);
+    TimeSpan currentTime);
 
-  public bool TryFinishProcessing(
+  public void CompleteProcessing(
     StageId stageId,
     TrackingSubjectId trackingSubjectId);
 }

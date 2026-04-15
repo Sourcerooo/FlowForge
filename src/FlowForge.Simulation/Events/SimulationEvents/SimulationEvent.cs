@@ -1,4 +1,3 @@
-using FlowForge.Domain.Process.ValueObjects;
 using FlowForge.Simulation.Events.Enums;
 using FlowForge.Simulation.Events.ValueObjects;
 using FlowForge.Simulation.Runtime.ValueObjects;
@@ -11,8 +10,4 @@ public abstract record SimulationEvent(
   TimeSpan ScheduledTime,
   EventSortRank Rank,
   long SequenceNumber,
-  EventKind EventKind,
-  StageId? StageId,
-  StationId? StationId,
-  long? ProcessingToken
-  );
+  EventKind EventKind);

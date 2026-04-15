@@ -16,10 +16,9 @@ internal sealed class SimulationEventDispatcher(IEnumerable<ISimulationEventHand
     CancellationToken cancellationToken)
   {
     //StageId? stageId = null;
-    var handler = _eventHandler.GetValueOrDefault(simulationEvent.EventKind);
-    if (handler != null)
-    {
-      await handler.Process(simulationEvent, context, cancellationToken);
-    }
+    var handler = _eventHandler.GetValueOrDefault(simulationEvent.EventKind)
+      ?? throw new InvalidOperationException($"No handler found for event kind: {simulationEvent.EventKind}");
+    await handler.Process(simulationEvent, context, cancellationToken);
+
   }
 }

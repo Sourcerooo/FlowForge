@@ -1,9 +1,9 @@
+using FlowForge.Domain.Orders.ValueObjects;
 using FlowForge.Domain.Process.ValueObjects;
 using FlowForge.Domain.SharedKernel.Util;
 using FlowForge.Simulation.Tracking.Contracts;
 using FlowForge.Simulation.Tracking.Entities.WorkItems;
 using FlowForge.Simulation.Tracking.Enums;
-using FlowForge.Simulation.Tracking.ValueObjects;
 using Microsoft.Extensions.Logging;
 namespace FlowForge.Simulation.Tracking.Services;
 
@@ -111,7 +111,7 @@ public sealed class WorkItemTrackingStore(ILogger<WorkItemTrackingStore> logger)
     return Result.Success();
   }
 
-  public Result ProcessWorkItem(TrackingSubjectId trackingSubjectId, TimeSpan currentTime)
+  public Result StartProcessingWorkItem(TrackingSubjectId trackingSubjectId, TimeSpan currentTime)
   {
     if (!_workItemTrackings.TryGetValue(trackingSubjectId, out WorkItemTracking? value))
     {
@@ -121,7 +121,7 @@ public sealed class WorkItemTrackingStore(ILogger<WorkItemTrackingStore> logger)
     return Result.Success();
   }
 
-  public Result StopWorkItem(TrackingSubjectId trackingSubjectId, TimeSpan currentTime)
+  public Result StopProcessingWorkItem(TrackingSubjectId trackingSubjectId, TimeSpan currentTime)
   {
     if (!_workItemTrackings.TryGetValue(trackingSubjectId, out WorkItemTracking? value))
     {

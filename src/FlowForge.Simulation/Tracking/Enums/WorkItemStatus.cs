@@ -6,5 +6,6 @@ public enum WorkItemStatus
   InQueue,
   OnHold,
   Processing,
-  Completed
+  Completed,
+  Finished
 }

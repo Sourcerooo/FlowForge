@@ -11,5 +11,6 @@
   <Folder Name="/tests/">
     <Project Path="tests/FlowForge.Application.Tests/FlowForge.Application.Tests.csproj" />
     <Project Path="tests/FlowForge.Domain.Tests/FlowForge.Domain.Tests.csproj" />
+    <Project Path="tests/FlowForge.Simulation.Tests/FlowForge.Simulation.Tests.csproj" />
   </Folder>
 </Solution>

@@ -1,22 +1,18 @@
-using FlowForge.Domain.Process.Entities;
-using FlowForge.Domain.Process.ValueObjects;
+using FlowForge.Simulation.Application.Contracts;
+using FlowForge.Simulation.Application.ValueObjects;
 using FlowForge.Simulation.Events.Contracts;
 using FlowForge.Simulation.Events.Enums;
 using FlowForge.Simulation.Events.SimulationEvents;
-using FlowForge.Simulation.Events.ValueObjects;
 using FlowForge.Simulation.Runtime.Entities;
-using FlowForge.Simulation.Scheduling.Contracts;
+using FlowForge.Simulation.Runtime.ValueObjects;
 
 namespace FlowForge.Simulation.Events.Handlers;
 
-internal sealed class WorkItemQueueEventHandler(ISimulationEventScheduler Scheduler) : ISimulationEventHandler
+internal sealed class WorkItemQueueEventHandler(
+  IWorkItemProcessOrchestrator Orchestrator)
+  : ISimulationEventHandler
 {
   public EventKind CanHandle() => EventKind.WorkItemQueue;
-
-  private static StageId GetFirstStage(IEnumerable<StageDefinition> stages)
-  {
-    return stages.FirstOrDefault()?.StageId ?? throw new InvalidOperationException("Process must have at least one stage");
-  }
 
   public async Task Process(
     SimulationEvent simulationEvent,
@@ -25,13 +21,38 @@ internal sealed class WorkItemQueueEventHandler(ISimulationEventScheduler Schedu
   {
     var workItemQueueEvent = (WorkItemQueueEvent)simulationEvent;
     var curTime = context.State.CurrentTime;
-    var stageId = GetFirstStage(context.ProcessConfiguration.Stages);
-    var newTrackingEvent = new ProcessingStartEvent(
-          SimulationEventId.NewId(),
+    if (workItemQueueEvent.TrackingSubjectId.Value == Guid.Empty)
+    {
+      throw new InvalidOperationException("TrackingSubjectId must be provided for WorkItemQueueEvent");
+    }
+
+    await Orchestrator.QueueForStageAsync(
+      new QueueForStageCommand(
+        workItemQueueEvent.TrackingSubjectId,
+        workItemQueueEvent.ProcessingToken,
+        workItemQueueEvent.StageId,
+        new SimulationCommandContext(
           context.SimulationRunId,
-          curTime,
-          context.State.GetNextSequenceNumber(), stageId, null, 0, workItemQueueEvent.OrderId
-        );
-    Scheduler.Schedule(newTrackingEvent);
+          context.State,
+          context.StageStore,
+          context.WorkItemStore,
+          context.RoutingPolicy)
+        ), cancellationToken);
+
+
+    if (!context.StageStore.StageRuntimeStore.IsBusy(workItemQueueEvent.StageId))
+    {
+      await Orchestrator.StartProcessingAsync(
+        new StartProcessingCommand(
+          workItemQueueEvent.StageId,
+          new SimulationCommandContext(
+              context.SimulationRunId,
+              context.State,
+              context.StageStore,
+              context.WorkItemStore,
+              context.RoutingPolicy)
+          ),
+        cancellationToken);
+    }
   }
 }
