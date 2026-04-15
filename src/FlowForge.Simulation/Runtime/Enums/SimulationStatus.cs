@@ -1,6 +1,6 @@
 namespace FlowForge.Simulation.Runtime.Enums;
 
-public enum SimulationStatus1
+public enum SimulationStatus
 {
   NotStarted,
   Running,

@@ -1,5 +1,4 @@
-using FlowForge.Domain.Orders.ValueObjects;
-using FlowForge.Domain.ProcessModel.ValueObjects;
+using FlowForge.Domain.Process.ValueObjects;
 using FlowForge.Simulation.Events.Enums;
 using FlowForge.Simulation.Events.ValueObjects;
 using FlowForge.Simulation.Runtime.ValueObjects;
@@ -11,9 +10,6 @@ public record ProcessingStartEvent(
   SimulationRunId SimulationRunId,
   TimeSpan ScheduledTime,
   long SequenceNumber,
-  StageId? StageId,
-  StationId? StationId,
-  long? ProcessingToken,
-  OrderId? OrderId)
+  StageId StageId)
   : PackagingSimulationEvent(Id, SimulationRunId, ScheduledTime, EventSortRank.ProcessingStart, SequenceNumber,
-    EventKind.ProcessingStart, StageId, StationId, ProcessingToken, OrderId);
+    EventKind.ProcessingStart);

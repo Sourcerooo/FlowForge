@@ -1,4 +1,4 @@
-using FlowForge.Simulation.Events.Entities;
+using FlowForge.Simulation.Events.ValueObjects;
 
 namespace FlowForge.Simulation.Events.Contracts;
 

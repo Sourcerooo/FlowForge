@@ -1,10 +1,7 @@
-using FlowForge.Domain.ProcessModel.Entities;
-using FlowForge.Simulation.Kpi.Contracts;
+using FlowForge.Domain.Process.Entities;
+using FlowForge.Simulation.Application.Contracts;
 using FlowForge.Simulation.Runtime.Enums;
 using FlowForge.Simulation.Runtime.ValueObjects;
-using FlowForge.Simulation.Scheduling.Contracts;
-using FlowForge.Simulation.Snapshots.Contracts;
-using FlowForge.Simulation.Tracking.Contracts;
 
 namespace FlowForge.Simulation.Runtime.Entities;
 
@@ -14,12 +11,7 @@ public sealed class SimulationExecutionHandlerContext
   public ProcessConfiguration ProcessConfiguration { get; init; } = default!;
   public SimulationMetadata Metadata { get; init; } = default!;
   public SimulationState State { get; init; } = default!;
-  public ISimulationEventScheduler Scheduler { get; init; } = default!;
-  public ITrackingSubjectStore TrackingSubjectStore { get; init; } = default!;
-  public IWorkItemTrackingStore WorkItemTrackingStore { get; init; } = default!;
-  public IStageTrackingStore StageTrackingStore { get; init; } = default!;
-  public IKpiCollector KpiCollector { get; init; } = default!;
-  public ISnapshotBuilder SnapshotBuilder { get; init; } = default!;
-  public ISnapshotStore SnapshotStore { get; init; } = default!;
-  public ISnapshotTimelineStore SnapshotTimelineStore { get; init; } = default!;
+  public StageStore StageStore { get; init; } = default!;
+  public WorkItemStore WorkItemStore { get; init; } = default!;
+  public IRoutingPolicy RoutingPolicy { get; init; } = default!;
 }

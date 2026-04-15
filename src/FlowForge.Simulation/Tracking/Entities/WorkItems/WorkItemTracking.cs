@@ -1,6 +1,7 @@
-using FlowForge.Domain.ProcessModel.ValueObjects;
+using FlowForge.Domain.Orders.ValueObjects;
+using FlowForge.Domain.Process.ValueObjects;
+using FlowForge.Simulation.Runtime.ValueObjects;
 using FlowForge.Simulation.Tracking.Enums;
-using FlowForge.Simulation.Tracking.ValueObjects;
 
 namespace FlowForge.Simulation.Tracking.Entities.WorkItems;
 
@@ -10,7 +11,7 @@ public sealed class WorkItemTracking(
   WorkItemStatus currentStatus = WorkItemStatus.Created,
   StageId? currentStage = null,
   StationId? currentStation = null,
-  long currentProcessingToken = 0,
+  ProcessingToken currentProcessingToken = default,
   TimeSpan? completedAt = null
   )
 {
@@ -19,7 +20,7 @@ public sealed class WorkItemTracking(
   public WorkItemStatus CurrentStatus { get; private set; } = currentStatus;
   public StageId? CurrentStage { get; private set; } = currentStage;
   public StationId? CurrentStation { get; private set; } = currentStation;
-  public long CurrentProcessingToken { get; private set; } = currentProcessingToken;
+  public ProcessingToken CurrentProcessingToken { get; private set; } = currentProcessingToken;
   public TimeSpan? CompletedAt { get; private set; } = completedAt;
   public IReadOnlyList<WorkItemTrackingSegment> Segments => _segments;
   public TimeSpan? TotalLeadTime => CompletedAt is null ? null : CompletedAt.Value - CreatedAt;
@@ -62,7 +63,7 @@ public sealed class WorkItemTracking(
     CurrentStation = stationId;
   }
 
-  public void SetCurrentProcessingToken(long processingToken)
+  public void SetCurrentProcessingToken(ProcessingToken processingToken)
   {
     CurrentProcessingToken = processingToken;
   }
@@ -108,7 +109,7 @@ public sealed class WorkItemTracking(
   private static WorkItemTrackingSegment StartSegment(
   TrackingSegmentType segmentType,
   TimeSpan startedAt,
-  long processingToken = 0,
+  ProcessingToken processingToken = default,
   StageId? stageId = null,
   StationId? stationId = null)
   {
@@ -135,4 +136,5 @@ public sealed class WorkItemTracking(
       null);
   }
 
+  public override string? ToString() => $"TrackingSubjectId={TrackingSubjectId}, CreatedAt={CreatedAt}, CurrentStatus={CurrentStatus}, CurrentStage={CurrentStage}, CurrentStation={CurrentStation}, CurrentProcessingToken={CurrentProcessingToken}, CompletedAt={CompletedAt}, TotalLeadTime={TotalLeadTime}";
 }

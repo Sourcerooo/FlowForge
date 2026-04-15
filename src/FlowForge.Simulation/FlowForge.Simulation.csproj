@@ -5,6 +5,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
   </ItemGroup>
 
   <ItemGroup>
@@ -12,7 +13,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Events\Handlers\" />
     <Folder Include="Kpi\Entities\" />
     <Folder Include="Kpi\ValueObjects\" />
     <Folder Include="Application\Entities\" />

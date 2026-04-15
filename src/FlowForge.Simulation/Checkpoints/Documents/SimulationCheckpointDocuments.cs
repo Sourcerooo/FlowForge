@@ -1,4 +1,5 @@
 using System.Text.Json.Nodes;
+using FlowForge.Simulation.Runtime.ValueObjects;
 
 namespace FlowForge.Simulation.Checkpoints.Documents;
 
@@ -86,7 +87,7 @@ public sealed record SimulationEventDocument(
     string ProcessStage,
     int SortRank,
     long SequenceNumber,
-    long? ProcessingToken,
+    ProcessingToken? ProcessingToken,
     Guid? OrderId,
     IReadOnlyDictionary<string, JsonNode?>? Payload);
 
@@ -103,12 +104,12 @@ public sealed record WorkItemTrackingDocument(
     Guid? CurrentStageId,
     TimeSpan CreatedAt,
     TimeSpan? CompletedAt,
-    long CurrentProcessingToken,
+    ProcessingToken CurrentProcessingToken,
     IReadOnlyList<WorkItemTrackingSegmentDocument> Segments);
 
 public sealed record WorkItemTrackingSegmentDocument(
     long SegmentId,
-    long ProcessingToken,
+    ProcessingToken ProcessingToken,
     Guid? StageId,
     Guid? StationId,
     string SegmentType,

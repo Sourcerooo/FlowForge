@@ -1,0 +1,54 @@
+<UserControl x:Class="FlowForge.UiWpf.Screens.TimelineScreen"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:FlowForge.UiWpf">
+    <Grid>
+        <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="16" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+        <Border Style="{StaticResource ScreenPanelCardStyle}">
+            <StackPanel>
+                <TextBlock Style="{StaticResource SectionTitleStyle}" Text="Timeline Playback" />
+                <TextBlock Margin="0,8,0,0" Style="{StaticResource HeaderLabelStyle}" Text="Dedicated timeline screen for reviewing simulated event progression and intervention windows." />
+            </StackPanel>
+        </Border>
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="2*" /><ColumnDefinition Width="16" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+            <Border Grid.Column="0" Style="{StaticResource ScreenPanelCardStyle}">
+                <StackPanel>
+                    <TextBlock Style="{StaticResource SectionTitleStyle}" Text="Milestones" />
+                    <ItemsControl Margin="0,18,0,0" ItemsSource="{Binding Milestones}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="{x:Type local:InfoCardViewModel}">
+                                <Border Margin="{StaticResource ScreenListItemMargin}" Padding="16" CornerRadius="12" Background="{Binding Background}" BorderBrush="{Binding AccentBrush}" BorderThickness="1">
+                                    <StackPanel>
+                                        <TextBlock FontWeight="SemiBold" Foreground="{Binding AccentBrush}" Text="{Binding Subtitle}" />
+                                        <TextBlock Margin="0,4,0,0" FontFamily="Bahnschrift" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource StrongTextBrush}" Text="{Binding Title}" />
+                                        <TextBlock Margin="0,6,0,0" Foreground="{DynamicResource MutedTextBrush}" Text="{Binding Description}" TextWrapping="Wrap" />
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+            <Border Grid.Column="2" Style="{StaticResource ScreenPanelCardStyle}">
+                <StackPanel>
+                    <TextBlock Style="{StaticResource SectionTitleStyle}" Text="Recorded Events" />
+                    <ItemsControl Margin="0,18,0,0" ItemsSource="{Binding EventEntries}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="{x:Type local:EventEntryViewModel}">
+                                <Border Margin="{StaticResource ScreenListItemMargin}" Padding="12" CornerRadius="12" Background="{DynamicResource PanelSurfaceBrush}" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="1">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="60" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                        <TextBlock FontWeight="SemiBold" Foreground="{DynamicResource StrongTextBrush}" Text="{Binding TimeLabel}" />
+                                        <TextBlock Grid.Column="1" Foreground="{DynamicResource StrongTextBrush}" Text="{Binding Title}" />
+                                        <Border Grid.Column="2" Padding="10,4" CornerRadius="10" Background="{Binding BadgeBackground}"><TextBlock FontSize="11" FontWeight="SemiBold" Foreground="{Binding BadgeForeground}" Text="{Binding BadgeText}" /></Border>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

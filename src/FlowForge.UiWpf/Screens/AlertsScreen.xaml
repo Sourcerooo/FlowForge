@@ -1,0 +1,55 @@
+<UserControl x:Class="FlowForge.UiWpf.Screens.AlertsScreen"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:FlowForge.UiWpf">
+    <Grid>
+        <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="16" /><ColumnDefinition Width="1.2*" /></Grid.ColumnDefinitions>
+        <Border Grid.Column="0" Style="{StaticResource ScreenPanelCardStyle}">
+            <StackPanel>
+                <TextBlock Style="{StaticResource SectionTitleStyle}" Text="Alert Queue" />
+                <ItemsControl Margin="0,18,0,0" ItemsSource="{Binding Alerts}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="{x:Type local:AlertItemViewModel}">
+                            <Button Margin="{StaticResource ScreenListItemMargin}" Style="{StaticResource ListActionButtonStyle}" Background="{Binding Background}" BorderBrush="{Binding BorderBrush}" Command="{Binding DataContext.SelectAlertCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}">
+                                <Grid>
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                    <TextBlock VerticalAlignment="Center" FontFamily="Segoe Fluent Icons" Foreground="{Binding IconBrush}" Text="{Binding IconGlyph}" />
+                                    <StackPanel Grid.Column="1" Margin="12,0,0,0">
+                                        <TextBlock Foreground="{DynamicResource StrongTextBrush}" Text="{Binding Title}" />
+                                        <TextBlock Margin="0,4,0,0" FontSize="12" Foreground="{DynamicResource MutedTextBrush}" Text="{Binding Description}" TextWrapping="Wrap" />
+                                    </StackPanel>
+                                </Grid>
+                            </Button>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </Border>
+        <Border Grid.Column="2" Style="{StaticResource ScreenPanelCardStyle}">
+            <StackPanel>
+                <TextBlock Style="{StaticResource SectionTitleStyle}" Text="Alert Detail" />
+                <TextBlock Margin="0,18,0,0" FontFamily="Bahnschrift" FontSize="22" FontWeight="SemiBold" Foreground="{DynamicResource StrongTextBrush}" Text="{Binding SelectedAlert.Title}" />
+                <TextBlock Margin="0,10,0,0" Foreground="{DynamicResource MutedTextBrush}" TextWrapping="Wrap" Text="{Binding SelectedAlert.Description}" />
+                <Border Margin="0,14,0,0" Padding="12" CornerRadius="12" Background="{DynamicResource PanelSurfaceBrush}" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="1">
+                    <StackPanel>
+                        <TextBlock Foreground="{DynamicResource MutedTextBrush}" Text="Impacted Stage" />
+                        <TextBlock Margin="0,4,0,0" FontWeight="SemiBold" Foreground="{DynamicResource StrongTextBrush}" Text="{Binding SelectedAlert.TargetStageName}" />
+                    </StackPanel>
+                </Border>
+                <Border Margin="0,18,0,0" Padding="16" CornerRadius="12" Background="{Binding SelectedAlert.Background}" BorderBrush="{Binding SelectedAlert.BorderBrush}" BorderThickness="1">
+                    <TextBlock Foreground="{DynamicResource StrongTextBrush}" Text="Operators should inspect the selected stage detail and compare mitigation options before resuming playback." TextWrapping="Wrap" />
+                </Border>
+                <Button Margin="0,18,0,0"
+                        Style="{StaticResource ToolbarButtonPrimaryStyle}"
+                        HorizontalAlignment="Left"
+                        Command="{Binding DataContext.FocusStageInOverviewCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                        CommandParameter="{Binding SelectedAlert.TargetStageName}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Margin="0,0,8,0" FontFamily="Segoe Fluent Icons" Text="&#xE71B;" />
+                        <TextBlock Text="Focus Stage In Flow" />
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

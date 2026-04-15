@@ -38,6 +38,7 @@ Abgeschlossene Aufgaben werden aus dieser Datei nach `docs/DoneTasks.md` verscho
 | T023 | Offen | Checkpoint-Basisvertraege anlegen | `SimulationExecutionState`, `SimulationCheckpointDocument` und die wichtigsten Subdokumente in `FlowForge.Simulation` einfuehren | `docs/architecture/design/checkpoints.md` |
 | T024 | Offen | Checkpoint-Store-Port in Application anlegen | `ISimulationCheckpointStore` als Application-Port definieren und fuer spaetere Infrastructure-Implementierung vorbereiten | `docs/architecture/design/checkpoints.md` |
 | T025 | Offen | Simulation-Testsprojekt anlegen | `tests/FlowForge.Simulation.Tests` erstellen und erste Tests fuer Event-Ordering und Runner-Verhalten hinzufuegen | `docs/architecture/design/simulation-runner.md`, `docs/architecture/design/simulation-events.md` |
+| T033 | Offen | `FlowForge.UiWpf` an echte Snapshot- und Control-Use-Cases anbinden | Application-Ports fuer Start, Pause, Reset und Latest-Snapshot-Read konkretisieren und die WPF-Ansicht statt Sample-Daten daran anbinden | `docs/architecture/components/delivery.md`, `docs/architecture/design/application-contracts.md`, `docs/architecture/design/snapshots-and-kpis.md` |
 
 ## Vorbereitet, aber aktuell blockiert
 

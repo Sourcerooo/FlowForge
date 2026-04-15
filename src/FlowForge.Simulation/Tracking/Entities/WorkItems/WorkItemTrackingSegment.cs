@@ -1,4 +1,5 @@
-using FlowForge.Domain.ProcessModel.ValueObjects;
+using FlowForge.Domain.Process.ValueObjects;
+using FlowForge.Simulation.Runtime.ValueObjects;
 using FlowForge.Simulation.Tracking.Enums;
 using FlowForge.Simulation.Tracking.ValueObjects;
 
@@ -7,7 +8,7 @@ namespace FlowForge.Simulation.Tracking.Entities.WorkItems;
 public sealed record WorkItemTrackingSegment(
   TrackingSegmentType SegmentType,
   TimeSpan StartedAt,
-  long ProcessingToken = 0,
+  ProcessingToken ProcessingToken = default,
   StageId? StageId = null,
   StationId? StationId = null,
   TimeSpan? EndedAt = null

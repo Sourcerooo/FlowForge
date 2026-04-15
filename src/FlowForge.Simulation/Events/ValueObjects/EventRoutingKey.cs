@@ -1,6 +1,6 @@
-using FlowForge.Domain.ProcessModel.ValueObjects;
+using FlowForge.Domain.Process.ValueObjects;
 using FlowForge.Simulation.Events.Enums;
 
 namespace FlowForge.Simulation.Events.ValueObjects;
 
-internal readonly record struct EventRoutingKey(EventKind EventKind, StageId? StageId);
+public readonly record struct EventRoutingKey(EventKind EventKind, StageId? StageId);

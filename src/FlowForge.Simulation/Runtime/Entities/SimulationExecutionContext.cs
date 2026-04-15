@@ -3,11 +3,11 @@ using FlowForge.Simulation.Runtime.ValueObjects;
 namespace FlowForge.Simulation.Runtime.Entities;
 
 public sealed class SimulationExecutionContext(
-  SimulationRunId simulationRundId,
+  SimulationRunId simulationRunId,
   SimulationExecutionContextData data
   )
 {
-  public SimulationRunId SimulationRunId { get; init; } = simulationRundId;
+  public SimulationRunId SimulationRunId { get; init; } = simulationRunId;
   public SimulationExecutionContextData Data { get; init; } = data;
 
   public SimulationExecutionHandlerContext CreateHandlerContext() => new()
@@ -16,11 +16,9 @@ public sealed class SimulationExecutionContext(
     ProcessConfiguration = Data.ProcessConfiguration,
     Metadata = Data.Metadata,
     State = Data.State,
-    TrackingSubjectStore = Data.TrackingSubjectStore,
-    WorkItemTrackingStore = Data.WorkItemTrackingStore,
-    StageTrackingStore = Data.StageTrackingStore,
-    SnapshotStore = Data.SnapshotStore,
-    SnapshotTimelineStore = Data.SnapshotTimelineStore
+    StageStore = new StageStore(Data.StageRuntimeStateStore, Data.StageTrackingStore),
+    WorkItemStore = new WorkItemStore(Data.WorkItemRuntimeStateStore, Data.WorkItemTrackingStore),
+    RoutingPolicy = Data.RoutingPolicy
   };
 
 }

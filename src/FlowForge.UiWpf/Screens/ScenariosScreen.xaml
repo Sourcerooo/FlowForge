@@ -1,0 +1,24 @@
+<UserControl x:Class="FlowForge.UiWpf.Screens.ScenariosScreen"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:FlowForge.UiWpf">
+    <Border Style="{StaticResource ScreenPanelCardStyle}">
+        <StackPanel>
+            <TextBlock Style="{StaticResource SectionTitleStyle}" Text="Scenario Library" />
+            <TextBlock Margin="0,8,0,0" Style="{StaticResource HeaderLabelStyle}" Text="Separate scenario screen to compare presets without overloading the overview flow canvas." />
+            <ItemsControl Margin="0,18,0,0" ItemsSource="{Binding ScenarioCards}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="{x:Type local:ScenarioCardViewModel}">
+                        <Border Margin="{StaticResource ScreenListItemMargin}" Padding="16" CornerRadius="12" Background="{Binding Background}" BorderBrush="{Binding AccentBrush}" BorderThickness="1">
+                            <StackPanel>
+                                <TextBlock Foreground="{Binding AccentBrush}" FontWeight="SemiBold" Text="{Binding Status}" />
+                                <TextBlock Margin="0,4,0,0" FontFamily="Bahnschrift" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource StrongTextBrush}" Text="{Binding Title}" />
+                                <TextBlock Margin="0,6,0,0" Foreground="{DynamicResource MutedTextBrush}" TextWrapping="Wrap" Text="{Binding Description}" />
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </StackPanel>
+    </Border>
+</UserControl>

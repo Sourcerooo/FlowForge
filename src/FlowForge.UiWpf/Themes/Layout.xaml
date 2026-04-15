@@ -1,0 +1,96 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+    <Thickness x:Key="WindowOuterMargin">18</Thickness>
+    <Thickness x:Key="WindowInnerPadding">18</Thickness>
+    <Thickness x:Key="SectionPadding">18</Thickness>
+    <Thickness x:Key="PanelHeaderPadding">14,10</Thickness>
+    <Thickness x:Key="CompactPanelPadding">12</Thickness>
+    <Thickness x:Key="ToolbarButtonPadding">18,10</Thickness>
+    <Thickness x:Key="NavButtonPadding">12</Thickness>
+    <Thickness x:Key="MetricPillPadding">12</Thickness>
+    <Thickness x:Key="CardContentPadding">16</Thickness>
+    <Thickness x:Key="StageCardPadding">18</Thickness>
+    <Thickness x:Key="WorkerCardPadding">10</Thickness>
+    <Thickness x:Key="WorkspaceDescriptionMargin">0,6,0,0</Thickness>
+    <Thickness x:Key="SectionTopMargin">0,18,0,0</Thickness>
+    <Thickness x:Key="SidebarPanelMargin">0,12,0,0</Thickness>
+    <Thickness x:Key="SidebarListMargin">0,14,0,0</Thickness>
+    <Thickness x:Key="SidebarButtonMargin">0,0,0,8</Thickness>
+    <Thickness x:Key="SidebarFooterCardMargin">0,0,0,10</Thickness>
+    <Thickness x:Key="ToolbarButtonSpacing">8,0,0,0</Thickness>
+    <Thickness x:Key="ToolbarGhostButtonSpacing">12,0,0,0</Thickness>
+    <Thickness x:Key="MetricSpacing">0,0,0,14</Thickness>
+    <Thickness x:Key="TrendSpacing">0,0,0,12</Thickness>
+    <Thickness x:Key="AlertSpacing">0,0,0,10</Thickness>
+    <Thickness x:Key="RecommendationSpacing">0,0,0,12</Thickness>
+    <Thickness x:Key="StageSectionMargin">0,28,0,0</Thickness>
+    <Thickness x:Key="StageCardInnerSpacing">0,16,0,0</Thickness>
+    <Thickness x:Key="MetricRowSpacing">0,10,0,0</Thickness>
+    <Thickness x:Key="WorkersSectionMargin">0,14,0,0</Thickness>
+    <Thickness x:Key="CanvasLegendMargin">0,0,0,10</Thickness>
+    <Thickness x:Key="RightColumnCardMargin">0,16,0,0</Thickness>
+    <Thickness x:Key="TimelineInnerMargin">18,14,18,8</Thickness>
+    <Thickness x:Key="ListContainerMargin">18,0,18,18</Thickness>
+    <Thickness x:Key="ScreenCardMargin">0,0,0,16</Thickness>
+    <Thickness x:Key="ScreenCardPadding">18</Thickness>
+    <Thickness x:Key="FlowStageButtonMargin">0,0,14,0</Thickness>
+    <Thickness x:Key="FlowArrowMargin">0,22,14,0</Thickness>
+    <Thickness x:Key="DetailPanelMargin">0,18,0,0</Thickness>
+    <Thickness x:Key="DetailWorkersMargin">0,16,0,0</Thickness>
+    <Thickness x:Key="ScreenListItemMargin">0,0,0,12</Thickness>
+    <Thickness x:Key="ScreenActionButtonPadding">14,12</Thickness>
+    <Thickness x:Key="HeaderSeparatorMargin">20,0,0,0</Thickness>
+    <Thickness x:Key="ConnectedStatusMargin">20,0,0,0</Thickness>
+    <Thickness x:Key="HeaderValueMargin">8,0,0,0</Thickness>
+    <Thickness x:Key="StageConnectorRightMargin">0,0,8,0</Thickness>
+    <Thickness x:Key="StageConnectorCardMarginLeft">0,0,6,0</Thickness>
+    <Thickness x:Key="StageConnectorCardMarginRight">6,0,0,0</Thickness>
+
+    <CornerRadius x:Key="WindowCornerRadius">26</CornerRadius>
+    <CornerRadius x:Key="CardCornerRadius">20</CornerRadius>
+    <CornerRadius x:Key="InnerCardCornerRadius">18</CornerRadius>
+    <CornerRadius x:Key="SmallCardCornerRadius">12</CornerRadius>
+    <CornerRadius x:Key="BadgeCornerRadius">10</CornerRadius>
+
+    <GridLength x:Key="SidebarColumnWidth">220</GridLength>
+    <GridLength x:Key="RightRailColumnWidth">350</GridLength>
+    <GridLength x:Key="ColumnSpacingWidth">18</GridLength>
+    <GridLength x:Key="TimelineRowHeight">240</GridLength>
+    <sys:Double x:Key="CanvasMinHeight">420</sys:Double>
+    <sys:Double x:Key="WorkerCardWidth">92</sys:Double>
+
+    <Style x:Key="SidebarHeaderStyle" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="Segoe UI" />
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="White" />
+    </Style>
+
+    <Style x:Key="SectionTitleStyle" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="Bahnschrift" />
+        <Setter Property="FontSize" Value="17" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{DynamicResource StrongTextBrush}" />
+    </Style>
+
+    <Style x:Key="PanelTitleStyle" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="Segoe UI" />
+        <Setter Property="FontSize" Value="15" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="White" />
+    </Style>
+
+    <Style x:Key="HeaderLabelStyle" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="Segoe UI" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
+    </Style>
+
+    <Style x:Key="HeaderValueStyle" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="Segoe UI" />
+        <Setter Property="FontSize" Value="17" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{DynamicResource StrongTextBrush}" />
+    </Style>
+</ResourceDictionary>

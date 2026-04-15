@@ -5,7 +5,7 @@ using FlowForge.Simulation.Runtime.Entities;
 
 namespace FlowForge.Simulation.Events.Entities;
 
-internal sealed class SimulationEventDispatcher(IEnumerable<ISimulationEventHandler> eventHandler) : ISimulationEventDispatcher, IEventHandlerRegistry
+internal sealed class SimulationEventDispatcher(IEnumerable<ISimulationEventHandler> eventHandler) : ISimulationEventDispatcher
 {
   private readonly Dictionary<EventKind, ISimulationEventHandler> _eventHandler
     = eventHandler.ToDictionary<ISimulationEventHandler, EventKind>(simulationEventHandler => simulationEventHandler.CanHandle());
@@ -16,13 +16,9 @@ internal sealed class SimulationEventDispatcher(IEnumerable<ISimulationEventHand
     CancellationToken cancellationToken)
   {
     //StageId? stageId = null;
-    var handler = _eventHandler.GetValueOrDefault(simulationEvent.EventKind);
-    if (handler != null)
-    {
-      await handler.Process(simulationEvent, context, cancellationToken);
-    }
-  }
+    var handler = _eventHandler.GetValueOrDefault(simulationEvent.EventKind)
+      ?? throw new InvalidOperationException($"No handler found for event kind: {simulationEvent.EventKind}");
+    await handler.Process(simulationEvent, context, cancellationToken);
 
-  public void Register(EventRoutingKey key, ISimulationEventHandler handler) => throw new NotImplementedException();
-  public ISimulationEventHandler Resolve(EventRoutingKey key) => throw new NotImplementedException();
+  }
 }

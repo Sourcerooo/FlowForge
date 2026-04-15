@@ -1,5 +1,5 @@
 using System.Collections.Concurrent;
-using FlowForge.Domain.ProcessModel.ValueObjects;
+using FlowForge.Domain.Process.ValueObjects;
 using FlowForge.Domain.SharedKernel.Util;
 using FlowForge.Simulation.Tracking.Contracts;
 

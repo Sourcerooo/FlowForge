@@ -1,18 +1,26 @@
-using FlowForge.Simulation.Events.SimulationEvents;
-using FlowForge.Simulation.Runtime.Entities;
-using FlowForge.Simulation.Tracking.ValueObjects;
+using FlowForge.Simulation.Application.ValueObjects;
 
 namespace FlowForge.Simulation.Application.Contracts;
 
 public interface IWorkItemProcessOrchestrator
 {
-  public void CreateFromGeneration();
-  public void QueueForStage();
-  public void StartProcessing();
-  public void PutOnHold();
-  public void CompleteProcessing(TrackingSubjectId trackingSubject,
-    SimulationEvent simulationEvent,
-    SimulationExecutionContext context);
-  public void CompleteWorkItem();
+  public Task CreateFromGenerationAsync(
+    CreateFromGenerationCommand command,
+    CancellationToken cancellationToken);
+  public Task QueueForStageAsync(
+    QueueForStageCommand command,
+    CancellationToken cancellationToken);
+  public Task StartProcessingAsync(
+    StartProcessingCommand command,
+    CancellationToken cancellationToken);
+  public Task PutOnHoldAsync(
+    PutOnHoldCommand command,
+    CancellationToken cancellationToken);
+  public Task CompleteProcessingAsync(
+    CompleteProcessingCommand command,
+    CancellationToken cancellationToken);
+  public Task CompleteWorkItemAsync(
+    CompleteWorkItemCommand command,
+    CancellationToken cancellationToken);
 
 }

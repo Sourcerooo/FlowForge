@@ -1,4 +1,4 @@
-using FlowForge.Domain.ProcessModel.ValueObjects;
+using FlowForge.Domain.Process.ValueObjects;
 
 namespace FlowForge.Simulation.Tracking.Entities.Stations;
 

@@ -8,8 +8,8 @@ This glossary defines the canonical terms used across the architecture documenta
 - `WorkItem`: the runtime-neutral term for an item moving through the simulation; the fulfillment MVP maps orders to work items
 - `Scenario`: the authored input defining one process configuration and run defaults
 - `ProcessConfiguration`: the immutable domain-owned runtime configuration derived from a scenario
-- `Stage`: a logical process step such as Picking, Packing, or Shipping
-- `Station`: a concrete processing resource inside a stage
+- `Stage`: a logical process step such as Picking, Packing, or Shipping; it owns the shared backlog and dispatches waiting work to free station capacity
+- `Station`: a concrete execution area inside a stage; stations of the same stage are business-equivalent processing resources
 - `SimulationRun`: one concrete execution of the simulation engine
 - `SimulationExecutionContext`: the simulation-internal run-scoped composition root used by runner and dispatcher
 - `SimulationExecutionState`: the technical cross-layer document used for checkpoint save and load flows
@@ -22,12 +22,14 @@ This glossary defines the canonical terms used across the architecture documenta
 - `IEventDispatcher`: the routing component that maps one dequeued event to the correct handler
 - `EventRoutingKey`: the composite routing key used to resolve stage-aware handlers
 - `ProcessingToken`: the run/version marker used to invalidate outdated completion events
+- `StageRuntimeState`: the mutable runtime object that owns one stage backlog, station availability view, and dispatch decisions inside a stage
+- `StageQueueEntry`: the queue payload stored in a stage backlog; it references one queued work item plus queue-entered metadata
 
 ## Tracking and Read Model Terms
 
 - `WorkItemTracking`: factual per-work-item timing and segment history
-- `StationTracking`: cumulative facts for one concrete station
-- `StageTracking`: aggregation of station-level facts to one logical stage
+- `StationTracking`: cumulative facts for one concrete station, primarily processing and utilization facts
+- `StageTracking`: stage-level cumulative facts, including shared queue behavior and aggregated station facts
 - `IKpiCollector`: owner of compact KPI aggregates and derived metric inputs
 - `SimulationSnapshot`: immutable consumer-facing read model produced by the simulation layer
 - `Latest Snapshot`: the authoritative current snapshot for live readers

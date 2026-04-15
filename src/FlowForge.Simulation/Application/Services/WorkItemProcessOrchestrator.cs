@@ -1,68 +1,245 @@
+using FlowForge.Domain.Process.ValueObjects;
 using FlowForge.Simulation.Application.Contracts;
+using FlowForge.Simulation.Application.ValueObjects;
 using FlowForge.Simulation.Events.SimulationEvents;
 using FlowForge.Simulation.Events.ValueObjects;
+using FlowForge.Simulation.Runtime.Contracts;
 using FlowForge.Simulation.Runtime.Entities;
+using FlowForge.Simulation.Runtime.ValueObjects;
 using FlowForge.Simulation.Scheduling.Contracts;
-using FlowForge.Simulation.Tracking.ValueObjects;
+using FlowForge.Simulation.Tracking.Enums;
 
 namespace FlowForge.Simulation.Application.Services;
 
-public sealed class WorkItemProcessOrchestrator(ISimulationEventScheduler EventScheduler) : IWorkItemProcessOrchestrator
+public sealed class WorkItemProcessOrchestrator(
+  ISimulationEventScheduler EventScheduler,
+  IWorkItemService WorkItemService,
+  IStageService StageService) : IWorkItemProcessOrchestrator
 {
-  public void CompleteProcessing(
-    TrackingSubjectId trackingSubject,
-    SimulationEvent simulationEvent,
-    SimulationExecutionContext context
-    )
+  public Task CompleteProcessingAsync(
+    CompleteProcessingCommand command,
+    CancellationToken cancellationToken)
   {
-    var workItemResult = context.Data.WorkItemTrackingStore.GetWorkItemTracking(trackingSubject);
-    if (workItemResult.IsFailure
-      || workItemResult.Value is null
-      || workItemResult.Value.CurrentStage is null)
+    if (cancellationToken.IsCancellationRequested)
     {
-      throw new KeyNotFoundException("Something went wrong");
+      return Task.FromCanceled(cancellationToken);
     }
-    if (workItemResult.Value.CurrentProcessingToken != simulationEvent.ProcessingToken
-      || workItemResult.Value.CurrentStatus != Tracking.Enums.WorkItemStatus.Processing
-      || workItemResult.Value.CurrentStage != simulationEvent.StageId)
+    var workItem = WorkItemService.GetWorkItemRuntimeState(command.SimulationContext.WorkItemStore, command.TrackingSubjectId);
+
+    if (IsEventOutdated(workItem, WorkItemStatus.Processing, command.ProcessingToken, command.StageId)
+      || workItem.CurrentStageId is null)
     {
       //Event outdated, skip
-      return;
-    }
-    var stageResult = context.Data.StageTrackingStore.GetStageTracking(workItemResult.Value.CurrentStage.Value);
-    if (stageResult.IsFailure
-      || stageResult.Value is null
-      || workItemResult.Value.CurrentStation is null
-      || !stageResult.Value.Stations.TryGetValue(workItemResult.Value.CurrentStation.Value, out var station))
-    {
-      throw new KeyNotFoundException("Something went wrong");
+      return Task.CompletedTask;
     }
 
-    workItemResult.Value.CompleteWorkItem(simulationEvent.ScheduledTime);
+    StageService.CompleteProcessing(command.SimulationContext.StageStore, workItem.CurrentStageId.Value, workItem.TrackingSubjectId);
+    WorkItemService.CompleteProcessing(command.SimulationContext.WorkItemStore, command.TrackingSubjectId, command.SimulationContext.SimulationState.CurrentTime);
+
     //station.Value.CompleteProcessing(simulationEvent.ScheduledTime);//
     //stageResult.Value.CompleteProcessing(simulationEvent.ScheduledTime);
 
+    //Start next item in queue for the stage
+    EventScheduler.Schedule(
+     new ProcessingStartEvent(
+       SimulationEventId.NewId(),
+       command.SimulationContext.SimulationRunId,
+       command.SimulationContext.SimulationState.CurrentTime,
+       command.SimulationContext.SimulationState.GetNextSequenceNumber(),
+       workItem.CurrentStageId.Value)
+   );
 
     //Determine next stage
-    var nextStage = workItemResult.Value.CurrentStage;
-    EventScheduler.Schedule(
-      new WorkItemQueueEvent(
-          SimulationEventId.NewId(),
-          simulationEvent.SimulationRunId,
-          simulationEvent.ScheduledTime,
-          context.Data.State.GetNextSequenceNumber(),
-          nextStage,
-          null,
-          0,
-          null
-        )
-      );
+    var nextStage = command.SimulationContext.RoutingPolicy.GetNextStage(workItem.CurrentStageId);
+    //If next stage is null, it means processing is finished for the work item, otherwise queue for next stage
+    if (nextStage is null)
+    {
+      EventScheduler.Schedule(
+        new WorkItemCompleteEvent(
+            SimulationEventId.NewId(),
+            command.SimulationContext.SimulationRunId,
+            command.SimulationContext.SimulationState.CurrentTime,
+            command.SimulationContext.SimulationState.GetNextSequenceNumber(),
+            workItem.CurrentProcessingToken,
+            workItem.TrackingSubjectId
+          )
+        );
+    }
+    else
+    {
+      EventScheduler.Schedule(
+        new WorkItemQueueEvent(
+            SimulationEventId.NewId(),
+            command.SimulationContext.SimulationRunId,
+            command.SimulationContext.SimulationState.CurrentTime,
+            command.SimulationContext.SimulationState.GetNextSequenceNumber(),
+            nextStage.Value,
+            null,
+            workItem.CurrentProcessingToken,
+            workItem.TrackingSubjectId
+          )
+        );
+    }
 
+
+
+    return Task.CompletedTask;
     //Update KPI
   }
-  public void CompleteWorkItem() => throw new NotImplementedException();
-  public void CreateFromGeneration() => throw new NotImplementedException();
-  public void PutOnHold() => throw new NotImplementedException();
-  public void QueueForStage() => throw new NotImplementedException();
-  public void StartProcessing() => throw new NotImplementedException();
+  public Task CompleteWorkItemAsync(
+    CompleteWorkItemCommand command,
+    CancellationToken cancellationToken
+    )
+  {
+    if (cancellationToken.IsCancellationRequested)
+    {
+      return Task.FromCanceled(cancellationToken);
+    }
+
+    var workItem = WorkItemService.GetWorkItemRuntimeState(command.SimulationContext.WorkItemStore, command.TrackingSubjectId);
+
+    if (IsEventOutdated(workItem, WorkItemStatus.Completed, command.ProcessingToken)
+      || workItem.CurrentStageId is null)
+    {
+      //Event outdated, skip
+      return Task.CompletedTask;
+    }
+    WorkItemService.CompleteWorkItem(command.SimulationContext.WorkItemStore, command.TrackingSubjectId, command.SimulationContext.SimulationState.CurrentTime);
+    return Task.CompletedTask;
+  }
+  public Task CreateFromGenerationAsync(
+    CreateFromGenerationCommand command,
+    CancellationToken cancellationToken)
+  {
+    if (cancellationToken.IsCancellationRequested)
+    {
+      return Task.FromCanceled(cancellationToken);
+    }
+    WorkItemService.CreateFromGeneration(command.SimulationContext.WorkItemStore, command.TrackingSubjectId, command.SimulationContext.SimulationState.CurrentTime);
+    var nextStage = command.SimulationContext.RoutingPolicy.GetNextStage(null);
+    if (nextStage == null)
+    {
+      throw new InvalidOperationException("Initial stage could not be determined");
+    }
+    EventScheduler.Schedule(
+       new WorkItemQueueEvent(
+           SimulationEventId.NewId(),
+           command.SimulationContext.SimulationRunId,
+           command.SimulationContext.SimulationState.CurrentTime,
+           command.SimulationContext.SimulationState.GetNextSequenceNumber(),
+           nextStage.Value,
+           null,
+           ProcessingToken.Initial,
+           command.TrackingSubjectId
+         )
+       );
+    return Task.CompletedTask;
+  }
+
+  public Task PutOnHoldAsync(
+    PutOnHoldCommand command,
+    CancellationToken cancellationToken)
+  {
+    if (cancellationToken.IsCancellationRequested)
+    {
+      return Task.FromCanceled(cancellationToken);
+    }
+    var workItem = WorkItemService.GetWorkItemRuntimeState(command.WorkItemStore, command.TrackingSubjectId);
+
+    if (IsEventOutdated(workItem, WorkItemStatus.Processing, command.ProcessingToken, command.CurrentStageId)
+      || workItem.CurrentStageId is null)
+    {
+      //Event outdated, skip
+      return Task.CompletedTask;
+    }
+
+    StageService.StopProcessing(command.StageStore, command.CurrentStageId, command.TrackingSubjectId, command.CurrentTime);
+    WorkItemService.StopProcessing(command.WorkItemStore, command.TrackingSubjectId, command.CurrentTime);
+
+    return Task.CompletedTask;
+  }
+  public Task QueueForStageAsync(
+    QueueForStageCommand command,
+    CancellationToken cancellationToken)
+  {
+    if (cancellationToken.IsCancellationRequested)
+    {
+      return Task.FromCanceled(cancellationToken);
+    }
+
+
+    var workItem = WorkItemService.GetWorkItemRuntimeState(command.SimulationContext.WorkItemStore, command.TrackingSubjectId);
+
+    if (IsEventOutdated(workItem, new[] { WorkItemStatus.Created, WorkItemStatus.Completed }, command.ProcessingToken, command.CurrentStageId))
+    {
+      //Event outdated, skip
+      return Task.CompletedTask;
+    }
+
+
+    StageService.Enqueue(command.SimulationContext.StageStore, command.CurrentStageId, workItem.TrackingSubjectId, command.SimulationContext.SimulationState.CurrentTime);
+    WorkItemService.QueueForStage(command.SimulationContext.WorkItemStore, command.TrackingSubjectId, command.CurrentStageId, command.SimulationContext.SimulationState.CurrentTime);
+
+    EventScheduler.Schedule(
+      new ProcessingStartEvent(
+        SimulationEventId.NewId(),
+        command.SimulationContext.SimulationRunId,
+        command.SimulationContext.SimulationState.CurrentTime,
+        command.SimulationContext.SimulationState.GetNextSequenceNumber(),
+        command.CurrentStageId)
+    );
+    return Task.CompletedTask;
+  }
+
+  public Task StartProcessingAsync(
+    StartProcessingCommand command,
+    CancellationToken cancellationToken)
+  {
+    if (cancellationToken.IsCancellationRequested)
+    {
+      return Task.FromCanceled(cancellationToken);
+    }
+    var result = StageService.TryStartProcessing(command.SimulationContext.StageStore, command.StageId, command.SimulationContext.SimulationState.CurrentTime);
+    if (result.IsFailure)
+    {
+      return Task.CompletedTask;
+    }
+
+    WorkItemService.StartProcessing(command.SimulationContext.WorkItemStore, result.Value.TrackingSubjectId, result.Value.StationId, command.SimulationContext.SimulationState.CurrentTime);
+
+    var newTrackingEvent = new ProcessingCompleteEvent(
+         SimulationEventId.NewId(),
+         command.SimulationContext.SimulationRunId,
+         command.SimulationContext.SimulationState.CurrentTime,
+         command.SimulationContext.SimulationState.GetNextSequenceNumber(),
+         command.StageId,
+         result.Value.StationId,
+         result.Value.ProcessingToken,
+         result.Value.TrackingSubjectId
+       );
+    EventScheduler.Schedule(newTrackingEvent);
+    return Task.CompletedTask;
+  }
+
+  private static bool IsEventOutdated(
+    WorkItemRuntimeState? workItem,
+    IReadOnlyCollection<WorkItemStatus> expectedStatus,
+    ProcessingToken? expectedProcessingToken,
+    StageId? expectedStageId)
+  {
+    return workItem is null
+      ? throw new InvalidOperationException("Something went wrong")
+      : workItem.CurrentStageId == expectedStageId
+      && workItem.CurrentProcessingToken == expectedProcessingToken
+      && expectedStatus.Contains(workItem.CurrentStatus);
+  }
+
+  private static bool IsEventOutdated(
+   WorkItemRuntimeState? workItem,
+   WorkItemStatus expectedStatus,
+   ProcessingToken? expectedProcessingToken,
+   StageId? expectedStageId = default)
+  {
+    return IsEventOutdated(workItem, new[] { expectedStatus }, expectedProcessingToken, expectedStageId);
+  }
 }

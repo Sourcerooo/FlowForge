@@ -14,10 +14,10 @@
     <Folder Include="Orders\Rules\" />
     <Folder Include="Orders\Services\" />
 
-    <Folder Include="ProcessModel\Enums\" />
-    <Folder Include="ProcessModel\Events\" />
-    <Folder Include="ProcessModel\Rules\" />
-    <Folder Include="ProcessModel\Services\" />
+    <Folder Include="Process\Enums\" />
+    <Folder Include="Process\Events\" />
+    <Folder Include="Process\Rules\" />
+    <Folder Include="Process\Services\" />
     <Folder Include="Scenarios\Events\" />
     <Folder Include="Scenarios\Rules\" />
     <Folder Include="Scenarios\Services\" />

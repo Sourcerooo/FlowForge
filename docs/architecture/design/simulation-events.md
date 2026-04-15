@@ -9,8 +9,8 @@ The current recommended MVP direction is a generic event family with routing met
 | Event | Purpose | Typical producer | Typical follow-up |
 |---|---|---|---|
 | `GenerateSimulationEvent` | Generate incoming work items for a time slice | bootstrap or generator | create work items, enqueue queue events, schedule next generation |
-| `WorkItemQueueEvent` | Place a work item into a station queue | generator or routing logic | try to start processing |
-| `ProcessingStartEvent` | Start processing at a station | station capacity logic | schedule matching completion |
+| `WorkItemQueueEvent` | Place a work item into a stage queue | generator or routing logic | try to dispatch to free stage capacity |
+| `ProcessingStartEvent` | Start processing at a station | stage dispatch logic | schedule matching completion |
 | `ProcessingCompleteEvent` | Finish processing at a station | runner after scheduled delay | route to next station or complete work item |
 | `WorkItemCompleteEvent` | Finalize the work item lifecycle | final-stage completion logic | update KPIs and counters |
 | `SnapshotPublishedEvent` | Trigger snapshot publication | snapshot policy | build and publish immutable snapshot |
@@ -30,7 +30,7 @@ Trade-off:
 - `GenerateSimulationEvent` should be the first event scheduled when a simulation starts
 - the generation handler creates work items for the configured time slice
 - new work items enter the run in state `Created` and then enqueue the first `WorkItemQueueEvent`
-- `WorkItemQueueEvent` carries target station context, sets queue state, and triggers capacity checks
+- `WorkItemQueueEvent` carries target stage context, appends the work item to the shared stage queue, and triggers capacity checks across all stations of that stage
 - `ProcessingStartEvent` reserves capacity, stamps start time, increments the processing token, and schedules the completion event
 - `ProcessingCompleteEvent` validates its processing token before mutating state
 - a valid `ProcessingCompleteEvent` releases capacity, updates counters and history, and enqueues the next queue or completion event
@@ -73,7 +73,7 @@ Recommended default ordering at the same `ScheduledTime`:
 Reasoning:
 
 - completion happens before new starts so released capacity is visible immediately
-- queueing happens before start attempts so newly routed work is visible to station logic
+- queueing happens before start attempts so newly routed work is visible to stage dispatch logic
 - generation runs after current-cycle completions and routing
 - snapshot publication usually observes the already-applied state for that simulated timestamp
 
@@ -165,12 +165,12 @@ All simulation events should likely share a common base payload such as:
 | `EventKind` | Identifies the generic event family used for routing |
 | `ProcessStage` | Identifies the targeted stage such as Picking, Packing, or Shipping |
 
-Station- and work-item-related events should additionally carry targeted business data such as:
+Stage-, station-, and work-item-related events should additionally carry targeted business data such as:
 
 | Event family | Suggested payload |
 |---|---|
 | `GenerateSimulationEvent` | generation window start or end, batch settings reference, optional scenario snapshot or version |
-| `OrderQueuedEvent` | `OrderId`, target `StationId`, queue-entered timestamp |
+| `OrderQueuedEvent` | `OrderId`, target `StageId`, queue-entered timestamp |
 | `ProcessingStartedEvent` | `OrderId`, `StationId`, assigned worker slot or capacity token, processing duration |
 | `ProcessingCompletedEvent` | `OrderId`, `StationId`, processing-start timestamp, processing-end timestamp |
 | `OrderCompletedEvent` | `OrderId`, completion timestamp |
@@ -181,6 +181,12 @@ Recommended default:
 - do not place full aggregate snapshots inside events
 - prefer identifiers plus the minimal deterministic data needed by the handler
 - let `SimulationState` remain the source of broader runtime context
+
+Recommended queue payload rule:
+
+- stage queues should store work-item references and queue metadata, not scheduled events
+- the event queue models future execution intent, while the stage queue models current operational backlog
+- `WorkItemQueueEvent` should therefore enqueue a `StageQueueEntry` or equivalent runtime payload, then let stage dispatch logic create `ProcessingStartEvent`
 
 ## Invalidation and Skip Model
 

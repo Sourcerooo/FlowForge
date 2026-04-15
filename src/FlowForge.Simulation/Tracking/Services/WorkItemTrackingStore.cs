@@ -1,17 +1,32 @@
-using System.Collections.Concurrent;
-using FlowForge.Domain.ProcessModel.ValueObjects;
+using FlowForge.Domain.Orders.ValueObjects;
+using FlowForge.Domain.Process.ValueObjects;
 using FlowForge.Domain.SharedKernel.Util;
+using FlowForge.Simulation.Runtime.ValueObjects;
 using FlowForge.Simulation.Tracking.Contracts;
 using FlowForge.Simulation.Tracking.Entities.WorkItems;
 using FlowForge.Simulation.Tracking.Enums;
-using FlowForge.Simulation.Tracking.ValueObjects;
-
+using Microsoft.Extensions.Logging;
 namespace FlowForge.Simulation.Tracking.Services;
 
-public sealed class WorkItemTrackingStore : IWorkItemTrackingStore
+internal static partial class WorkItemTrackingStoreLog
 {
-  private readonly ConcurrentDictionary<TrackingSubjectId, WorkItemTracking> _workItemTrackings
-    = new ConcurrentDictionary<TrackingSubjectId, WorkItemTracking>();
+  [LoggerMessage(
+    EventId = 1001,
+    Level = LogLevel.Information,
+    Message = "Tracking item added: TrackingItemId={TrackingSubjectId}, " +
+    "CreatedAt={CreatedAt}, Status={CurrentStatus}, Token={CurrentProcessingToken}")]
+  public static partial void TrackingItemAdded(
+    ILogger<WorkItemTrackingStore> logger,
+    TrackingSubjectId trackingSubjectId,
+    TimeSpan createdAt,
+    WorkItemStatus currentStatus,
+    ProcessingToken currentProcessingToken);
+}
+
+public sealed class WorkItemTrackingStore(ILogger<WorkItemTrackingStore> logger) : IWorkItemTrackingStore
+{
+  private readonly Dictionary<TrackingSubjectId, WorkItemTracking> _workItemTrackings
+    = new Dictionary<TrackingSubjectId, WorkItemTracking>();
 
   public Result<WorkItemTracking> GetWorkItemTracking(TrackingSubjectId trackingSubjectId)
   {
@@ -26,13 +41,19 @@ public sealed class WorkItemTrackingStore : IWorkItemTrackingStore
     WorkItemStatus currentStatus = WorkItemStatus.Created,
     StageId? currentStageId = null,
     StationId? currentStationId = null,
-    long currentProcessingToken = 0,
+    ProcessingToken currentProcessingToken = default,
     TimeSpan? completedAt = null)
   {
     var tracking = new WorkItemTracking(
       trackingSubjectId, createdAt, currentStatus, currentStageId, currentStationId,
       currentProcessingToken, completedAt);
     _workItemTrackings[trackingSubjectId] = tracking;
+    WorkItemTrackingStoreLog.TrackingItemAdded(logger,
+      tracking.TrackingSubjectId,
+      tracking.CreatedAt,
+      tracking.CurrentStatus,
+      tracking.CurrentProcessingToken);
+
     return tracking;
   }
 
@@ -70,7 +91,7 @@ public sealed class WorkItemTrackingStore : IWorkItemTrackingStore
     return Result.Success();
   }
 
-  public Result SetCurrentProcessingToken(TrackingSubjectId trackingSubjectId, long processingToken)
+  public Result SetCurrentProcessingToken(TrackingSubjectId trackingSubjectId, ProcessingToken processingToken)
   {
     var trackingResult = GetWorkItemTracking(trackingSubjectId);
     if (trackingResult.IsFailure)
@@ -91,7 +112,7 @@ public sealed class WorkItemTrackingStore : IWorkItemTrackingStore
     return Result.Success();
   }
 
-  public Result ProcessWorkItem(TrackingSubjectId trackingSubjectId, TimeSpan currentTime)
+  public Result StartProcessingWorkItem(TrackingSubjectId trackingSubjectId, TimeSpan currentTime)
   {
     if (!_workItemTrackings.TryGetValue(trackingSubjectId, out WorkItemTracking? value))
     {
@@ -101,7 +122,7 @@ public sealed class WorkItemTrackingStore : IWorkItemTrackingStore
     return Result.Success();
   }
 
-  public Result StopWorkItem(TrackingSubjectId trackingSubjectId, TimeSpan currentTime)
+  public Result StopProcessingWorkItem(TrackingSubjectId trackingSubjectId, TimeSpan currentTime)
   {
     if (!_workItemTrackings.TryGetValue(trackingSubjectId, out WorkItemTracking? value))
     {
