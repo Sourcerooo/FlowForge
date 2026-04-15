@@ -1,4 +1,5 @@
 using FlowForge.Domain.Orders.ValueObjects;
+using FlowForge.Domain.Process.Entities;
 using FlowForge.Simulation.Application.Contracts;
 using FlowForge.Simulation.Application.ValueObjects;
 using FlowForge.Simulation.Events.Contracts;
@@ -12,7 +13,7 @@ using FlowForge.Simulation.Scheduling.Contracts;
 namespace FlowForge.Simulation.Events.Handlers;
 
 
-internal sealed class SimulationEventsGenerateEventHandler(ISimulationEventScheduler Scheduler, IWorkItemProcessOrchestrator Orchestrator) : ISimulationEventHandler
+internal sealed class SimulationEventsGenerateEventHandler(ProcessConfiguration ProcessConfiguration, ISimulationEventScheduler Scheduler, IWorkItemProcessOrchestrator Orchestrator) : ISimulationEventHandler
 {
   public EventKind CanHandle() => EventKind.SimulationEventsGenerate;
 
@@ -27,10 +28,10 @@ internal sealed class SimulationEventsGenerateEventHandler(ISimulationEventSched
   {
     var simulationEventsGenerateEvent = (SimulationEventsGenerateEvent)simulationEvent;
     var curTime = context.State.CurrentTime;
-    var nextGenTime = simulationEventsGenerateEvent.ScheduledTime + context.ProcessConfiguration.ArrivalProfileDefinition.GenerationWindow;
-    for (var i = 0; i < context.ProcessConfiguration.ArrivalProfileDefinition.AverageWorkItemsPerWindow; i++)
+    var nextGenTime = simulationEventsGenerateEvent.ScheduledTime + ProcessConfiguration.ArrivalProfileDefinition.GenerationWindow;
+    for (var i = 0; i < ProcessConfiguration.ArrivalProfileDefinition.AverageWorkItemsPerWindow; i++)
     {
-      var arrivalTime = curTime + TimeSpan.FromMinutes(Random.Shared.Next(0, (int)context.ProcessConfiguration.ArrivalProfileDefinition.GenerationWindow.TotalMinutes));
+      var arrivalTime = curTime + TimeSpan.FromMinutes(Random.Shared.Next(0, (int)ProcessConfiguration.ArrivalProfileDefinition.GenerationWindow.TotalMinutes));
       if (arrivalTime < nextGenTime)
       {
         await Orchestrator.CreateFromGenerationAsync(
@@ -39,10 +40,7 @@ internal sealed class SimulationEventsGenerateEventHandler(ISimulationEventSched
             arrivalTime,
             new SimulationCommandContext(
               context.SimulationRunId,
-              context.State,
-              context.StageStore,
-              context.WorkItemStore,
-              context.RoutingPolicy)
+              context.State)
             ), cancellationToken);
       }
     }

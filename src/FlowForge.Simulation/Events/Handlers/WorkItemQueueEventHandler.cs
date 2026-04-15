@@ -33,26 +33,8 @@ internal sealed class WorkItemQueueEventHandler(
         workItemQueueEvent.StageId,
         new SimulationCommandContext(
           context.SimulationRunId,
-          context.State,
-          context.StageStore,
-          context.WorkItemStore,
-          context.RoutingPolicy)
+          context.State)
         ), cancellationToken);
 
-
-    if (!context.StageStore.StageRuntimeStore.IsBusy(workItemQueueEvent.StageId))
-    {
-      await Orchestrator.StartProcessingAsync(
-        new StartProcessingCommand(
-          workItemQueueEvent.StageId,
-          new SimulationCommandContext(
-              context.SimulationRunId,
-              context.State,
-              context.StageStore,
-              context.WorkItemStore,
-              context.RoutingPolicy)
-          ),
-        cancellationToken);
-    }
   }
 }

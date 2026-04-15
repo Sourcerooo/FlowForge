@@ -7,7 +7,7 @@ using FlowForge.Domain.Orders.ValueObjects;
 using FlowForge.Domain.Process.ValueObjects;
 using FlowForge.Infrastructure;
 using FlowForge.Simulation;
-using FlowForge.Simulation.Runtime.Contracts;
+using FlowForge.Simulation.Application.Contracts;
 using FlowForge.Simulation.Runtime.Entities;
 using FlowForge.Simulation.Runtime.ValueObjects;
 using Microsoft.Extensions.DependencyInjection;
@@ -150,10 +150,10 @@ public class Program
     }
     */
 
-    var simulationContextBuilder = serviceProvider.GetRequiredService<ISimulationContextBuilder>();
+
     var simulationRunner = serviceProvider.GetRequiredService<ISimulationRunner>();
 
-    await simulationRunner.RunSimulation(simulationContextBuilder.Build(), CancellationToken.None);
+    await simulationRunner.RunAsync(CancellationToken.None);
 
 
     if (args.Contains("wait", StringComparer.OrdinalIgnoreCase))

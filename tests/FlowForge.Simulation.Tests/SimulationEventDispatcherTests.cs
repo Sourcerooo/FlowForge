@@ -60,8 +60,6 @@ public sealed class SimulationEventDispatcherTests
     return new SimulationExecutionHandlerContext
     {
       SimulationRunId = SimulationRunId.NewId(),
-      ProcessConfiguration = CreateProcessConfiguration(TimeSpan.FromHours(1)),
-      Metadata = new SimulationMetadata(DateTimeOffset.UtcNow, "scenario", "1.0.0", new SimulationRunOptions()),
       State = new SimulationState()
     };
   }

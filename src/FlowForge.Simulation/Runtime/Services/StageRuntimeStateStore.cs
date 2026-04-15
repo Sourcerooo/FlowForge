@@ -1,4 +1,3 @@
-using System.Collections.Immutable;
 using FlowForge.Domain.Orders.ValueObjects;
 using FlowForge.Domain.Process.Entities;
 using FlowForge.Domain.Process.ValueObjects;
@@ -10,9 +9,9 @@ using static FlowForge.Simulation.Runtime.Entities.StageRuntimeState;
 
 namespace FlowForge.Simulation.Runtime.Services;
 
-internal sealed class StageRuntimeStateStore(IImmutableList<StageDefinition> stageDefinitions) : IStageRuntimeStateStore
+internal sealed class StageRuntimeStateStore(ProcessConfiguration ProcessConfiguration) : IStageRuntimeStateStore
 {
-  private readonly Dictionary<StageId, StageRuntimeState> _stageRuntimeStates = stageDefinitions.ToDictionary(
+  private readonly Dictionary<StageId, StageRuntimeState> _stageRuntimeStates = ProcessConfiguration.Stages.ToDictionary(
       stageDefinition => stageDefinition.StageId,
       stageDefinition => new StageRuntimeState(stageDefinition.StageId, stageDefinition.Stations.ToDictionary(
         station => station.StationId,

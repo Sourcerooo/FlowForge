@@ -15,7 +15,6 @@
   <ItemGroup>
     <Folder Include="Kpi\Entities\" />
     <Folder Include="Kpi\ValueObjects\" />
-    <Folder Include="Application\Entities\" />
     <Folder Include="Tracking\Entities\Orders\" />
   </ItemGroup>
 </Project>

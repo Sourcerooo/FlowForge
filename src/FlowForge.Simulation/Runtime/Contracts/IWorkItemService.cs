@@ -7,11 +7,11 @@ namespace FlowForge.Simulation.Runtime.Contracts;
 
 public interface IWorkItemService
 {
-  public void CompleteProcessing(WorkItemStore workItemStore, TrackingSubjectId trackingSubjectId, TimeSpan currentTime);
-  public void CompleteWorkItem(WorkItemStore workItemStore, TrackingSubjectId trackingSubjectId, TimeSpan currentTime);
-  public void CreateFromGeneration(WorkItemStore workItemStore, TrackingSubjectId trackingSubjectId, TimeSpan createdAt);
-  public WorkItemRuntimeState GetWorkItemRuntimeState(WorkItemStore workItemStore, TrackingSubjectId trackingSubjectId);
-  public void QueueForStage(WorkItemStore workItemStore, TrackingSubjectId trackingSubjectId, StageId stageId, TimeSpan currentTime, ProcessingToken processingToken = default);
-  public void StartProcessing(WorkItemStore workItemStore, TrackingSubjectId trackingSubjectId, StationId stationId, TimeSpan currentTime);
-  public void StopProcessing(WorkItemStore workItemStore, TrackingSubjectId trackingSubjectId, TimeSpan currentTime);
+  public void CompleteProcessing(TrackingSubjectId trackingSubjectId, TimeSpan currentTime);
+  public void CompleteWorkItem(TrackingSubjectId trackingSubjectId, TimeSpan currentTime);
+  public void CreateFromGeneration(TrackingSubjectId trackingSubjectId, TimeSpan createdAt);
+  public WorkItemRuntimeState GetWorkItemRuntimeState(TrackingSubjectId trackingSubjectId);
+  public void QueueForStage(TrackingSubjectId trackingSubjectId, StageId stageId, TimeSpan currentTime, ProcessingToken processingToken = default);
+  public void StartProcessing(TrackingSubjectId trackingSubjectId, StationId stationId, TimeSpan currentTime);
+  public void StopProcessing(TrackingSubjectId trackingSubjectId, TimeSpan currentTime);
 }

@@ -7,25 +7,25 @@ using FlowForge.Simulation.Scheduling.Contracts;
 
 namespace FlowForge.Simulation.Runtime.Entities;
 
-public sealed class SimulationRunner(
+public sealed class SimulationEngine(
   ISimulationEventQueue EventQueue,
   ISimulationEventScheduler Scheduler,
   ISimulationEventDispatcher Dispatcher)
-  : ISimulationRunner
+  : ISimulationEngine
 {
-  public async Task<SimulationRunResult> RunSimulation(SimulationExecutionContext context, CancellationToken cancellationToken)
+  public async Task<SimulationRunResult> RunSimulationAsync(SimulationExecutionContext context, CancellationToken cancellationToken)
   {
     Scheduler.Schedule(
         new SimulationEventsGenerateEvent(
           SimulationEventId.NewId(),
           context.SimulationRunId,
           TimeSpan.FromSeconds(0),
-          context.Data.State.GetNextSequenceNumber())
+          context.State.GetNextSequenceNumber())
       );
     while (EventQueue.TryDequeue(out var nextEvent)
-      && context.Data.State.CurrentTime <= context.Data.ProcessConfiguration.PlannedDuration
+      && context.State.CurrentTime <= context.ProcessConfiguration.PlannedDuration
       && nextEvent is not null
-      && nextEvent.ScheduledTime <= context.Data.ProcessConfiguration.PlannedDuration
+      && nextEvent.ScheduledTime <= context.ProcessConfiguration.PlannedDuration
       )
     {
       if (cancellationToken.IsCancellationRequested)
@@ -33,7 +33,7 @@ public sealed class SimulationRunner(
         return SimulationRunResult.Cancelled;
       }
 
-      context.Data.State.AdvanceTo(nextEvent.ScheduledTime);
+      context.State.AdvanceTo(nextEvent.ScheduledTime);
       await Dispatcher.DispatchAsync(nextEvent,
         context.CreateHandlerContext(),
         cancellationToken);
