@@ -1,24 +1,25 @@
+using FlowForge.Domain.Process.Entities;
+using FlowForge.Simulation.Runtime.Enums;
 using FlowForge.Simulation.Runtime.ValueObjects;
 
 namespace FlowForge.Simulation.Runtime.Entities;
 
 public sealed class SimulationExecutionContext(
   SimulationRunId simulationRunId,
-  SimulationExecutionContextData data
+  SimulationMetadata metaData,
+  SimulationState state,
+  ProcessConfiguration processConfiguration
   )
 {
   public SimulationRunId SimulationRunId { get; init; } = simulationRunId;
-  public SimulationExecutionContextData Data { get; init; } = data;
+  public ProcessConfiguration ProcessConfiguration { get; init; } = processConfiguration;
+  public SimulationMetadata Metadata { get; init; } = metaData;
+  public SimulationState State { get; init; } = state;
 
   public SimulationExecutionHandlerContext CreateHandlerContext() => new()
   {
     SimulationRunId = SimulationRunId,
-    ProcessConfiguration = Data.ProcessConfiguration,
-    Metadata = Data.Metadata,
-    State = Data.State,
-    StageStore = new StageStore(Data.StageRuntimeStateStore, Data.StageTrackingStore),
-    WorkItemStore = new WorkItemStore(Data.WorkItemRuntimeStateStore, Data.WorkItemTrackingStore),
-    RoutingPolicy = Data.RoutingPolicy
+    State = State
   };
 
 }

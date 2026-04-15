@@ -13,6 +13,7 @@ namespace FlowForge.Simulation.Application.Services;
 
 public sealed class WorkItemProcessOrchestrator(
   ISimulationEventScheduler EventScheduler,
+  IRoutingPolicy RoutingPolicy,
   IWorkItemService WorkItemService,
   IStageService StageService) : IWorkItemProcessOrchestrator
 {
@@ -24,7 +25,7 @@ public sealed class WorkItemProcessOrchestrator(
     {
       return Task.FromCanceled(cancellationToken);
     }
-    var workItem = WorkItemService.GetWorkItemRuntimeState(command.SimulationContext.WorkItemStore, command.TrackingSubjectId);
+    var workItem = WorkItemService.GetWorkItemRuntimeState(command.TrackingSubjectId);
 
     if (IsEventOutdated(workItem, WorkItemStatus.Processing, command.ProcessingToken, command.StageId)
       || workItem.CurrentStageId is null)
@@ -33,8 +34,8 @@ public sealed class WorkItemProcessOrchestrator(
       return Task.CompletedTask;
     }
 
-    StageService.CompleteProcessing(command.SimulationContext.StageStore, workItem.CurrentStageId.Value, workItem.TrackingSubjectId);
-    WorkItemService.CompleteProcessing(command.SimulationContext.WorkItemStore, command.TrackingSubjectId, command.SimulationContext.SimulationState.CurrentTime);
+    StageService.CompleteProcessing(workItem.CurrentStageId.Value, workItem.TrackingSubjectId);
+    WorkItemService.CompleteProcessing(command.TrackingSubjectId, command.SimulationContext.SimulationState.CurrentTime);
 
     //station.Value.CompleteProcessing(simulationEvent.ScheduledTime);//
     //stageResult.Value.CompleteProcessing(simulationEvent.ScheduledTime);
@@ -50,7 +51,7 @@ public sealed class WorkItemProcessOrchestrator(
    );
 
     //Determine next stage
-    var nextStage = command.SimulationContext.RoutingPolicy.GetNextStage(workItem.CurrentStageId);
+    var nextStage = RoutingPolicy.GetNextStage(workItem.CurrentStageId);
     //If next stage is null, it means processing is finished for the work item, otherwise queue for next stage
     if (nextStage is null)
     {
@@ -96,7 +97,7 @@ public sealed class WorkItemProcessOrchestrator(
       return Task.FromCanceled(cancellationToken);
     }
 
-    var workItem = WorkItemService.GetWorkItemRuntimeState(command.SimulationContext.WorkItemStore, command.TrackingSubjectId);
+    var workItem = WorkItemService.GetWorkItemRuntimeState(command.TrackingSubjectId);
 
     if (IsEventOutdated(workItem, WorkItemStatus.Completed, command.ProcessingToken)
       || workItem.CurrentStageId is null)
@@ -104,7 +105,7 @@ public sealed class WorkItemProcessOrchestrator(
       //Event outdated, skip
       return Task.CompletedTask;
     }
-    WorkItemService.CompleteWorkItem(command.SimulationContext.WorkItemStore, command.TrackingSubjectId, command.SimulationContext.SimulationState.CurrentTime);
+    WorkItemService.CompleteWorkItem(command.TrackingSubjectId, command.SimulationContext.SimulationState.CurrentTime);
     return Task.CompletedTask;
   }
   public Task CreateFromGenerationAsync(
@@ -115,8 +116,8 @@ public sealed class WorkItemProcessOrchestrator(
     {
       return Task.FromCanceled(cancellationToken);
     }
-    WorkItemService.CreateFromGeneration(command.SimulationContext.WorkItemStore, command.TrackingSubjectId, command.SimulationContext.SimulationState.CurrentTime);
-    var nextStage = command.SimulationContext.RoutingPolicy.GetNextStage(null);
+    WorkItemService.CreateFromGeneration(command.TrackingSubjectId, command.ArrivalTime);
+    var nextStage = RoutingPolicy.GetNextStage(null);
     if (nextStage == null)
     {
       throw new InvalidOperationException("Initial stage could not be determined");
@@ -125,7 +126,7 @@ public sealed class WorkItemProcessOrchestrator(
        new WorkItemQueueEvent(
            SimulationEventId.NewId(),
            command.SimulationContext.SimulationRunId,
-           command.SimulationContext.SimulationState.CurrentTime,
+           command.ArrivalTime,
            command.SimulationContext.SimulationState.GetNextSequenceNumber(),
            nextStage.Value,
            null,
@@ -144,7 +145,7 @@ public sealed class WorkItemProcessOrchestrator(
     {
       return Task.FromCanceled(cancellationToken);
     }
-    var workItem = WorkItemService.GetWorkItemRuntimeState(command.WorkItemStore, command.TrackingSubjectId);
+    var workItem = WorkItemService.GetWorkItemRuntimeState(command.TrackingSubjectId);
 
     if (IsEventOutdated(workItem, WorkItemStatus.Processing, command.ProcessingToken, command.CurrentStageId)
       || workItem.CurrentStageId is null)
@@ -153,8 +154,8 @@ public sealed class WorkItemProcessOrchestrator(
       return Task.CompletedTask;
     }
 
-    StageService.StopProcessing(command.StageStore, command.CurrentStageId, command.TrackingSubjectId, command.CurrentTime);
-    WorkItemService.StopProcessing(command.WorkItemStore, command.TrackingSubjectId, command.CurrentTime);
+    StageService.StopProcessing(command.CurrentStageId, command.TrackingSubjectId, command.CurrentTime);
+    WorkItemService.StopProcessing(command.TrackingSubjectId, command.CurrentTime);
 
     return Task.CompletedTask;
   }
@@ -168,7 +169,7 @@ public sealed class WorkItemProcessOrchestrator(
     }
 
 
-    var workItem = WorkItemService.GetWorkItemRuntimeState(command.SimulationContext.WorkItemStore, command.TrackingSubjectId);
+    var workItem = WorkItemService.GetWorkItemRuntimeState(command.TrackingSubjectId);
 
     if (IsEventOutdated(workItem, new[] { WorkItemStatus.Created, WorkItemStatus.Completed }, command.ProcessingToken, command.CurrentStageId))
     {
@@ -177,8 +178,8 @@ public sealed class WorkItemProcessOrchestrator(
     }
 
 
-    StageService.Enqueue(command.SimulationContext.StageStore, command.CurrentStageId, workItem.TrackingSubjectId, command.SimulationContext.SimulationState.CurrentTime);
-    WorkItemService.QueueForStage(command.SimulationContext.WorkItemStore, command.TrackingSubjectId, command.CurrentStageId, command.SimulationContext.SimulationState.CurrentTime);
+    StageService.Enqueue(command.CurrentStageId, workItem.TrackingSubjectId, command.SimulationContext.SimulationState.CurrentTime);
+    WorkItemService.QueueForStage(command.TrackingSubjectId, command.CurrentStageId, command.SimulationContext.SimulationState.CurrentTime);
 
     EventScheduler.Schedule(
       new ProcessingStartEvent(
@@ -199,13 +200,13 @@ public sealed class WorkItemProcessOrchestrator(
     {
       return Task.FromCanceled(cancellationToken);
     }
-    var result = StageService.TryStartProcessing(command.SimulationContext.StageStore, command.StageId, command.SimulationContext.SimulationState.CurrentTime);
+    var result = StageService.TryStartProcessing(command.StageId, command.SimulationContext.SimulationState.CurrentTime);
     if (result.IsFailure)
     {
       return Task.CompletedTask;
     }
 
-    WorkItemService.StartProcessing(command.SimulationContext.WorkItemStore, result.Value.TrackingSubjectId, result.Value.StationId, command.SimulationContext.SimulationState.CurrentTime);
+    WorkItemService.StartProcessing(result.Value.TrackingSubjectId, result.Value.StationId, command.SimulationContext.SimulationState.CurrentTime);
 
     var newTrackingEvent = new ProcessingCompleteEvent(
          SimulationEventId.NewId(),

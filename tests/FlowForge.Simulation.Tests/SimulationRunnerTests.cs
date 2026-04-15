@@ -25,9 +25,9 @@ public sealed class SimulationRunnerTests
     var queue = new RecordingQueue([]);
     var scheduler = new RecordingScheduler();
     var dispatcher = new RecordingDispatcher();
-    var runner = new SimulationRunner(queue, scheduler, dispatcher);
+    var runner = new SimulationEngine(queue, scheduler, dispatcher);
 
-    var result = await runner.RunSimulation(CreateContext(TimeSpan.FromHours(1)), CancellationToken.None);
+    var result = await runner.RunSimulationAsync(CreateContext(TimeSpan.FromHours(1)), CancellationToken.None);
 
     Assert.Equal(SimulationRunResult.Completed, result);
     var initialEvent = Assert.Single(scheduler.ScheduledEvents);
@@ -43,17 +43,17 @@ public sealed class SimulationRunnerTests
     var queue = new RecordingQueue([simulationEvent]);
     var scheduler = new RecordingScheduler();
     var dispatcher = new RecordingDispatcher();
-    var runner = new SimulationRunner(queue, scheduler, dispatcher);
+    var runner = new SimulationEngine(queue, scheduler, dispatcher);
     var context = CreateContext(TimeSpan.FromHours(1));
 
-    var result = await runner.RunSimulation(context, CancellationToken.None);
+    var result = await runner.RunSimulationAsync(context, CancellationToken.None);
 
     Assert.Equal(SimulationRunResult.Completed, result);
-    Assert.Equal(TimeSpan.FromMinutes(20), context.Data.State.CurrentTime);
+    Assert.Equal(TimeSpan.FromMinutes(20), context.State.CurrentTime);
     var dispatched = Assert.Single(dispatcher.DispatchedEvents);
     Assert.Same(simulationEvent, dispatched.Event);
     Assert.Equal(context.SimulationRunId, dispatched.Context.SimulationRunId);
-    Assert.Same(context.Data.State, dispatched.Context.State);
+    Assert.Same(context.State, dispatched.Context.State);
   }
 
   [Fact]
@@ -62,9 +62,9 @@ public sealed class SimulationRunnerTests
     var queue = new RecordingQueue([null]);
     var scheduler = new RecordingScheduler();
     var dispatcher = new RecordingDispatcher();
-    var runner = new SimulationRunner(queue, scheduler, dispatcher);
+    var runner = new SimulationEngine(queue, scheduler, dispatcher);
 
-    var result = await runner.RunSimulation(CreateContext(TimeSpan.FromHours(1)), CancellationToken.None);
+    var result = await runner.RunSimulationAsync(CreateContext(TimeSpan.FromHours(1)), CancellationToken.None);
 
     Assert.Equal(SimulationRunResult.Completed, result);
     Assert.Empty(dispatcher.DispatchedEvents);
@@ -76,11 +76,11 @@ public sealed class SimulationRunnerTests
     var queue = new RecordingQueue([CreateGenerateEvent(TimeSpan.FromMinutes(5), sequenceNumber: 1)]);
     var scheduler = new RecordingScheduler();
     var dispatcher = new RecordingDispatcher();
-    var runner = new SimulationRunner(queue, scheduler, dispatcher);
+    var runner = new SimulationEngine(queue, scheduler, dispatcher);
     using var cancellationTokenSource = new CancellationTokenSource();
     cancellationTokenSource.Cancel();
 
-    var result = await runner.RunSimulation(CreateContext(TimeSpan.FromHours(1)), cancellationTokenSource.Token);
+    var result = await runner.RunSimulationAsync(CreateContext(TimeSpan.FromHours(1)), cancellationTokenSource.Token);
 
     Assert.Equal(SimulationRunResult.Cancelled, result);
     Assert.Empty(dispatcher.DispatchedEvents);
@@ -92,9 +92,9 @@ public sealed class SimulationRunnerTests
     var queue = new RecordingQueue([CreateGenerateEvent(TimeSpan.FromHours(2), sequenceNumber: 1)]);
     var scheduler = new RecordingScheduler();
     var dispatcher = new RecordingDispatcher();
-    var runner = new SimulationRunner(queue, scheduler, dispatcher);
+    var runner = new SimulationEngine(queue, scheduler, dispatcher);
 
-    var result = await runner.RunSimulation(CreateContext(TimeSpan.FromHours(1)), CancellationToken.None);
+    var result = await runner.RunSimulationAsync(CreateContext(TimeSpan.FromHours(1)), CancellationToken.None);
 
     Assert.Equal(SimulationRunResult.Completed, result);
     Assert.Empty(dispatcher.DispatchedEvents);
@@ -104,19 +104,9 @@ public sealed class SimulationRunnerTests
   {
     return new SimulationExecutionContext(
       SimulationRunId.NewId(),
-      new SimulationExecutionContextData
-      {
-        ProcessConfiguration = CreateProcessConfiguration(plannedDuration),
-        Metadata = new SimulationMetadata(DateTimeOffset.UtcNow, "scenario", "1.0.0", new SimulationRunOptions()),
-        State = new SimulationState(),
-        TrackingSubjectStore = new StubTrackingSubjectStore(),
-        //WorkItemRuntimeStateStore = new StubWorkItemRuntimeStateStore(),
-        //StageRuntimeStateStore = new StubStageRuntimeStateStore(),
-        WorkItemTrackingStore = new StubWorkItemTrackingStore(),
-        StageTrackingStore = new StubStageTrackingStore(),
-        SnapshotStore = new StubSnapshotStore(),
-        SnapshotTimelineStore = new StubSnapshotTimelineStore()
-      });
+      new SimulationMetadata(DateTimeOffset.UtcNow, "scenario", "1.0.0", new SimulationRunOptions()),
+      new SimulationState(),
+      CreateProcessConfiguration(plannedDuration));
   }
 
   private static ProcessConfiguration CreateProcessConfiguration(TimeSpan plannedDuration)

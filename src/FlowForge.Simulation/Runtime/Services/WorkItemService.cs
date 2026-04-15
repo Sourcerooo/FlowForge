@@ -3,53 +3,55 @@ using FlowForge.Domain.Process.ValueObjects;
 using FlowForge.Simulation.Runtime.Contracts;
 using FlowForge.Simulation.Runtime.Entities;
 using FlowForge.Simulation.Runtime.ValueObjects;
+using FlowForge.Simulation.Tracking.Contracts;
 
 namespace FlowForge.Simulation.Runtime.Services;
 
-internal class WorkItemService() : IWorkItemService
+internal class WorkItemService(IWorkItemRuntimeStateStore WorkItemRuntimeStateStore,
+  IWorkItemTrackingStore WorkItemTrackingStore) : IWorkItemService
 {
-  public WorkItemRuntimeState GetWorkItemRuntimeState(WorkItemStore workItemStore, TrackingSubjectId trackingSubjectId)
+  public WorkItemRuntimeState GetWorkItemRuntimeState(TrackingSubjectId trackingSubjectId)
   {
-    return workItemStore.WorkItemRuntimeStore.GetWorkItemRuntimeState(trackingSubjectId);
+    return WorkItemRuntimeStateStore.GetWorkItemRuntimeState(trackingSubjectId);
   }
 
-  public void CreateFromGeneration(WorkItemStore workItemStore, TrackingSubjectId trackingSubjectId, TimeSpan createdAt)
+  public void CreateFromGeneration(TrackingSubjectId trackingSubjectId, TimeSpan createdAt)
   {
-    if (workItemStore.WorkItemRuntimeStore.ContainsWorkItemRuntimeState(trackingSubjectId))
+    if (WorkItemRuntimeStateStore.ContainsWorkItemRuntimeState(trackingSubjectId))
     {
       throw new InvalidOperationException($"WorkItemRuntimeStateStore->CreateFromGeneration: TrackingSubjectId {trackingSubjectId} already exists.");
     }
-    workItemStore.WorkItemRuntimeStore.CreateFromGeneration(trackingSubjectId, createdAt);
-    workItemStore.WorkItemTrackingStore.AddWorkItemTracking(trackingSubjectId, createdAt);
+    WorkItemRuntimeStateStore.CreateFromGeneration(trackingSubjectId, createdAt);
+    WorkItemTrackingStore.AddWorkItemTracking(trackingSubjectId, createdAt);
   }
 
-  public void QueueForStage(WorkItemStore workItemStore, TrackingSubjectId trackingSubjectId, StageId stageId, TimeSpan currentTime, ProcessingToken processingToken = default)
+  public void QueueForStage(TrackingSubjectId trackingSubjectId, StageId stageId, TimeSpan currentTime, ProcessingToken processingToken = default)
   {
-    workItemStore.WorkItemRuntimeStore.QueueForStage(trackingSubjectId, stageId, processingToken);
-    workItemStore.WorkItemTrackingStore.EnqueueWorkItem(trackingSubjectId, currentTime);
+    WorkItemRuntimeStateStore.QueueForStage(trackingSubjectId, stageId, processingToken);
+    WorkItemTrackingStore.EnqueueWorkItem(trackingSubjectId, currentTime);
   }
 
-  public void StartProcessing(WorkItemStore workItemStore, TrackingSubjectId trackingSubjectId, StationId stationId, TimeSpan currentTime)
+  public void StartProcessing(TrackingSubjectId trackingSubjectId, StationId stationId, TimeSpan currentTime)
   {
-    workItemStore.WorkItemRuntimeStore.StartProcessing(trackingSubjectId, stationId);
-    workItemStore.WorkItemTrackingStore.StartProcessingWorkItem(trackingSubjectId, currentTime);
+    WorkItemRuntimeStateStore.StartProcessing(trackingSubjectId, stationId);
+    WorkItemTrackingStore.StartProcessingWorkItem(trackingSubjectId, currentTime);
   }
 
-  public void CompleteProcessing(WorkItemStore workItemStore, TrackingSubjectId trackingSubjectId, TimeSpan currentTime)
+  public void CompleteProcessing(TrackingSubjectId trackingSubjectId, TimeSpan currentTime)
   {
-    workItemStore.WorkItemRuntimeStore.CompleteProcessing(trackingSubjectId);
-    workItemStore.WorkItemTrackingStore.CompleteWorkItem(trackingSubjectId, currentTime);
+    WorkItemRuntimeStateStore.CompleteProcessing(trackingSubjectId);
+    WorkItemTrackingStore.CompleteWorkItem(trackingSubjectId, currentTime);
   }
 
-  public void StopProcessing(WorkItemStore workItemStore, TrackingSubjectId trackingSubjectId, TimeSpan currentTime)
+  public void StopProcessing(TrackingSubjectId trackingSubjectId, TimeSpan currentTime)
   {
-    workItemStore.WorkItemRuntimeStore.StopProcessing(trackingSubjectId);
-    workItemStore.WorkItemTrackingStore.StopProcessingWorkItem(trackingSubjectId, currentTime);
+    WorkItemRuntimeStateStore.StopProcessing(trackingSubjectId);
+    WorkItemTrackingStore.StopProcessingWorkItem(trackingSubjectId, currentTime);
   }
 
-  public void CompleteWorkItem(WorkItemStore workItemStore, TrackingSubjectId trackingSubjectId, TimeSpan currentTime)
+  public void CompleteWorkItem(TrackingSubjectId trackingSubjectId, TimeSpan currentTime)
   {
-    workItemStore.WorkItemRuntimeStore.CompleteWorkItem(trackingSubjectId, currentTime);
-    workItemStore.WorkItemTrackingStore.CompleteWorkItem(trackingSubjectId, currentTime);
+    WorkItemRuntimeStateStore.CompleteWorkItem(trackingSubjectId, currentTime);
+    WorkItemTrackingStore.CompleteWorkItem(trackingSubjectId, currentTime);
   }
 }

@@ -9,10 +9,10 @@ public static class EventsDependencyInjection
 {
   public static IServiceCollection AddEvents(this IServiceCollection services)
   {
-    services.AddScoped<ISimulationEventDispatcher, SimulationEventDispatcher>();
+    services.AddSingleton<ISimulationEventDispatcher, SimulationEventDispatcher>();
     //Register event handlers
-    services.AddScoped<ISimulationEventHandler, SimulationEventsGenerateEventHandler>();
-    services.AddScoped<ISimulationEventHandler, WorkItemQueueEventHandler>();
+    services.AddSingleton<ISimulationEventHandler, SimulationEventsGenerateEventHandler>();
+    services.AddSingleton<ISimulationEventHandler, WorkItemQueueEventHandler>();
     return services;
   }
 }
