@@ -13,7 +13,7 @@ public record WorkItemQueueEvent(
   long SequenceNumber,
   StageId StageId,
   StationId? StationId,
-  long ProcessingToken,
+  ProcessingToken ProcessingToken,
   TrackingSubjectId TrackingSubjectId)
   : PackagingSimulationEvent(
     Id,

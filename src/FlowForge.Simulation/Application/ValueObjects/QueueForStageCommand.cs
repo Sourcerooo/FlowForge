@@ -6,7 +6,7 @@ namespace FlowForge.Simulation.Application.ValueObjects;
 
 public sealed record QueueForStageCommand(
     TrackingSubjectId TrackingSubjectId,
-    long? ProcessingToken,
+    ProcessingToken? ProcessingToken,
     StageId CurrentStageId,
     SimulationCommandContext SimulationContext
   );

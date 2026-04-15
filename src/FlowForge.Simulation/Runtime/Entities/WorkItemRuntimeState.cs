@@ -1,5 +1,6 @@
 using FlowForge.Domain.Orders.ValueObjects;
 using FlowForge.Domain.Process.ValueObjects;
+using FlowForge.Simulation.Runtime.ValueObjects;
 using FlowForge.Simulation.Tracking.Enums;
 
 namespace FlowForge.Simulation.Runtime.Entities;
@@ -10,7 +11,7 @@ public sealed class WorkItemRuntimeState(
   WorkItemStatus currentStatus = WorkItemStatus.Created,
   StageId? currentStageId = null,
   StationId? currentStationId = null,
-  long currentProcessingToken = 0,
+  ProcessingToken currentProcessingToken = default,
   TimeSpan? completedAt = null)
 {
   public TrackingSubjectId TrackingSubjectId { get; } = trackingSubjectId;
@@ -18,10 +19,10 @@ public sealed class WorkItemRuntimeState(
   public WorkItemStatus CurrentStatus { get; private set; } = currentStatus;
   public StageId? CurrentStageId { get; private set; } = currentStageId;
   public StationId? CurrentStationId { get; private set; } = currentStationId;
-  public long CurrentProcessingToken { get; private set; } = currentProcessingToken;
+  public ProcessingToken CurrentProcessingToken { get; private set; } = currentProcessingToken;
   public TimeSpan? CompletedAt { get; private set; } = completedAt;
 
-  public void QueueForStage(StageId stageId, long processingToken = 0)
+  public void QueueForStage(StageId stageId, ProcessingToken processingToken = default)
   {
     CurrentStatus = WorkItemStatus.InQueue;
     CurrentStageId = stageId;

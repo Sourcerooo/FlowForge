@@ -5,6 +5,7 @@ using FlowForge.Simulation.Events.SimulationEvents;
 using FlowForge.Simulation.Events.ValueObjects;
 using FlowForge.Simulation.Runtime.Contracts;
 using FlowForge.Simulation.Runtime.Entities;
+using FlowForge.Simulation.Runtime.ValueObjects;
 using FlowForge.Simulation.Scheduling.Contracts;
 using FlowForge.Simulation.Tracking.Enums;
 
@@ -128,7 +129,7 @@ public sealed class WorkItemProcessOrchestrator(
            command.SimulationContext.SimulationState.GetNextSequenceNumber(),
            nextStage.Value,
            null,
-           0,
+           ProcessingToken.Initial,
            command.TrackingSubjectId
          )
        );
@@ -223,7 +224,7 @@ public sealed class WorkItemProcessOrchestrator(
   private static bool IsEventOutdated(
     WorkItemRuntimeState? workItem,
     IReadOnlyCollection<WorkItemStatus> expectedStatus,
-    long? expectedProcessingToken,
+    ProcessingToken? expectedProcessingToken,
     StageId? expectedStageId)
   {
     return workItem is null
@@ -236,7 +237,7 @@ public sealed class WorkItemProcessOrchestrator(
   private static bool IsEventOutdated(
    WorkItemRuntimeState? workItem,
    WorkItemStatus expectedStatus,
-   long? expectedProcessingToken,
+   ProcessingToken? expectedProcessingToken,
    StageId? expectedStageId = default)
   {
     return IsEventOutdated(workItem, new[] { expectedStatus }, expectedProcessingToken, expectedStageId);

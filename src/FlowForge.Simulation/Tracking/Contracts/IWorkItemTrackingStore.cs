@@ -1,6 +1,7 @@
 using FlowForge.Domain.Orders.ValueObjects;
 using FlowForge.Domain.Process.ValueObjects;
 using FlowForge.Domain.SharedKernel.Util;
+using FlowForge.Simulation.Runtime.ValueObjects;
 using FlowForge.Simulation.Tracking.Entities.WorkItems;
 using FlowForge.Simulation.Tracking.Enums;
 
@@ -17,9 +18,9 @@ public interface IWorkItemTrackingStore
     WorkItemStatus currentStatus = WorkItemStatus.Created,
     StageId? currentStageId = null,
     StationId? currentStationId = null,
-    long currentProcessingToken = 0,
+    ProcessingToken currentProcessingToken = default,
     TimeSpan? completedAt = null);
-  public Result SetCurrentProcessingToken(TrackingSubjectId trackingSubjectId, long processingToken);
+  public Result SetCurrentProcessingToken(TrackingSubjectId trackingSubjectId, ProcessingToken processingToken);
   public Result SetCurrentStageId(TrackingSubjectId trackingSubjectId, StageId? stageId);
   public Result SetCurrentStationId(TrackingSubjectId trackingSubjectId, StageId? stageId, StationId? stationId);
   public Result SetCurrentStatus(TrackingSubjectId trackingSubjectId, WorkItemStatus status);

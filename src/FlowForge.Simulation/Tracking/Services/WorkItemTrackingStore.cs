@@ -1,6 +1,7 @@
 using FlowForge.Domain.Orders.ValueObjects;
 using FlowForge.Domain.Process.ValueObjects;
 using FlowForge.Domain.SharedKernel.Util;
+using FlowForge.Simulation.Runtime.ValueObjects;
 using FlowForge.Simulation.Tracking.Contracts;
 using FlowForge.Simulation.Tracking.Entities.WorkItems;
 using FlowForge.Simulation.Tracking.Enums;
@@ -19,7 +20,7 @@ internal static partial class WorkItemTrackingStoreLog
     TrackingSubjectId trackingSubjectId,
     TimeSpan createdAt,
     WorkItemStatus currentStatus,
-    long currentProcessingToken);
+    ProcessingToken currentProcessingToken);
 }
 
 public sealed class WorkItemTrackingStore(ILogger<WorkItemTrackingStore> logger) : IWorkItemTrackingStore
@@ -40,7 +41,7 @@ public sealed class WorkItemTrackingStore(ILogger<WorkItemTrackingStore> logger)
     WorkItemStatus currentStatus = WorkItemStatus.Created,
     StageId? currentStageId = null,
     StationId? currentStationId = null,
-    long currentProcessingToken = 0,
+    ProcessingToken currentProcessingToken = default,
     TimeSpan? completedAt = null)
   {
     var tracking = new WorkItemTracking(
@@ -90,7 +91,7 @@ public sealed class WorkItemTrackingStore(ILogger<WorkItemTrackingStore> logger)
     return Result.Success();
   }
 
-  public Result SetCurrentProcessingToken(TrackingSubjectId trackingSubjectId, long processingToken)
+  public Result SetCurrentProcessingToken(TrackingSubjectId trackingSubjectId, ProcessingToken processingToken)
   {
     var trackingResult = GetWorkItemTracking(trackingSubjectId);
     if (trackingResult.IsFailure)

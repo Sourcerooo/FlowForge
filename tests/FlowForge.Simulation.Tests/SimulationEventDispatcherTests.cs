@@ -75,7 +75,7 @@ public sealed class SimulationEventDispatcherTests
       3,
       StageId.NewId(),
       StationId.NewId(),
-      4,
+      new ProcessingToken(4),
       TrackingSubjectId.NewId());
   }
 

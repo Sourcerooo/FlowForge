@@ -6,5 +6,5 @@ public readonly record struct StationProcessingInfo(
   TrackingSubjectId TrackingSubjectId,
   int WorkerSlot,
   TimeSpan StartedAt,
-  long ProcessingToken
+  ProcessingToken ProcessingToken
   );

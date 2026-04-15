@@ -66,7 +66,7 @@ public sealed class StageRuntimeStateTests
   {
     var stage = CreateStage(workerCapacities: [1]);
     var entry = NewQueueEntry(TimeSpan.FromMinutes(1));
-    entry = entry with { ProcessingToken = 9 };
+    entry = entry with { ProcessingToken = new ProcessingToken(9) };
     stage.Enqueue(entry);
 
     var result = stage.TryStartProcessing(TimeSpan.FromMinutes(2));
@@ -76,7 +76,7 @@ public sealed class StageRuntimeStateTests
     var station = Assert.Single(stage.Stations).Value;
     var processing = Assert.Single(station.ProcessingInfo);
     Assert.Equal(entry.TrackingSubjectId, processing.Value.TrackingSubjectId);
-    Assert.Equal(9, processing.Value.ProcessingToken);
+    Assert.Equal(9, processing.Value.ProcessingToken.Value);
   }
 
   [Fact]

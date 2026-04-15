@@ -6,7 +6,7 @@ namespace FlowForge.Simulation.Application.ValueObjects;
 
 public sealed record CompleteProcessingCommand(
     TrackingSubjectId TrackingSubjectId,
-    long ProcessingToken,
+    ProcessingToken ProcessingToken,
     StageId StageId,
     SimulationCommandContext SimulationContext
     );

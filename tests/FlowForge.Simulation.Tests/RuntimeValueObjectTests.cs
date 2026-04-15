@@ -55,8 +55,8 @@ public sealed class RuntimeValueObjectTests
   public void StationProcessingInfo_UsesValueEquality()
   {
     var trackingSubjectId = TrackingSubjectId.NewId();
-    var first = new StationProcessingInfo(trackingSubjectId, 1, TimeSpan.FromMinutes(5), 6);
-    var second = new StationProcessingInfo(trackingSubjectId, 1, TimeSpan.FromMinutes(5), 6);
+    var first = new StationProcessingInfo(trackingSubjectId, 1, TimeSpan.FromMinutes(5), new ProcessingToken(6));
+    var second = new StationProcessingInfo(trackingSubjectId, 1, TimeSpan.FromMinutes(5), new ProcessingToken(6));
 
     Assert.Equal(first, second);
   }

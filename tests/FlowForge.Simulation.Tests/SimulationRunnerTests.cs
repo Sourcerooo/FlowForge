@@ -194,7 +194,7 @@ public sealed class SimulationRunnerTests
     public bool ContainsWorkItemRuntimeState(TrackingSubjectId trackingSubjectId) => throw new NotImplementedException();
     public void CreateFromGeneration(TrackingSubjectId trackingSubjectId, TimeSpan createdAt) => throw new NotImplementedException();
     public WorkItemRuntimeState GetWorkItemRuntimeState(TrackingSubjectId trackingSubjectId) => throw new NotImplementedException();
-    public void QueueForStage(TrackingSubjectId trackingSubjectId, StageId stageId, long processingToken = 0) => throw new NotImplementedException();
+    public void QueueForStage(TrackingSubjectId trackingSubjectId, StageId stageId, ProcessingToken processingToken = default) => throw new NotImplementedException();
     public void StartProcessing(TrackingSubjectId trackingSubjectId, StationId stationId) => throw new NotImplementedException();
     public void StopProcessing(TrackingSubjectId trackingSubjectId) => throw new NotImplementedException();
   }
@@ -211,12 +211,12 @@ public sealed class SimulationRunnerTests
 
   private sealed class StubWorkItemTrackingStore : IWorkItemTrackingStore
   {
-    public Tracking.Entities.WorkItems.WorkItemTracking AddWorkItemTracking(TrackingSubjectId trackingSubjectId, TimeSpan createdAt, Tracking.Enums.WorkItemStatus currentStatus = Tracking.Enums.WorkItemStatus.Created, StageId? currentStageId = null, StationId? currentStationId = null, long currentProcessingToken = 0, TimeSpan? completedAt = null) => throw new NotImplementedException();
+    public Tracking.Entities.WorkItems.WorkItemTracking AddWorkItemTracking(TrackingSubjectId trackingSubjectId, TimeSpan createdAt, Tracking.Enums.WorkItemStatus currentStatus = Tracking.Enums.WorkItemStatus.Created, StageId? currentStageId = null, StationId? currentStationId = null, ProcessingToken currentProcessingToken = default, TimeSpan? completedAt = null) => throw new NotImplementedException();
     public Result CompleteWorkItem(TrackingSubjectId trackingSubjectId, TimeSpan completionTime) => throw new NotImplementedException();
     public Result EnqueueWorkItem(TrackingSubjectId trackingSubjectId, TimeSpan currentTime) => throw new NotImplementedException();
     public Result<Tracking.Entities.WorkItems.WorkItemTracking> GetWorkItemTracking(TrackingSubjectId trackingSubjectId) => throw new NotImplementedException();
     public Result StartProcessingWorkItem(TrackingSubjectId trackingSubjectId, TimeSpan currentTime) => throw new NotImplementedException();
-    public Result SetCurrentProcessingToken(TrackingSubjectId trackingSubjectId, long processingToken) => throw new NotImplementedException();
+    public Result SetCurrentProcessingToken(TrackingSubjectId trackingSubjectId, ProcessingToken processingToken) => throw new NotImplementedException();
     public Result SetCurrentStageId(TrackingSubjectId trackingSubjectId, StageId? stageId) => throw new NotImplementedException();
     public Result SetCurrentStationId(TrackingSubjectId trackingSubjectId, StageId? stageId, StationId? stationId) => throw new NotImplementedException();
     public Result SetCurrentStatus(TrackingSubjectId trackingSubjectId, Tracking.Enums.WorkItemStatus status) => throw new NotImplementedException();

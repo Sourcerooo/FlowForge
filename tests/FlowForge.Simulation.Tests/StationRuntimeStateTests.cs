@@ -1,6 +1,7 @@
 using FlowForge.Domain.Orders.ValueObjects;
 using FlowForge.Domain.Process.ValueObjects;
 using FlowForge.Simulation.Runtime.Entities;
+using FlowForge.Simulation.Runtime.ValueObjects;
 
 namespace FlowForge.Simulation.Tests;
 
@@ -25,7 +26,7 @@ public sealed class StationRuntimeStateTests
     var trackingSubjectId = TrackingSubjectId.NewId();
     var startedAt = TimeSpan.FromMinutes(5);
 
-    var result = station.TryReserveWorker(trackingSubjectId, startedAt, processingToken: 7);
+    var result = station.TryReserveWorker(trackingSubjectId, startedAt, processingToken: new ProcessingToken(7));
 
     Assert.True(result);
     Assert.Equal(1, station.BusyWorkerCount);
@@ -34,7 +35,7 @@ public sealed class StationRuntimeStateTests
     Assert.Equal(0, processing.Key);
     Assert.Equal(trackingSubjectId, processing.Value.TrackingSubjectId);
     Assert.Equal(startedAt, processing.Value.StartedAt);
-    Assert.Equal(7, processing.Value.ProcessingToken);
+    Assert.Equal(7, processing.Value.ProcessingToken.Value);
   }
 
   [Fact]
@@ -42,10 +43,10 @@ public sealed class StationRuntimeStateTests
   {
     var station = CreateStation(workerCapacity: 2);
 
-    station.TryReserveWorker(TrackingSubjectId.NewId(), TimeSpan.FromMinutes(1), processingToken: 1);
+    station.TryReserveWorker(TrackingSubjectId.NewId(), TimeSpan.FromMinutes(1), processingToken: new ProcessingToken(1));
     var secondTrackingId = TrackingSubjectId.NewId();
 
-    var result = station.TryReserveWorker(secondTrackingId, TimeSpan.FromMinutes(2), processingToken: 2);
+    var result = station.TryReserveWorker(secondTrackingId, TimeSpan.FromMinutes(2), processingToken: new ProcessingToken(2));
 
     Assert.True(result);
     Assert.Equal(2, station.BusyWorkerCount);
@@ -57,9 +58,9 @@ public sealed class StationRuntimeStateTests
   public void TryReserveWorker_ReturnsFalseWhenAllWorkersAreBusy()
   {
     var station = CreateStation(workerCapacity: 1);
-    station.TryReserveWorker(TrackingSubjectId.NewId(), TimeSpan.Zero, processingToken: 1);
+    station.TryReserveWorker(TrackingSubjectId.NewId(), TimeSpan.Zero, processingToken: new ProcessingToken(1));
 
-    var result = station.TryReserveWorker(TrackingSubjectId.NewId(), TimeSpan.FromSeconds(1), processingToken: 2);
+    var result = station.TryReserveWorker(TrackingSubjectId.NewId(), TimeSpan.FromSeconds(1), processingToken: new ProcessingToken(2));
 
     Assert.False(result);
     Assert.Equal(1, station.BusyWorkerCount);
@@ -71,7 +72,7 @@ public sealed class StationRuntimeStateTests
   {
     var station = CreateStation(workerCapacity: 0);
 
-    var result = station.TryReserveWorker(TrackingSubjectId.NewId(), TimeSpan.Zero, processingToken: 1);
+    var result = station.TryReserveWorker(TrackingSubjectId.NewId(), TimeSpan.Zero, processingToken: new ProcessingToken(1));
 
     Assert.False(result);
     Assert.Equal(0, station.BusyWorkerCount);
@@ -85,8 +86,8 @@ public sealed class StationRuntimeStateTests
     var first = TrackingSubjectId.NewId();
     var second = TrackingSubjectId.NewId();
 
-    station.TryReserveWorker(first, TimeSpan.FromMinutes(1), processingToken: 1);
-    station.TryReserveWorker(second, TimeSpan.FromMinutes(2), processingToken: 2);
+    station.TryReserveWorker(first, TimeSpan.FromMinutes(1), processingToken: new Runtime.ValueObjects.ProcessingToken(1));
+    station.TryReserveWorker(second, TimeSpan.FromMinutes(2), processingToken: new Runtime.ValueObjects.ProcessingToken(2));
 
     station.ReleaseWorker(first);
 
@@ -115,9 +116,9 @@ public sealed class StationRuntimeStateTests
     var first = TrackingSubjectId.NewId();
     var second = TrackingSubjectId.NewId();
 
-    station.TryReserveWorker(first, TimeSpan.FromMinutes(1), processingToken: 1);
+    station.TryReserveWorker(first, TimeSpan.FromMinutes(1), processingToken: new ProcessingToken(1));
     station.ReleaseWorker(first);
-    var result = station.TryReserveWorker(second, TimeSpan.FromMinutes(2), processingToken: 2);
+    var result = station.TryReserveWorker(second, TimeSpan.FromMinutes(2), processingToken: new ProcessingToken(2));
 
     Assert.True(result);
     var processing = Assert.Single(station.ProcessingInfo);

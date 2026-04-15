@@ -25,7 +25,7 @@ public sealed class StationRuntimeState(
   public bool TryReserveWorker(
     TrackingSubjectId trackingSubjectId,
     TimeSpan startedAt,
-    long processingToken)
+    ProcessingToken processingToken)
   {
     if (AvailableWorkerCount <= 0)
     {

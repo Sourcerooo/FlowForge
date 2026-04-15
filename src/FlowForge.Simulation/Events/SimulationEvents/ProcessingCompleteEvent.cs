@@ -13,7 +13,7 @@ public record ProcessingCompleteEvent(
   long SequenceNumber,
   StageId StageId,
   StationId StationId,
-  long ProcessingToken,
+  ProcessingToken ProcessingToken,
   TrackingSubjectId TrackingSubjectId)
   : PackagingSimulationEvent(Id, SimulationRunId, ScheduledTime, EventSortRank.ProcessingComplete, SequenceNumber,
     EventKind.ProcessingComplete);

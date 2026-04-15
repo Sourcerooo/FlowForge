@@ -5,6 +5,6 @@ namespace FlowForge.Simulation.Application.ValueObjects;
 
 public sealed record CompleteWorkItemCommand(
   TrackingSubjectId TrackingSubjectId,
-  long ProcessingToken,
+  ProcessingToken ProcessingToken,
   SimulationCommandContext SimulationContext
   );

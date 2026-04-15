@@ -10,7 +10,7 @@ public record WorkItemCompleteEvent(
   SimulationRunId SimulationRunId,
   TimeSpan ScheduledTime,
   long SequenceNumber,
-  long ProcessingToken,
+  ProcessingToken ProcessingToken,
   TrackingSubjectId TrackingSubjectId)
   : PackagingSimulationEvent(Id, SimulationRunId, ScheduledTime, EventSortRank.OrderComplete, SequenceNumber,
     EventKind.WorkItemComplete);

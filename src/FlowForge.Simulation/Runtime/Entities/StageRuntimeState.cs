@@ -64,7 +64,7 @@ public sealed partial class StageRuntimeState(
       throw new InvalidOperationException($"StageRuntimeState->StopProcessing: TrackingSubjectId {trackingSubjectId} is not currently processing at any station.");
     }
     var proccesingInfo = ReleaseStation(trackingSubjectId);
-    var newProcessingToken = proccesingInfo.ProcessingToken + 1;
+    var newProcessingToken = new ProcessingToken(proccesingInfo.ProcessingToken.Value + 1);
     Enqueue(new StageQueueEntry(trackingSubjectId, currentTime, newProcessingToken));
   }
 
@@ -85,7 +85,7 @@ public sealed partial class StageRuntimeState(
   private StationId? TryReserveFreeStation(
     TrackingSubjectId trackingSubjectId,
     TimeSpan startedAt,
-    long processingToken)
+    ProcessingToken processingToken)
   {
     if (_stationOrder.Count == 0)
     {
@@ -115,10 +115,10 @@ public sealed partial class StageRuntimeState(
       throw new InvalidOperationException($"StageRuntimeState->ReleaseStation: TrackingSubjectId {trackingSubjectId} is not currently processing at any station.");
     }
     var station = Stations[stationId];
-    var processingToken = station.GetProcessingInfo(trackingSubjectId);
+    var processingInfo = station.GetProcessingInfo(trackingSubjectId);
     station.ReleaseWorker(trackingSubjectId);
     _processingStation.Remove(trackingSubjectId);
-    return processingToken;
+    return processingInfo;
   }
 
   private bool HasEntries()

@@ -2,6 +2,7 @@ using FlowForge.Domain.Orders.ValueObjects;
 using FlowForge.Domain.Process.ValueObjects;
 using FlowForge.Simulation.Runtime.Contracts;
 using FlowForge.Simulation.Runtime.Entities;
+using FlowForge.Simulation.Runtime.ValueObjects;
 
 namespace FlowForge.Simulation.Runtime.Services;
 
@@ -22,7 +23,7 @@ internal class WorkItemService() : IWorkItemService
     workItemStore.WorkItemTrackingStore.AddWorkItemTracking(trackingSubjectId, createdAt);
   }
 
-  public void QueueForStage(WorkItemStore workItemStore, TrackingSubjectId trackingSubjectId, StageId stageId, TimeSpan currentTime, long processingToken = 0)
+  public void QueueForStage(WorkItemStore workItemStore, TrackingSubjectId trackingSubjectId, StageId stageId, TimeSpan currentTime, ProcessingToken processingToken = default)
   {
     workItemStore.WorkItemRuntimeStore.QueueForStage(trackingSubjectId, stageId, processingToken);
     workItemStore.WorkItemTrackingStore.EnqueueWorkItem(trackingSubjectId, currentTime);

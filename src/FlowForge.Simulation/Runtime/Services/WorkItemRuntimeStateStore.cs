@@ -2,6 +2,7 @@ using FlowForge.Domain.Orders.ValueObjects;
 using FlowForge.Domain.Process.ValueObjects;
 using FlowForge.Simulation.Runtime.Contracts;
 using FlowForge.Simulation.Runtime.Entities;
+using FlowForge.Simulation.Runtime.ValueObjects;
 
 namespace FlowForge.Simulation.Runtime.Services;
 
@@ -26,7 +27,7 @@ internal class WorkItemRuntimeStateStore() : IWorkItemRuntimeStateStore
     _workItemRuntimeStates[trackingSubjectId] = new WorkItemRuntimeState(trackingSubjectId, createdAt);
   }
 
-  public void QueueForStage(TrackingSubjectId trackingSubjectId, StageId stageId, long processingToken = 0)
+  public void QueueForStage(TrackingSubjectId trackingSubjectId, StageId stageId, ProcessingToken processingToken = default)
   {
     if (!_workItemRuntimeStates.TryGetValue(trackingSubjectId, out var workItemRuntimeState))
     {
