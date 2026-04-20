@@ -8,6 +8,7 @@ using FlowForge.Simulation.Runtime.Entities;
 using FlowForge.Simulation.Runtime.ValueObjects;
 using FlowForge.Simulation.Scheduling.Contracts;
 using FlowForge.Simulation.Tracking.Enums;
+using Microsoft.Extensions.Logging;
 
 namespace FlowForge.Simulation.Application.Services;
 
@@ -15,7 +16,9 @@ public sealed class WorkItemProcessOrchestrator(
   ISimulationEventScheduler EventScheduler,
   IRoutingPolicy RoutingPolicy,
   IWorkItemService WorkItemService,
-  IStageService StageService) : IWorkItemProcessOrchestrator
+  IStageService StageService,
+  ILogger<WorkItemProcessOrchestrator> Logger
+  ) : IWorkItemProcessOrchestrator
 {
   public Task CompleteProcessingAsync(
     CompleteProcessingCommand command,
@@ -33,12 +36,9 @@ public sealed class WorkItemProcessOrchestrator(
       //Event outdated, skip
       return Task.CompletedTask;
     }
-
-    StageService.CompleteProcessing(workItem.CurrentStageId.Value, workItem.TrackingSubjectId);
+    StageService.CompleteProcessing(workItem.CurrentStageId.Value, workItem.TrackingSubjectId, command.SimulationContext.SimulationState.CurrentTime);
     WorkItemService.CompleteProcessing(command.TrackingSubjectId, command.SimulationContext.SimulationState.CurrentTime);
-
-    //station.Value.CompleteProcessing(simulationEvent.ScheduledTime);//
-    //stageResult.Value.CompleteProcessing(simulationEvent.ScheduledTime);
+    Logger.LogInformation("Completed processing for WorkItem {TrackingSubjectId} at Stage {StageId}", command.TrackingSubjectId, workItem.CurrentStageId);
 
     //Start next item in queue for the stage
     EventScheduler.Schedule(
@@ -105,7 +105,9 @@ public sealed class WorkItemProcessOrchestrator(
       //Event outdated, skip
       return Task.CompletedTask;
     }
+
     WorkItemService.CompleteWorkItem(command.TrackingSubjectId, command.SimulationContext.SimulationState.CurrentTime);
+    Logger.LogInformation("Completed WorkItem {TrackingSubjectId}", command.TrackingSubjectId);
     return Task.CompletedTask;
   }
   public Task CreateFromGenerationAsync(
@@ -117,6 +119,7 @@ public sealed class WorkItemProcessOrchestrator(
       return Task.FromCanceled(cancellationToken);
     }
     WorkItemService.CreateFromGeneration(command.TrackingSubjectId, command.ArrivalTime);
+    Logger.LogInformation("Created WorkItem {TrackingSubjectId} from generation at time {ArrivalTime}", command.TrackingSubjectId, command.ArrivalTime);
     var nextStage = RoutingPolicy.GetNextStage(null);
     if (nextStage == null)
     {
@@ -156,7 +159,7 @@ public sealed class WorkItemProcessOrchestrator(
 
     StageService.StopProcessing(command.CurrentStageId, command.TrackingSubjectId, command.CurrentTime);
     WorkItemService.StopProcessing(command.TrackingSubjectId, command.CurrentTime);
-
+    Logger.LogInformation("Put on hold WorkItem {TrackingSubjectId} at Stage {StageId}", command.TrackingSubjectId, command.CurrentStageId);
     return Task.CompletedTask;
   }
   public Task QueueForStageAsync(
@@ -171,7 +174,7 @@ public sealed class WorkItemProcessOrchestrator(
 
     var workItem = WorkItemService.GetWorkItemRuntimeState(command.TrackingSubjectId);
 
-    if (IsEventOutdated(workItem, new[] { WorkItemStatus.Created, WorkItemStatus.Completed }, command.ProcessingToken, command.CurrentStageId))
+    if (IsEventOutdated(workItem, new[] { WorkItemStatus.Created, WorkItemStatus.Completed }, command.ProcessingToken, workItem.CurrentStageId))
     {
       //Event outdated, skip
       return Task.CompletedTask;
@@ -180,7 +183,7 @@ public sealed class WorkItemProcessOrchestrator(
 
     StageService.Enqueue(command.CurrentStageId, workItem.TrackingSubjectId, command.SimulationContext.SimulationState.CurrentTime);
     WorkItemService.QueueForStage(command.TrackingSubjectId, command.CurrentStageId, command.SimulationContext.SimulationState.CurrentTime);
-
+    Logger.LogInformation("Queued WorkItem {TrackingSubjectId} for Stage {StageId}", command.TrackingSubjectId, command.CurrentStageId);
     EventScheduler.Schedule(
       new ProcessingStartEvent(
         SimulationEventId.NewId(),
@@ -201,22 +204,28 @@ public sealed class WorkItemProcessOrchestrator(
       return Task.FromCanceled(cancellationToken);
     }
     var result = StageService.TryStartProcessing(command.StageId, command.SimulationContext.SimulationState.CurrentTime);
-    if (result.IsFailure)
+    if (result.IsFailure || result.Value.StationId is null)
     {
       return Task.CompletedTask;
     }
 
-    WorkItemService.StartProcessing(result.Value.TrackingSubjectId, result.Value.StationId, command.SimulationContext.SimulationState.CurrentTime);
+    WorkItemService.StartProcessing(result.Value.TrackingSubjectId, result.Value.StationId.Value, command.SimulationContext.SimulationState.CurrentTime);
+    var workitem = WorkItemService.GetWorkItemRuntimeState(result.Value.TrackingSubjectId);
+    if (workitem == null || workitem.CurrentStationId == null)
+    {
+      throw new InvalidOperationException("WorkItem or StationId cannot be null at this point");
+    }
+    Logger.LogInformation("Started processing WorkItem {TrackingSubjectId} at Stage {StageId} on Station {StationId}", result.Value.TrackingSubjectId, command.StageId, result.Value.StationId);
 
     var newTrackingEvent = new ProcessingCompleteEvent(
          SimulationEventId.NewId(),
          command.SimulationContext.SimulationRunId,
-         command.SimulationContext.SimulationState.CurrentTime,
+         command.SimulationContext.SimulationState.CurrentTime + TimeSpan.FromMinutes(5),
          command.SimulationContext.SimulationState.GetNextSequenceNumber(),
          command.StageId,
-         result.Value.StationId,
-         result.Value.ProcessingToken,
-         result.Value.TrackingSubjectId
+         workitem.CurrentStationId.Value,
+         workitem.CurrentProcessingToken,
+         workitem.TrackingSubjectId
        );
     EventScheduler.Schedule(newTrackingEvent);
     return Task.CompletedTask;
@@ -230,9 +239,9 @@ public sealed class WorkItemProcessOrchestrator(
   {
     return workItem is null
       ? throw new InvalidOperationException("Something went wrong")
-      : workItem.CurrentStageId == expectedStageId
-      && workItem.CurrentProcessingToken == expectedProcessingToken
-      && expectedStatus.Contains(workItem.CurrentStatus);
+      : workItem.CurrentStageId != expectedStageId
+      || workItem.CurrentProcessingToken != expectedProcessingToken
+      || !expectedStatus.Contains(workItem.CurrentStatus);
   }
 
   private static bool IsEventOutdated(

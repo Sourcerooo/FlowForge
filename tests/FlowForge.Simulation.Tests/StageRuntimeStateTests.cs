@@ -66,7 +66,6 @@ public sealed class StageRuntimeStateTests
   {
     var stage = CreateStage(workerCapacities: [1]);
     var entry = NewQueueEntry(TimeSpan.FromMinutes(1));
-    entry = entry with { ProcessingToken = new ProcessingToken(9) };
     stage.Enqueue(entry);
 
     var result = stage.TryStartProcessing(TimeSpan.FromMinutes(2));
@@ -76,7 +75,6 @@ public sealed class StageRuntimeStateTests
     var station = Assert.Single(stage.Stations).Value;
     var processing = Assert.Single(station.ProcessingInfo);
     Assert.Equal(entry.TrackingSubjectId, processing.Value.TrackingSubjectId);
-    Assert.Equal(9, processing.Value.ProcessingToken.Value);
   }
 
   [Fact]
@@ -138,7 +136,7 @@ public sealed class StageRuntimeStateTests
     stage.Enqueue(entry);
     stage.TryStartProcessing(TimeSpan.FromSeconds(1));
 
-    stage.CompleteProcessing(entry.TrackingSubjectId);
+    stage.CompleteProcessing(entry.TrackingSubjectId, TimeSpan.FromSeconds(5));
 
     var station = Assert.Single(stage.Stations).Value;
     Assert.Equal(0, station.BusyWorkerCount);
@@ -150,9 +148,8 @@ public sealed class StageRuntimeStateTests
   {
     var stage = CreateStage(workerCapacities: [1]);
 
-    void Act() => stage.CompleteProcessing(TrackingSubjectId.NewId());
-
-    Assert.Throws<InvalidOperationException>(Act);
+    var result = stage.CompleteProcessing(TrackingSubjectId.NewId(), TimeSpan.FromSeconds(5));
+    Assert.True(result.IsFailure);
   }
 
   [Fact]
@@ -160,7 +157,7 @@ public sealed class StageRuntimeStateTests
   {
     var stage = CreateStage(workerCapacities: [1]);
 
-    Assert.IsAssignableFrom<IReadOnlyCollection<StageQueueEntry>>(stage.Queue);
+    Assert.IsAssignableFrom<IReadOnlyCollection<StageEntry>>(stage.Queue);
   }
 
   private static StageRuntimeState CreateStage(int[] workerCapacities)
@@ -173,8 +170,8 @@ public sealed class StageRuntimeStateTests
     return new StageRuntimeState(stageId, stations);
   }
 
-  private static StageQueueEntry NewQueueEntry(TimeSpan enqueuedAt)
+  private static StageEntry NewQueueEntry(TimeSpan enqueuedAt)
   {
-    return new StageQueueEntry(TrackingSubjectId.NewId(), enqueuedAt);
+    return new StageEntry(TrackingSubjectId.NewId(), enqueuedAt);
   }
 }

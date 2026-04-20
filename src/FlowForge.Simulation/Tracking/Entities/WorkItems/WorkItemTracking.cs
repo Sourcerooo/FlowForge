@@ -1,5 +1,6 @@
 using FlowForge.Domain.Orders.ValueObjects;
 using FlowForge.Domain.Process.ValueObjects;
+using FlowForge.Simulation.Runtime.Entities;
 using FlowForge.Simulation.Runtime.ValueObjects;
 using FlowForge.Simulation.Tracking.Enums;
 
@@ -8,31 +9,23 @@ namespace FlowForge.Simulation.Tracking.Entities.WorkItems;
 public sealed class WorkItemTracking(
   TrackingSubjectId trackingSubjectId,
   TimeSpan createdAt,
-  WorkItemStatus currentStatus = WorkItemStatus.Created,
-  StageId? currentStage = null,
-  StationId? currentStation = null,
-  ProcessingToken currentProcessingToken = default,
   TimeSpan? completedAt = null
   )
 {
   public TrackingSubjectId TrackingSubjectId { get; init; } = trackingSubjectId;
   public TimeSpan CreatedAt { get; init; } = createdAt;
-  public WorkItemStatus CurrentStatus { get; private set; } = currentStatus;
-  public StageId? CurrentStage { get; private set; } = currentStage;
-  public StationId? CurrentStation { get; private set; } = currentStation;
-  public ProcessingToken CurrentProcessingToken { get; private set; } = currentProcessingToken;
   public TimeSpan? CompletedAt { get; private set; } = completedAt;
   public IReadOnlyList<WorkItemTrackingSegment> Segments => _segments;
   public TimeSpan? TotalLeadTime => CompletedAt is null ? null : CompletedAt.Value - CreatedAt;
 
   private readonly List<WorkItemTrackingSegment> _segments = new List<WorkItemTrackingSegment>();
 
-  public void EnqueueWorkItem(TimeSpan currentTime)
-    => TransitionTo(TrackingSegmentType.QueueWait, WorkItemStatus.InQueue, currentTime);
-  public void ProcessWorkItem(TimeSpan currentTime)
-    => TransitionTo(TrackingSegmentType.Processing, WorkItemStatus.Processing, currentTime);
-  public void StopWorkItem(TimeSpan currentTime)
-    => TransitionTo(TrackingSegmentType.OnHold, WorkItemStatus.OnHold, currentTime);
+  public void EnqueueWorkItem(WorkItemRuntimeState workItem, TimeSpan currentTime)
+    => TransitionTo(workItem, TrackingSegmentType.QueueWait, currentTime);
+  public void ProcessWorkItem(WorkItemRuntimeState workItem, TimeSpan currentTime)
+    => TransitionTo(workItem, TrackingSegmentType.Processing, currentTime);
+  public void StopWorkItem(WorkItemRuntimeState workItem, TimeSpan currentTime)
+    => TransitionTo(workItem, TrackingSegmentType.OnHold, currentTime);
   public void CompleteWorkItem(TimeSpan completedAt)
   {
     if (_segments.Count > 0)
@@ -45,37 +38,15 @@ public sealed class WorkItemTracking(
       _segments[^1] = currentSegment.EndSegment(completedAt);
     }
     CompletedAt = completedAt;
-    CurrentStatus = WorkItemStatus.Completed;
   }
-
-  public void SetCurrentStatus(WorkItemStatus status)
-  {
-    CurrentStatus = status;
-  }
-
-  public void SetCurrentStage(StageId? stageId)
-  {
-    CurrentStage = stageId;
-  }
-
-  public void SetCurrentStation(StationId? stationId)
-  {
-    CurrentStation = stationId;
-  }
-
-  public void SetCurrentProcessingToken(ProcessingToken processingToken)
-  {
-    CurrentProcessingToken = processingToken;
-  }
-
   public void SetCompletedAt(TimeSpan completionDate)
   {
     CompletedAt = completionDate;
   }
 
   private WorkItemTracking TransitionTo(
+    WorkItemRuntimeState workItem,
     TrackingSegmentType targetSegmentType,
-    WorkItemStatus targetStatus,
     TimeSpan currentTime
     )
   {
@@ -98,11 +69,10 @@ public sealed class WorkItemTracking(
       _segments.Add(StartSegment(
         targetSegmentType,
         currentTime,
-        CurrentProcessingToken,
-        CurrentStage,
-        CurrentStation));
+        workItem.CurrentProcessingToken,
+        workItem.CurrentStageId,
+        workItem.CurrentStationId));
     }
-    CurrentStatus = targetStatus;
     return this;
   }
 
@@ -136,5 +106,5 @@ public sealed class WorkItemTracking(
       null);
   }
 
-  public override string? ToString() => $"TrackingSubjectId={TrackingSubjectId}, CreatedAt={CreatedAt}, CurrentStatus={CurrentStatus}, CurrentStage={CurrentStage}, CurrentStation={CurrentStation}, CurrentProcessingToken={CurrentProcessingToken}, CompletedAt={CompletedAt}, TotalLeadTime={TotalLeadTime}";
+  public override string? ToString() => $"TrackingSubjectId={TrackingSubjectId}, CreatedAt={CreatedAt}, CompletedAt={CompletedAt}, TotalLeadTime={TotalLeadTime}";
 }

@@ -1,9 +1,7 @@
 using FlowForge.Domain.Orders.ValueObjects;
-using FlowForge.Domain.Process.ValueObjects;
 using FlowForge.Domain.SharedKernel.Util;
-using FlowForge.Simulation.Runtime.ValueObjects;
+using FlowForge.Simulation.Runtime.Entities;
 using FlowForge.Simulation.Tracking.Entities.WorkItems;
-using FlowForge.Simulation.Tracking.Enums;
 
 namespace FlowForge.Simulation.Tracking.Contracts;
 
@@ -15,18 +13,9 @@ public interface IWorkItemTrackingStore
   public WorkItemTracking AddWorkItemTracking(
     TrackingSubjectId trackingSubjectId,
     TimeSpan createdAt,
-    WorkItemStatus currentStatus = WorkItemStatus.Created,
-    StageId? currentStageId = null,
-    StationId? currentStationId = null,
-    ProcessingToken currentProcessingToken = default,
     TimeSpan? completedAt = null);
-  public Result SetCurrentProcessingToken(TrackingSubjectId trackingSubjectId, ProcessingToken processingToken);
-  public Result SetCurrentStageId(TrackingSubjectId trackingSubjectId, StageId? stageId);
-  public Result SetCurrentStationId(TrackingSubjectId trackingSubjectId, StageId? stageId, StationId? stationId);
-  public Result SetCurrentStatus(TrackingSubjectId trackingSubjectId, WorkItemStatus status);
-
-  public Result EnqueueWorkItem(TrackingSubjectId trackingSubjectId, TimeSpan currentTime);
-  public Result StartProcessingWorkItem(TrackingSubjectId trackingSubjectId, TimeSpan currentTime);
-  public Result StopProcessingWorkItem(TrackingSubjectId trackingSubjectId, TimeSpan currentTime);
+  public Result EnqueueWorkItem(WorkItemRuntimeState workItem, TimeSpan currentTime);
+  public Result StartProcessingWorkItem(WorkItemRuntimeState workItem, TimeSpan currentTime);
+  public Result StopProcessingWorkItem(WorkItemRuntimeState workItem, TimeSpan currentTime);
   public Result CompleteWorkItem(TrackingSubjectId trackingSubjectId, TimeSpan completionTime);
 }

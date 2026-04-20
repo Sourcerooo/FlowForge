@@ -1,10 +1,8 @@
 using FlowForge.Domain.Orders.ValueObjects;
-using FlowForge.Domain.Process.ValueObjects;
 using FlowForge.Domain.SharedKernel.Util;
-using FlowForge.Simulation.Runtime.ValueObjects;
+using FlowForge.Simulation.Runtime.Entities;
 using FlowForge.Simulation.Tracking.Contracts;
 using FlowForge.Simulation.Tracking.Entities.WorkItems;
-using FlowForge.Simulation.Tracking.Enums;
 using Microsoft.Extensions.Logging;
 namespace FlowForge.Simulation.Tracking.Services;
 
@@ -14,13 +12,11 @@ internal static partial class WorkItemTrackingStoreLog
     EventId = 1001,
     Level = LogLevel.Information,
     Message = "Tracking item added: TrackingItemId={TrackingSubjectId}, " +
-    "CreatedAt={CreatedAt}, Status={CurrentStatus}, Token={CurrentProcessingToken}")]
+    "CreatedAt={CreatedAt}")]
   public static partial void TrackingItemAdded(
     ILogger<WorkItemTrackingStore> logger,
     TrackingSubjectId trackingSubjectId,
-    TimeSpan createdAt,
-    WorkItemStatus currentStatus,
-    ProcessingToken currentProcessingToken);
+    TimeSpan createdAt);
 }
 
 public sealed class WorkItemTrackingStore(ILogger<WorkItemTrackingStore> logger) : IWorkItemTrackingStore
@@ -38,97 +34,44 @@ public sealed class WorkItemTrackingStore(ILogger<WorkItemTrackingStore> logger)
   public WorkItemTracking AddWorkItemTracking(
     TrackingSubjectId trackingSubjectId,
     TimeSpan createdAt,
-    WorkItemStatus currentStatus = WorkItemStatus.Created,
-    StageId? currentStageId = null,
-    StationId? currentStationId = null,
-    ProcessingToken currentProcessingToken = default,
     TimeSpan? completedAt = null)
   {
     var tracking = new WorkItemTracking(
-      trackingSubjectId, createdAt, currentStatus, currentStageId, currentStationId,
-      currentProcessingToken, completedAt);
+      trackingSubjectId, createdAt, completedAt);
     _workItemTrackings[trackingSubjectId] = tracking;
     WorkItemTrackingStoreLog.TrackingItemAdded(logger,
       tracking.TrackingSubjectId,
-      tracking.CreatedAt,
-      tracking.CurrentStatus,
-      tracking.CurrentProcessingToken);
-
+      tracking.CreatedAt);
     return tracking;
   }
 
-  public Result SetCurrentStatus(TrackingSubjectId trackingSubjectId, WorkItemStatus status)
+  public Result EnqueueWorkItem(WorkItemRuntimeState workItem, TimeSpan currentTime)
   {
-    var trackingResult = GetWorkItemTracking(trackingSubjectId);
-    if (trackingResult.IsFailure)
+    if (!_workItemTrackings.TryGetValue(workItem.TrackingSubjectId, out WorkItemTracking? value))
     {
-      return Result.Failure(trackingResult.Exception!);
+      return Result.Failure(new InvalidOperationException($"TrackingSubjectId {workItem.TrackingSubjectId} does not exist"));
     }
-    trackingResult.Value?.SetCurrentStatus(status);
-    return Result.Success();
-  }
-  public Result SetCurrentStageId(TrackingSubjectId trackingSubjectId, StageId? stageId)
-  {
-    var trackingResult = GetWorkItemTracking(trackingSubjectId);
-    if (trackingResult.IsFailure)
-    {
-      return Result.Failure(trackingResult.Exception!);
-    }
-    trackingResult.Value?.SetCurrentStage(stageId);
-    trackingResult.Value?.SetCurrentStation(null);
+    value.EnqueueWorkItem(workItem, currentTime);
     return Result.Success();
   }
 
-  public Result SetCurrentStationId(TrackingSubjectId trackingSubjectId, StageId? stageId, StationId? stationId)
+  public Result StartProcessingWorkItem(WorkItemRuntimeState workItem, TimeSpan currentTime)
   {
-    var trackingResult = GetWorkItemTracking(trackingSubjectId);
-    if (trackingResult.IsFailure)
+    if (!_workItemTrackings.TryGetValue(workItem.TrackingSubjectId, out WorkItemTracking? value))
     {
-      return Result.Failure(trackingResult.Exception!);
+      return Result.Failure(new InvalidOperationException($"TrackingSubjectId {workItem.TrackingSubjectId} does not exist"));
     }
-    trackingResult.Value?.SetCurrentStage(stageId);
-    trackingResult.Value?.SetCurrentStation(stationId);
+    value.ProcessWorkItem(workItem, currentTime);
     return Result.Success();
   }
 
-  public Result SetCurrentProcessingToken(TrackingSubjectId trackingSubjectId, ProcessingToken processingToken)
+  public Result StopProcessingWorkItem(WorkItemRuntimeState workItem, TimeSpan currentTime)
   {
-    var trackingResult = GetWorkItemTracking(trackingSubjectId);
-    if (trackingResult.IsFailure)
+    if (!_workItemTrackings.TryGetValue(workItem.TrackingSubjectId, out WorkItemTracking? value))
     {
-      return Result.Failure(trackingResult.Exception!);
+      return Result.Failure(new InvalidOperationException($"TrackingSubjectId {workItem.TrackingSubjectId} does not exist"));
     }
-    trackingResult.Value?.SetCurrentProcessingToken(processingToken);
-    return Result.Success();
-  }
-
-  public Result EnqueueWorkItem(TrackingSubjectId trackingSubjectId, TimeSpan currentTime)
-  {
-    if (!_workItemTrackings.TryGetValue(trackingSubjectId, out WorkItemTracking? value))
-    {
-      return Result.Failure(new InvalidOperationException($"TrackingSubjectId {trackingSubjectId} does not exist"));
-    }
-    value.EnqueueWorkItem(currentTime);
-    return Result.Success();
-  }
-
-  public Result StartProcessingWorkItem(TrackingSubjectId trackingSubjectId, TimeSpan currentTime)
-  {
-    if (!_workItemTrackings.TryGetValue(trackingSubjectId, out WorkItemTracking? value))
-    {
-      return Result.Failure(new InvalidOperationException($"TrackingSubjectId {trackingSubjectId} does not exist"));
-    }
-    value.ProcessWorkItem(currentTime);
-    return Result.Success();
-  }
-
-  public Result StopProcessingWorkItem(TrackingSubjectId trackingSubjectId, TimeSpan currentTime)
-  {
-    if (!_workItemTrackings.TryGetValue(trackingSubjectId, out WorkItemTracking? value))
-    {
-      return Result.Failure(new InvalidOperationException($"TrackingSubjectId {trackingSubjectId} does not exist"));
-    }
-    value.StopWorkItem(currentTime);
+    value.StopWorkItem(workItem, currentTime);
     return Result.Success();
   }
 

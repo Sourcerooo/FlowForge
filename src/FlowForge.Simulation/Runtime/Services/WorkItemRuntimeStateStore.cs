@@ -18,58 +18,65 @@ internal class WorkItemRuntimeStateStore() : IWorkItemRuntimeStateStore
       : workItemRuntimeState;
   }
 
-  public void CreateFromGeneration(TrackingSubjectId trackingSubjectId, TimeSpan createdAt)
+  public WorkItemRuntimeState CreateFromGeneration(TrackingSubjectId trackingSubjectId, TimeSpan createdAt)
   {
     if (_workItemRuntimeStates.ContainsKey(trackingSubjectId))
     {
       throw new InvalidOperationException($"WorkItemRuntimeStateStore->CreateFromGeneration: TrackingSubjectId {trackingSubjectId} already exists.");
     }
-    _workItemRuntimeStates[trackingSubjectId] = new WorkItemRuntimeState(trackingSubjectId, createdAt);
+    var workItem = new WorkItemRuntimeState(trackingSubjectId, createdAt);
+    _workItemRuntimeStates[trackingSubjectId] = workItem;
+    return workItem;
   }
 
-  public void QueueForStage(TrackingSubjectId trackingSubjectId, StageId stageId, ProcessingToken processingToken = default)
+  public WorkItemRuntimeState QueueForStage(TrackingSubjectId trackingSubjectId, StageId stageId, ProcessingToken processingToken = default)
   {
     if (!_workItemRuntimeStates.TryGetValue(trackingSubjectId, out var workItemRuntimeState))
     {
       throw new InvalidOperationException($"WorkItemRuntimeStateStore->QueueForStage: TrackingSubjectId {trackingSubjectId} does not exist.");
     }
     workItemRuntimeState.QueueForStage(stageId, processingToken);
+    return workItemRuntimeState;
   }
 
-  public void StartProcessing(TrackingSubjectId trackingSubjectId, StationId stationId)
+  public WorkItemRuntimeState StartProcessing(TrackingSubjectId trackingSubjectId, StationId stationId)
   {
     if (!_workItemRuntimeStates.TryGetValue(trackingSubjectId, out var workItemRuntimeState))
     {
       throw new InvalidOperationException($"WorkItemRuntimeStateStore->QueueForStage: TrackingSubjectId {trackingSubjectId} does not exist.");
     }
     workItemRuntimeState.StartProcessing(stationId);
+    return workItemRuntimeState;
   }
 
-  public void CompleteProcessing(TrackingSubjectId trackingSubjectId)
+  public WorkItemRuntimeState CompleteProcessing(TrackingSubjectId trackingSubjectId)
   {
     if (!_workItemRuntimeStates.TryGetValue(trackingSubjectId, out var workItemRuntimeState))
     {
       throw new InvalidOperationException($"WorkItemRuntimeStateStore->QueueForStage: TrackingSubjectId {trackingSubjectId} does not exist.");
     }
     workItemRuntimeState.CompleteProcessing();
+    return workItemRuntimeState;
   }
 
-  public void StopProcessing(TrackingSubjectId trackingSubjectId)
+  public WorkItemRuntimeState StopProcessing(TrackingSubjectId trackingSubjectId)
   {
     if (!_workItemRuntimeStates.TryGetValue(trackingSubjectId, out var workItemRuntimeState))
     {
       throw new InvalidOperationException($"WorkItemRuntimeStateStore->QueueForStage: TrackingSubjectId {trackingSubjectId} does not exist.");
     }
     workItemRuntimeState.StopProcessing();
+    return workItemRuntimeState;
   }
 
-  public void CompleteWorkItem(TrackingSubjectId trackingSubjectId, TimeSpan currentTime)
+  public WorkItemRuntimeState CompleteWorkItem(TrackingSubjectId trackingSubjectId, TimeSpan currentTime)
   {
     if (!_workItemRuntimeStates.TryGetValue(trackingSubjectId, out var workItemRuntimeState))
     {
       throw new InvalidOperationException($"WorkItemRuntimeStateStore->QueueForStage: TrackingSubjectId {trackingSubjectId} does not exist.");
     }
     workItemRuntimeState.CompleteWorkItem(currentTime);
+    return workItemRuntimeState;
   }
 
   public bool ContainsWorkItemRuntimeState(TrackingSubjectId trackingSubjectId)

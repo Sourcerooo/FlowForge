@@ -87,9 +87,8 @@ public sealed class StageRuntimeStateStoreTests
   {
     var store = CreateStore(1);
 
-    void Act() => store.TryStartProcessing(StageId.NewId(), TimeSpan.FromSeconds(1));
-
-    Assert.Throws<InvalidOperationException>(Act);
+    var result = store.TryStartProcessing(StageId.NewId(), TimeSpan.FromSeconds(1));
+    Assert.True(result.IsFailure);
   }
 
   [Fact]
@@ -101,7 +100,7 @@ public sealed class StageRuntimeStateStoreTests
     store.Enqueue(stageId, trackingSubjectId, TimeSpan.Zero);
     store.TryStartProcessing(stageId, TimeSpan.FromSeconds(1));
 
-    store.CompleteProcessing(stageId, trackingSubjectId);
+    store.CompleteProcessing(stageId, trackingSubjectId, TimeSpan.FromSeconds(5));
 
     Assert.False(store.IsBusy(stageId));
   }
@@ -110,8 +109,8 @@ public sealed class StageRuntimeStateStoreTests
   public void TryFinishProcessing_ReturnsFalseForUnknownStage()
   {
     var store = CreateStore(1);
-    void Act() => store.CompleteProcessing(StageId.NewId(), TrackingSubjectId.NewId());
-    Assert.Throws<InvalidOperationException>(Act);
+    var result = store.CompleteProcessing(StageId.NewId(), TrackingSubjectId.NewId(), TimeSpan.FromSeconds(5));
+    Assert.True(result.IsFailure);
   }
 
   private static StageRuntimeStateStore CreateStore(int workerCapacity, StageId? stageId = null)

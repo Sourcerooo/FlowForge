@@ -5,6 +5,5 @@ namespace FlowForge.Simulation.Runtime.ValueObjects;
 public readonly record struct StationProcessingInfo(
   TrackingSubjectId TrackingSubjectId,
   int WorkerSlot,
-  TimeSpan StartedAt,
-  ProcessingToken ProcessingToken
+  TimeSpan StartedAt
   );

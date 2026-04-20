@@ -14,6 +14,7 @@ using FlowForge.Simulation.Scheduling.Contracts;
 using FlowForge.Simulation.Snapshots.Contracts;
 using FlowForge.Simulation.Tracking.Contracts;
 using FlowForge.Simulation.Tracking.Entities.Stages;
+using FlowForge.Simulation.Tracking.Entities.WorkItems;
 
 namespace FlowForge.Simulation.Tests;
 
@@ -179,38 +180,34 @@ public sealed class SimulationRunnerTests
 
   private sealed class StubWorkItemRuntimeStateStore : IWorkItemRuntimeStateStore
   {
-    public void CompleteProcessing(TrackingSubjectId trackingSubjectId) => throw new NotImplementedException();
-    public void CompleteWorkItem(TrackingSubjectId trackingSubjectId, TimeSpan currentTime) => throw new NotImplementedException();
+    public WorkItemRuntimeState CompleteProcessing(TrackingSubjectId trackingSubjectId) => throw new NotImplementedException();
+    public WorkItemRuntimeState CompleteWorkItem(TrackingSubjectId trackingSubjectId, TimeSpan currentTime) => throw new NotImplementedException();
     public bool ContainsWorkItemRuntimeState(TrackingSubjectId trackingSubjectId) => throw new NotImplementedException();
-    public void CreateFromGeneration(TrackingSubjectId trackingSubjectId, TimeSpan createdAt) => throw new NotImplementedException();
+    public WorkItemRuntimeState CreateFromGeneration(TrackingSubjectId trackingSubjectId, TimeSpan createdAt) => throw new NotImplementedException();
     public WorkItemRuntimeState GetWorkItemRuntimeState(TrackingSubjectId trackingSubjectId) => throw new NotImplementedException();
-    public void QueueForStage(TrackingSubjectId trackingSubjectId, StageId stageId, ProcessingToken processingToken = default) => throw new NotImplementedException();
-    public void StartProcessing(TrackingSubjectId trackingSubjectId, StationId stationId) => throw new NotImplementedException();
-    public void StopProcessing(TrackingSubjectId trackingSubjectId) => throw new NotImplementedException();
+    public WorkItemRuntimeState QueueForStage(TrackingSubjectId trackingSubjectId, StageId stageId, ProcessingToken processingToken = default) => throw new NotImplementedException();
+    public WorkItemRuntimeState StartProcessing(TrackingSubjectId trackingSubjectId, StationId stationId) => throw new NotImplementedException();
+    public WorkItemRuntimeState StopProcessing(TrackingSubjectId trackingSubjectId) => throw new NotImplementedException();
   }
 
   private sealed class StubStageRuntimeStateStore : IStageRuntimeStateStore
   {
-    public StageQueueEntry? Dequeue(StageId stageId) => throw new NotImplementedException();
-    public void Enqueue(StageId stageId, TrackingSubjectId trackingSubjectId, TimeSpan currentTime) => throw new NotImplementedException();
+    public Result<StageEntry> CompleteProcessing(StageId stageId, TrackingSubjectId trackingSubjectId, TimeSpan currentTime) => throw new NotImplementedException();
+    public StageEntry? Dequeue(StageId stageId) => throw new NotImplementedException();
+    public Result<StageEntry> Enqueue(StageId stageId, TrackingSubjectId trackingSubjectId, TimeSpan currentTime) => throw new NotImplementedException();
     public bool IsBusy(StageId stageId) => throw new NotImplementedException();
-    Result<StageRuntimeState.StageStartedProcess> IStageRuntimeStateStore.TryStartProcessing(StageId stageId, TimeSpan startedAt) => throw new NotImplementedException();
-    public void StopProcessing(StageId stageId, TrackingSubjectId trackingSubjectId, TimeSpan currentTime) => throw new NotImplementedException();
-    void IStageRuntimeStateStore.CompleteProcessing(StageId stageId, TrackingSubjectId trackingSubjectId) => throw new NotImplementedException();
+    public Result<StageEntry> StopProcessing(StageId stageId, TrackingSubjectId trackingSubjectId, TimeSpan currentTime) => throw new NotImplementedException();
+    public Result<StageEntry> TryStartProcessing(StageId stageId, TimeSpan startedAt) => throw new NotImplementedException();
   }
 
   private sealed class StubWorkItemTrackingStore : IWorkItemTrackingStore
   {
-    public Tracking.Entities.WorkItems.WorkItemTracking AddWorkItemTracking(TrackingSubjectId trackingSubjectId, TimeSpan createdAt, Tracking.Enums.WorkItemStatus currentStatus = Tracking.Enums.WorkItemStatus.Created, StageId? currentStageId = null, StationId? currentStationId = null, ProcessingToken currentProcessingToken = default, TimeSpan? completedAt = null) => throw new NotImplementedException();
+    public WorkItemTracking AddWorkItemTracking(TrackingSubjectId trackingSubjectId, TimeSpan createdAt, TimeSpan? completedAt = null) => throw new NotImplementedException();
     public Result CompleteWorkItem(TrackingSubjectId trackingSubjectId, TimeSpan completionTime) => throw new NotImplementedException();
-    public Result EnqueueWorkItem(TrackingSubjectId trackingSubjectId, TimeSpan currentTime) => throw new NotImplementedException();
-    public Result<Tracking.Entities.WorkItems.WorkItemTracking> GetWorkItemTracking(TrackingSubjectId trackingSubjectId) => throw new NotImplementedException();
-    public Result StartProcessingWorkItem(TrackingSubjectId trackingSubjectId, TimeSpan currentTime) => throw new NotImplementedException();
-    public Result SetCurrentProcessingToken(TrackingSubjectId trackingSubjectId, ProcessingToken processingToken) => throw new NotImplementedException();
-    public Result SetCurrentStageId(TrackingSubjectId trackingSubjectId, StageId? stageId) => throw new NotImplementedException();
-    public Result SetCurrentStationId(TrackingSubjectId trackingSubjectId, StageId? stageId, StationId? stationId) => throw new NotImplementedException();
-    public Result SetCurrentStatus(TrackingSubjectId trackingSubjectId, Tracking.Enums.WorkItemStatus status) => throw new NotImplementedException();
-    public Result StopProcessingWorkItem(TrackingSubjectId trackingSubjectId, TimeSpan currentTime) => throw new NotImplementedException();
+    public Result EnqueueWorkItem(WorkItemRuntimeState workItem, TimeSpan currentTime) => throw new NotImplementedException();
+    public Result<WorkItemTracking> GetWorkItemTracking(TrackingSubjectId trackingSubjectId) => throw new NotImplementedException();
+    public Result StartProcessingWorkItem(WorkItemRuntimeState workItem, TimeSpan currentTime) => throw new NotImplementedException();
+    public Result StopProcessingWorkItem(WorkItemRuntimeState workItem, TimeSpan currentTime) => throw new NotImplementedException();
   }
 
   private sealed class StubStageTrackingStore : IStageTrackingStore

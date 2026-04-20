@@ -13,13 +13,13 @@ public sealed partial class StageRuntimeState(
   public StageId StageId { get; } = stageId;
   public IReadOnlyDictionary<StationId, StationRuntimeState> Stations { get; } = stations;
 
-  public IReadOnlyCollection<StageQueueEntry> Queue => _queue;
+  public IReadOnlyCollection<StageEntry> Queue => _queue;
 
-  public void Enqueue(StageQueueEntry entry)
+  public void Enqueue(StageEntry entry)
   {
     _queue.Enqueue(entry);
   }
-  public StageQueueEntry Dequeue()
+  public StageEntry Dequeue()
   {
     return _queue.Count == 0
       ? throw new InvalidOperationException("StageRuntimeState->Dequeue: Queue is empty.")
@@ -31,61 +31,65 @@ public sealed partial class StageRuntimeState(
     return !Stations.Any(station => station.Value.HasFreeWorker);
   }
 
-  public Result<StageStartedProcess> TryStartProcessing(TimeSpan startedAt)
+  public Result<StageEntry> TryStartProcessing(TimeSpan startedAt)
   {
     if (!HasEntries())
     {
-      return Result<StageStartedProcess>.Failure(new InvalidOperationException("Queue is empty. No task to start processing."));
+      return Result<StageEntry>.Failure(new InvalidOperationException("Queue is empty. No task to start processing."));
     }
     if (IsBusy())
     {
-      return Result<StageStartedProcess>.Failure(new InvalidOperationException("All workers are busy. Task could not be started"));
+      return Result<StageEntry>.Failure(new InvalidOperationException("All workers are busy. Task could not be started"));
     }
     var entry = Dequeue();
     if (_processingStation.ContainsKey(entry.TrackingSubjectId))
     {
       throw new InvalidOperationException($"StageRuntimeState->TryStartProcessing: TrackingSubjectId {entry.TrackingSubjectId} is already processing at a station.");
     }
-    var stationId = TryReserveFreeStation(entry.TrackingSubjectId, startedAt, entry.ProcessingToken);
+    var stationId = TryReserveFreeStation(entry.TrackingSubjectId, startedAt);
     //If no station could be reserved (which can happen if the queue is not empty but all stations became busy since the IsBusy check),
     //re-enqueue the entry and return false to indicate that processing could not be started.
     if (stationId == null)
     {
       Enqueue(entry);
-      return Result<StageStartedProcess>.Failure(new InvalidOperationException("All workers are busy. Task could not be started"));
+      return Result<StageEntry>.Failure(new InvalidOperationException("All workers are busy. Task could not be started"));
     }
-    return Result<StageStartedProcess>.Success(new StageStartedProcess(entry.TrackingSubjectId, StageId, stationId.Value, entry.ProcessingToken));
+    return Result<StageEntry>.Success(new StageEntry(entry.TrackingSubjectId, entry.EnqueuedAt, startedAt, default, default, StageId, stationId.Value));
   }
 
-  public void StopProcessing(TrackingSubjectId trackingSubjectId, TimeSpan currentTime)
+  public Result<StageEntry> StopProcessing(TrackingSubjectId trackingSubjectId, TimeSpan currentTime)
   {
-    if (!_processingStation.ContainsKey(trackingSubjectId))
+    if (!_processingStation.TryGetValue(trackingSubjectId, out var stationId))
     {
-      throw new InvalidOperationException($"StageRuntimeState->StopProcessing: TrackingSubjectId {trackingSubjectId} is not currently processing at any station.");
+      return Result<StageEntry>.Failure(new InvalidOperationException($"StageRuntimeState->StopProcessing: TrackingSubjectId {trackingSubjectId} is not currently processing at any station."));
     }
-    var proccesingInfo = ReleaseStation(trackingSubjectId);
-    var newProcessingToken = new ProcessingToken(proccesingInfo.ProcessingToken.Value + 1);
-    Enqueue(new StageQueueEntry(trackingSubjectId, currentTime, newProcessingToken));
+    var station = Stations[stationId];
+    var processingInfo = ReleaseStation(station, trackingSubjectId);
+    var stageEntry = new StageEntry(trackingSubjectId, default, processingInfo.StartedAt, default, currentTime, StageId, stationId);
+    Enqueue(stageEntry);
+    return Result<StageEntry>.Success(stageEntry);
   }
 
-  public void CompleteProcessing(TrackingSubjectId trackingSubjectId)
+  public Result<StageEntry> CompleteProcessing(TrackingSubjectId trackingSubjectId, TimeSpan currentTime)
   {
-    if (!_processingStation.ContainsKey(trackingSubjectId))
+    if (!_processingStation.TryGetValue(trackingSubjectId, out var stationId))
     {
-      throw new InvalidOperationException($"StageRuntimeState->CompleteProcessing: TrackingSubjectId {trackingSubjectId} is not currently processing at any station.");
+      return Result<StageEntry>.Failure(new InvalidOperationException($"StageRuntimeState->StopProcessing: TrackingSubjectId {trackingSubjectId} is not currently processing at any station."));
     }
-    ReleaseStation(trackingSubjectId);
+    var station = Stations[stationId];
+    var processingInfo = ReleaseStation(station, trackingSubjectId);
+    var stageEntry = new StageEntry(trackingSubjectId, default, processingInfo.StartedAt, currentTime, default, StageId, stationId);
+    return Result<StageEntry>.Success(stageEntry);
   }
   //---------------------------------- Private Methods ----------------------------------
   private readonly List<StationId> _stationOrder = [.. stations.Keys];
   private int _nextStationIndex = 0;
-  private Queue<StageQueueEntry> _queue { get; } = new Queue<StageQueueEntry>();
+  private Queue<StageEntry> _queue { get; } = new Queue<StageEntry>();
   private readonly Dictionary<TrackingSubjectId, StationId> _processingStation = new Dictionary<TrackingSubjectId, StationId>();
 
   private StationId? TryReserveFreeStation(
     TrackingSubjectId trackingSubjectId,
-    TimeSpan startedAt,
-    ProcessingToken processingToken)
+    TimeSpan startedAt)
   {
     if (_stationOrder.Count == 0)
     {
@@ -97,7 +101,7 @@ public sealed partial class StageRuntimeState(
       var index = (_nextStationIndex + offset) % Stations.Count;
       var stationId = _stationOrder[index];
       var station = Stations[stationId];
-      if (!station.TryReserveWorker(trackingSubjectId, startedAt, processingToken))
+      if (!station.TryReserveWorker(trackingSubjectId, startedAt))
       {
         continue;
       }
@@ -108,13 +112,8 @@ public sealed partial class StageRuntimeState(
     return null;
   }
 
-  private StationProcessingInfo ReleaseStation(TrackingSubjectId trackingSubjectId)
+  private StationProcessingInfo ReleaseStation(StationRuntimeState station, TrackingSubjectId trackingSubjectId)
   {
-    if (!_processingStation.TryGetValue(trackingSubjectId, out var stationId))
-    {
-      throw new InvalidOperationException($"StageRuntimeState->ReleaseStation: TrackingSubjectId {trackingSubjectId} is not currently processing at any station.");
-    }
-    var station = Stations[stationId];
     var processingInfo = station.GetProcessingInfo(trackingSubjectId);
     station.ReleaseWorker(trackingSubjectId);
     _processingStation.Remove(trackingSubjectId);
