@@ -5,7 +5,6 @@ using FlowForge.Domain.SharedKernel.Util;
 using FlowForge.Simulation.Runtime.Contracts;
 using FlowForge.Simulation.Runtime.Entities;
 using FlowForge.Simulation.Runtime.ValueObjects;
-using static FlowForge.Simulation.Runtime.Entities.StageRuntimeState;
 
 namespace FlowForge.Simulation.Runtime.Services;
 
@@ -19,20 +18,23 @@ internal sealed class StageRuntimeStateStore(ProcessConfiguration ProcessConfigu
       ))
     );
 
-  public StageQueueEntry? Dequeue(StageId stageId)
+  public StageEntry? Dequeue(StageId stageId)
   {
     var found = _stageRuntimeStates.TryGetValue(stageId, out var stageRuntimeState);
     return !found || stageRuntimeState == null
       ? null
       : stageRuntimeState.Dequeue();
   }
-  public void Enqueue(StageId stageId, TrackingSubjectId trackingSubjectId, TimeSpan currentTime)
+  public Result<StageEntry> Enqueue(StageId stageId, TrackingSubjectId trackingSubjectId, TimeSpan currentTime)
   {
     var found = _stageRuntimeStates.TryGetValue(stageId, out var stageRuntimeState);
     if (found && stageRuntimeState != null)
     {
-      stageRuntimeState.Enqueue(new StageQueueEntry(trackingSubjectId, currentTime));
+      var stageEntry = new StageEntry(trackingSubjectId, currentTime);
+      stageRuntimeState.Enqueue(stageEntry);
+      return Result<StageEntry>.Success(stageEntry);
     }
+    return Result<StageEntry>.Failure(new InvalidOperationException($"StageRuntimeStateStore->Enqueue: Process can't be enqueued. StageId {stageId} was not found or is invalid."));
   }
 
   public bool IsBusy(StageId stageId)
@@ -41,32 +43,44 @@ internal sealed class StageRuntimeStateStore(ProcessConfiguration ProcessConfigu
     return !found || stageRuntimeState == null || stageRuntimeState.IsBusy();
   }
 
-  public void CompleteProcessing(StageId stageId, TrackingSubjectId trackingSubjectId)
+  public Result<StageEntry> CompleteProcessing(StageId stageId, TrackingSubjectId trackingSubjectId, TimeSpan currentTime)
   {
     var found = _stageRuntimeStates.TryGetValue(stageId, out var stageRuntimeState);
-    if (!found || stageRuntimeState == null)
-    {
-      throw new InvalidOperationException($"StageRuntimeStateStore->CompleteProcessing: TrackingSubjectId {trackingSubjectId} can't be completed. StageId {stageId} was not found or is invalid.");
-    }
-    stageRuntimeState.CompleteProcessing(trackingSubjectId);
+    return !found || stageRuntimeState == null
+      ? Result<StageEntry>.Failure(new InvalidOperationException($"StageRuntimeStateStore->CompleteProcessing: TrackingSubjectId {trackingSubjectId} can't be completed. StageId {stageId} was not found or is invalid."))
+      : stageRuntimeState.CompleteProcessing(trackingSubjectId, currentTime);
   }
-  public Result<StageStartedProcess> TryStartProcessing(
+  public Result<StageEntry> TryStartProcessing(
     StageId stageId,
     TimeSpan startedAt)
   {
     var found = _stageRuntimeStates.TryGetValue(stageId, out var stageRuntimeState);
     return !found || stageRuntimeState == null
-      ? throw new InvalidOperationException($"StageRuntimeStateStore->CompleteProcessing: Process can't be started. StageId {stageId} was not found or is invalid.")
+      ? Result<StageEntry>.Failure(new InvalidOperationException($"StageRuntimeStateStore->CompleteProcessing: Process can't be started. StageId {stageId} was not found or is invalid."))
       : stageRuntimeState.TryStartProcessing(startedAt);
   }
 
-  public void StopProcessing(StageId stageId, TrackingSubjectId trackingSubjectId, TimeSpan currentTime)
+  public Result<StageEntry> StopAndRequeue(StageId stageId, TrackingSubjectId trackingSubjectId, TimeSpan currentTime)
   {
     var found = _stageRuntimeStates.TryGetValue(stageId, out var stageRuntimeState);
-    if (!found || stageRuntimeState == null)
-    {
-      throw new InvalidOperationException($"StageRuntimeStateStore->StopProcessing: Process can't be started. StageId {stageId} was not found or is invalid.");
-    }
-    stageRuntimeState.StopProcessing(trackingSubjectId, currentTime);
+    return !found || stageRuntimeState == null
+      ? Result<StageEntry>.Failure(new InvalidOperationException($"StageRuntimeStateStore->StopProcessing: Process can't be started. StageId {stageId} was not found or is invalid."))
+      : stageRuntimeState.StopAndRequeue(trackingSubjectId, currentTime);
+  }
+
+  public Result<StageEntry> PutOnHold(StageId stageId, TrackingSubjectId trackingSubjectId, TimeSpan currentTime)
+  {
+    var found = _stageRuntimeStates.TryGetValue(stageId, out var stageRuntimeState);
+    return !found || stageRuntimeState == null
+      ? Result<StageEntry>.Failure(new InvalidOperationException($"StageRuntimeStateStore->PutOnHold: Process can't be put on hold. StageId {stageId} was not found or is invalid."))
+      : stageRuntimeState.PutOnHold(trackingSubjectId, currentTime);
+  }
+
+  public Result<StageEntry> ResumeProcessing(StageId stageId, TrackingSubjectId trackingSubjectId, TimeSpan currentTime)
+  {
+    var found = _stageRuntimeStates.TryGetValue(stageId, out var stageRuntimeState);
+    return !found || stageRuntimeState == null
+      ? Result<StageEntry>.Failure(new InvalidOperationException($"StageRuntimeStateStore->ResumeProcessing: Process can't be resumed. StageId {stageId} was not found or is invalid."))
+      : stageRuntimeState.ResumeProcessing(trackingSubjectId, currentTime);
   }
 }

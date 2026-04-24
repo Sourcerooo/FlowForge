@@ -18,7 +18,7 @@ It owns mutable execution state and advances the modeled process through discret
 ## Internal Subsystems
 
 - event queue and scheduling
-- event dispatcher and handler registry
+- event dispatcher and handler composition via dependency injection
 - simulation state and execution context
 - work-item, station, and stage tracking
 - KPI collector

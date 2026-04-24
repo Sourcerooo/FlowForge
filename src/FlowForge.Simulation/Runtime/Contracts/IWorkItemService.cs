@@ -13,5 +13,6 @@ public interface IWorkItemService
   public WorkItemRuntimeState GetWorkItemRuntimeState(TrackingSubjectId trackingSubjectId);
   public void QueueForStage(TrackingSubjectId trackingSubjectId, StageId stageId, TimeSpan currentTime, ProcessingToken processingToken = default);
   public void StartProcessing(TrackingSubjectId trackingSubjectId, StationId stationId, TimeSpan currentTime);
-  public void StopProcessing(TrackingSubjectId trackingSubjectId, TimeSpan currentTime);
+  public void PutOnHold(TrackingSubjectId trackingSubjectId, TimeSpan currentTime);
+  public void ResumeProcessing(TrackingSubjectId trackingSubjectId, TimeSpan currentTime);
 }

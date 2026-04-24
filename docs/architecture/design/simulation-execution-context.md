@@ -81,7 +81,7 @@ Visibility rule:
 Explicit non-goal:
 
 - `SimulationExecutionContext` must not become a generic service bag
-- scheduler, dispatcher, handler registry, orchestrators, KPI collector, and snapshot builder should be injected into the classes that own behavior whenever practical
+- scheduler, dispatcher, event handlers, orchestrators, KPI collector, and snapshot builder should be injected into the classes that own behavior whenever practical
 
 ## Factory Direction
 
@@ -99,7 +99,7 @@ Factory rules:
 - wire run-scoped execution data once per run
 - create the queue once per run and keep only the dequeue-facing `EventQueue` reference in the root context
 - build handler-facing contexts from the same run-scoped state and stores
-- provide scheduler, dispatcher, registry, and similar runtime services through dependency injection instead of storing them inside the context object
+- provide scheduler, dispatcher, handlers, and similar runtime services through dependency injection instead of storing them inside the context object
 - bootstrap scheduling of the first event through the injected scheduler used by the runtime bootstrapper
 
 ## Naming Rule

@@ -13,6 +13,9 @@ public static class EventsDependencyInjection
     //Register event handlers
     services.AddSingleton<ISimulationEventHandler, SimulationEventsGenerateEventHandler>();
     services.AddSingleton<ISimulationEventHandler, WorkItemQueueEventHandler>();
+    services.AddSingleton<ISimulationEventHandler, ProcessingCompleteEventHandler>();
+    services.AddSingleton<ISimulationEventHandler, ProcessingStartEventHandler>();
+    services.AddSingleton<ISimulationEventHandler, WorkItemCompleteEventHandler>();
     return services;
   }
 }

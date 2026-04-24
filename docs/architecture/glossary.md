@@ -20,7 +20,7 @@ This glossary defines the canonical terms used across the architecture documenta
 - `SimulationRunner`: the owner of the dequeue-and-dispatch loop
 - `ISimulationScheduler`: the only write gateway into the event queue
 - `IEventDispatcher`: the routing component that maps one dequeued event to the correct handler
-- `EventRoutingKey`: the composite routing key used to resolve stage-aware handlers
+- `ISimulationEventHandler`: a DI-registered runtime handler that declares its owned `EventKind` through `CanHandle()`
 - `ProcessingToken`: the run/version marker used to invalidate outdated completion events
 - `StageRuntimeState`: the mutable runtime object that owns one stage backlog, station availability view, and dispatch decisions inside a stage
 - `StageQueueEntry`: the queue payload stored in a stage backlog; it references one queued work item plus queue-entered metadata

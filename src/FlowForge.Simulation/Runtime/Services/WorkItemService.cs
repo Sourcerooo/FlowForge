@@ -27,26 +27,32 @@ internal class WorkItemService(IWorkItemRuntimeStateStore WorkItemRuntimeStateSt
 
   public void QueueForStage(TrackingSubjectId trackingSubjectId, StageId stageId, TimeSpan currentTime, ProcessingToken processingToken = default)
   {
-    WorkItemRuntimeStateStore.QueueForStage(trackingSubjectId, stageId, processingToken);
-    WorkItemTrackingStore.EnqueueWorkItem(trackingSubjectId, currentTime);
+    var workItem = WorkItemRuntimeStateStore.QueueForStage(trackingSubjectId, stageId, processingToken);
+    WorkItemTrackingStore.EnqueueWorkItem(workItem, currentTime);
   }
 
   public void StartProcessing(TrackingSubjectId trackingSubjectId, StationId stationId, TimeSpan currentTime)
   {
-    WorkItemRuntimeStateStore.StartProcessing(trackingSubjectId, stationId);
-    WorkItemTrackingStore.StartProcessingWorkItem(trackingSubjectId, currentTime);
+    var workItem = WorkItemRuntimeStateStore.StartProcessing(trackingSubjectId, stationId);
+    WorkItemTrackingStore.StartProcessingWorkItem(workItem, currentTime);
   }
 
   public void CompleteProcessing(TrackingSubjectId trackingSubjectId, TimeSpan currentTime)
   {
-    WorkItemRuntimeStateStore.CompleteProcessing(trackingSubjectId);
-    WorkItemTrackingStore.CompleteWorkItem(trackingSubjectId, currentTime);
+    var workItem = WorkItemRuntimeStateStore.CompleteProcessing(trackingSubjectId);
+    WorkItemTrackingStore.CompleteProcessingWorkItem(workItem, currentTime);
   }
 
-  public void StopProcessing(TrackingSubjectId trackingSubjectId, TimeSpan currentTime)
+  public void PutOnHold(TrackingSubjectId trackingSubjectId, TimeSpan currentTime)
   {
-    WorkItemRuntimeStateStore.StopProcessing(trackingSubjectId);
-    WorkItemTrackingStore.StopProcessingWorkItem(trackingSubjectId, currentTime);
+    var workItem = WorkItemRuntimeStateStore.PutOnHold(trackingSubjectId);
+    WorkItemTrackingStore.StopProcessingWorkItem(workItem, currentTime);
+  }
+
+  public void ResumeProcessing(TrackingSubjectId trackingSubjectId, TimeSpan currentTime)
+  {
+    var workItem = WorkItemRuntimeStateStore.ResumeProcessing(trackingSubjectId);
+    WorkItemTrackingStore.StartProcessingWorkItem(workItem, currentTime);
   }
 
   public void CompleteWorkItem(TrackingSubjectId trackingSubjectId, TimeSpan currentTime)

@@ -7,12 +7,13 @@ namespace FlowForge.Simulation.Runtime.Contracts;
 
 public interface IWorkItemRuntimeStateStore
 {
-  public void CompleteProcessing(TrackingSubjectId trackingSubjectId);
-  public void CompleteWorkItem(TrackingSubjectId trackingSubjectId, TimeSpan currentTime);
-  public void CreateFromGeneration(TrackingSubjectId trackingSubjectId, TimeSpan createdAt);
+  public WorkItemRuntimeState CompleteProcessing(TrackingSubjectId trackingSubjectId);
+  public WorkItemRuntimeState CompleteWorkItem(TrackingSubjectId trackingSubjectId, TimeSpan currentTime);
+  public WorkItemRuntimeState CreateFromGeneration(TrackingSubjectId trackingSubjectId, TimeSpan createdAt);
   public WorkItemRuntimeState GetWorkItemRuntimeState(TrackingSubjectId trackingSubjectId);
   public bool ContainsWorkItemRuntimeState(TrackingSubjectId trackingSubjectId);
-  public void QueueForStage(TrackingSubjectId trackingSubjectId, StageId stageId, ProcessingToken processingToken = default);
-  public void StartProcessing(TrackingSubjectId trackingSubjectId, StationId stationId);
-  public void StopProcessing(TrackingSubjectId trackingSubjectId);
+  public WorkItemRuntimeState QueueForStage(TrackingSubjectId trackingSubjectId, StageId stageId, ProcessingToken processingToken = default);
+  public WorkItemRuntimeState StartProcessing(TrackingSubjectId trackingSubjectId, StationId stationId);
+  public WorkItemRuntimeState PutOnHold(TrackingSubjectId trackingSubjectId);
+  public WorkItemRuntimeState ResumeProcessing(TrackingSubjectId trackingSubjectId);
 }

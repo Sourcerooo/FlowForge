@@ -9,7 +9,7 @@ Accepted
 - Keep the current runtime slice in-memory first and defer scenario and checkpoint persistence until the core simulation flow is stable.
 - Allow scenario data to be loaded fresh on application start for now instead of treating persistence as part of the current MVP-critical path.
 - Remove generic service aggregation from `SimulationExecutionContext` and keep it focused on run-scoped execution data.
-- Inject dispatcher, scheduler, registry, orchestrators, KPI collectors, and similar collaborators into the runtime classes that own the corresponding behavior.
+- Inject dispatcher, scheduler, event handlers, orchestrators, KPI collectors, and similar collaborators into the runtime classes that own the corresponding behavior.
 
 ## Reasoning
 

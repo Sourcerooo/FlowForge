@@ -99,18 +99,18 @@ public class Program
         { stationRuntimeState.StationId, stationRuntimeState }
       });
 
-    stageRuntimeState.Enqueue(new StageQueueEntry(t1, TimeSpan.FromSeconds(10)));
-    stageRuntimeState.Enqueue(new StageQueueEntry(t2, TimeSpan.FromSeconds(20)));
-    stageRuntimeState.Enqueue(new StageQueueEntry(t3, TimeSpan.FromSeconds(30)));
-    stageRuntimeState.Enqueue(new StageQueueEntry(t4, TimeSpan.FromSeconds(40)));
+    stageRuntimeState.Enqueue(new StageEntry(t1, TimeSpan.FromSeconds(10)));
+    stageRuntimeState.Enqueue(new StageEntry(t2, TimeSpan.FromSeconds(20)));
+    stageRuntimeState.Enqueue(new StageEntry(t3, TimeSpan.FromSeconds(30)));
+    stageRuntimeState.Enqueue(new StageEntry(t4, TimeSpan.FromSeconds(40)));
 
     var succ = false;
     succ = stageRuntimeState.TryStartProcessing(TimeSpan.FromSeconds(10)).IsSuccess;
     succ = stageRuntimeState.TryStartProcessing(TimeSpan.FromSeconds(20)).IsSuccess;
     succ = stageRuntimeState.TryStartProcessing(TimeSpan.FromSeconds(30)).IsSuccess;
     succ = stageRuntimeState.TryStartProcessing(TimeSpan.FromSeconds(40)).IsSuccess;
-    stageRuntimeState.CompleteProcessing(t2);
-    stageRuntimeState.Enqueue(new StageQueueEntry(t5, TimeSpan.FromSeconds(50)));
+    stageRuntimeState.CompleteProcessing(t2, TimeSpan.FromSeconds(45));
+    stageRuntimeState.Enqueue(new StageEntry(t5, TimeSpan.FromSeconds(50)));
     succ = stageRuntimeState.TryStartProcessing(TimeSpan.FromSeconds(50)).IsSuccess;
 
     /*var workItemTrackingService = serviceProvider.GetRequiredService<IWorkItemTrackingStore>();

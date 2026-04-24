@@ -24,8 +24,7 @@ public sealed class StationRuntimeState(
 
   public bool TryReserveWorker(
     TrackingSubjectId trackingSubjectId,
-    TimeSpan startedAt,
-    ProcessingToken processingToken)
+    TimeSpan startedAt)
   {
     if (AvailableWorkerCount <= 0)
     {
@@ -36,11 +35,24 @@ public sealed class StationRuntimeState(
       if (!_workerActive[i])
       {
         _workerActive[i] = true;
-        _processingInfo[i] = new StationProcessingInfo(trackingSubjectId, i, startedAt, processingToken);
+        _processingInfo[i] = new StationProcessingInfo(trackingSubjectId, i, startedAt);
         return true;
       }
     }
     return false;
+  }
+
+  public void PauseWorker(TrackingSubjectId trackingSubjectId, TimeSpan pausedAt)
+  {
+    var processingInfo = GetProcessingInfo(trackingSubjectId);
+    _processingInfo[processingInfo.WorkerSlot] = processingInfo with { StartedAt = pausedAt };
+  }
+
+  public StationProcessingInfo ResumeWorker(TrackingSubjectId trackingSubjectId, TimeSpan resumedAt)
+  {
+    var processingInfo = GetProcessingInfo(trackingSubjectId);
+    _processingInfo[processingInfo.WorkerSlot] = processingInfo with { StartedAt = resumedAt };
+    return processingInfo;
   }
 
   public void ReleaseWorker(TrackingSubjectId trackingSubjectId)

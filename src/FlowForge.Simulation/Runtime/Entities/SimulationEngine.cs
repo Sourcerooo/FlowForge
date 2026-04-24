@@ -22,10 +22,11 @@ public sealed class SimulationEngine(
           TimeSpan.FromSeconds(0),
           context.State.GetNextSequenceNumber())
       );
+
     while (EventQueue.TryDequeue(out var nextEvent)
-      && context.State.CurrentTime <= context.ProcessConfiguration.PlannedDuration
+      && context.State.CurrentTime < context.ProcessConfiguration.PlannedDuration
       && nextEvent is not null
-      && nextEvent.ScheduledTime <= context.ProcessConfiguration.PlannedDuration
+      && nextEvent.ScheduledTime < context.ProcessConfiguration.PlannedDuration
       )
     {
       if (cancellationToken.IsCancellationRequested)
@@ -39,7 +40,6 @@ public sealed class SimulationEngine(
         cancellationToken);
 
     }
-
     return SimulationRunResult.Completed;
   }
 }

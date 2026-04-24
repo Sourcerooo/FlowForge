@@ -22,7 +22,7 @@ Core runtime rules:
 
 - `SimulationRunner` owns the dequeue-and-dispatch loop.
 - `ISimulationScheduler` is the only write gateway into the queue.
-- `IEventDispatcher` resolves handlers from an immutable registry.
+- `IEventDispatcher` resolves handlers from the DI-registered handler set.
 - handlers stay thin and delegate multi-object process steps to orchestration boundaries.
 - runtime consumers observe immutable snapshots, not mutable runtime internals.
 
@@ -32,7 +32,7 @@ Use the following files for concrete runtime topics:
 
 - `docs/architecture/design/simulation-runner.md` for runtime loop, queue ownership, ordering, and lifecycle semantics
 - `docs/architecture/design/simulation-events.md` for event family, base event contract, ordering semantics, and invalidation rules
-- `docs/architecture/design/simulation-dispatching.md` for routing keys, dispatcher contracts, registry behavior, and dispatch handoff
+- `docs/architecture/design/simulation-dispatching.md` for dispatcher contracts, DI-based handler resolution, and dispatch handoff
 - `docs/architecture/design/simulation-execution-context.md` for execution context shape, handler-facing context, and run factory direction
 - `docs/architecture/design/simulation-orchestration.md` for runtime object boundaries, process orchestration, commands, and flow sequencing
 
