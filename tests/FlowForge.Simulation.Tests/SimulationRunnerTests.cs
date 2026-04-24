@@ -206,6 +206,7 @@ public sealed class SimulationRunnerTests
   private sealed class StubWorkItemTrackingStore : IWorkItemTrackingStore
   {
     public WorkItemTracking AddWorkItemTracking(TrackingSubjectId trackingSubjectId, TimeSpan createdAt, TimeSpan? completedAt = null) => throw new NotImplementedException();
+    public Result CompleteProcessingWorkItem(WorkItemRuntimeState workItem, TimeSpan currentTime) => throw new NotImplementedException();
     public Result CompleteWorkItem(TrackingSubjectId trackingSubjectId, TimeSpan completionTime) => throw new NotImplementedException();
     public Result EnqueueWorkItem(WorkItemRuntimeState workItem, TimeSpan currentTime) => throw new NotImplementedException();
     public Result<WorkItemTracking> GetWorkItemTracking(TrackingSubjectId trackingSubjectId) => throw new NotImplementedException();

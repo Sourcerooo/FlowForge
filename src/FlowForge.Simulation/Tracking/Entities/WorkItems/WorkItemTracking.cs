@@ -26,17 +26,15 @@ public sealed class WorkItemTracking(
     => TransitionTo(workItem, TrackingSegmentType.Processing, currentTime);
   public void StopWorkItem(WorkItemRuntimeState workItem, TimeSpan currentTime)
     => TransitionTo(workItem, TrackingSegmentType.OnHold, currentTime);
+
+  public void CompleteProcessingWorkItem(TimeSpan currentTime)
+  {
+    EndLastSegment(currentTime);
+  }
+
   public void CompleteWorkItem(TimeSpan completedAt)
   {
-    if (_segments.Count > 0)
-    {
-      var currentSegment = _segments[^1];
-      if (currentSegment.StartedAt > completedAt)
-      {
-        throw new InvalidOperationException($"WorkItemTracking for item: {TrackingSubjectId}. CompletionTime before StartTime");
-      }
-      _segments[^1] = currentSegment.EndSegment(completedAt);
-    }
+    EndLastSegment(completedAt);
     CompletedAt = completedAt;
   }
   public void SetCompletedAt(TimeSpan completionDate)
@@ -106,5 +104,17 @@ public sealed class WorkItemTracking(
       null);
   }
 
+  private void EndLastSegment(TimeSpan currentTime)
+  {
+    if (_segments.Count > 0)
+    {
+      var currentSegment = _segments[^1];
+      if (currentSegment.StartedAt > currentTime)
+      {
+        throw new InvalidOperationException($"WorkItemTracking for item: {TrackingSubjectId}. CompletionTime before StartTime");
+      }
+      _segments[^1] = currentSegment.EndSegment(currentTime);
+    }
+  }
   public override string? ToString() => $"TrackingSubjectId={TrackingSubjectId}, CreatedAt={CreatedAt}, CompletedAt={CompletedAt}, TotalLeadTime={TotalLeadTime}";
 }

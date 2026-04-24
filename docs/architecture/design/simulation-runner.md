@@ -35,7 +35,7 @@ Recommended component split:
 |---|---|---|---|
 | `SimulationRunner` | main execution loop, dequeue step, simulation-time advancement, run lifecycle | dequeue due events from `SimulationExecutionContext.EventQueue`, call dispatcher, stop when queue is empty or cancelled | expose the mutable queue to delivery or application layers |
 | `ISimulationScheduler` | controlled queue write access | assign `SequenceNumber`, apply `SortRank`, enqueue follow-up events | dequeue events or mutate runtime state directly |
-| `IEventDispatcher` | routing one dequeued event to the correct handler pipeline | resolve handler from registry and invoke it | own the main loop or queue ordering |
+| `IEventDispatcher` | routing one dequeued event to the correct handler pipeline | resolve handler from the DI-registered handler set and invoke it | own the main loop or queue ordering |
 | `ISimulationEventHandler<TEvent>` | mutation logic for one routed event kind or context | update state and tracking, schedule follow-up events through the scheduler | read or write the raw queue directly |
 
 Recommended access rules:

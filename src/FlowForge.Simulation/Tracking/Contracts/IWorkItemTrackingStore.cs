@@ -17,5 +17,6 @@ public interface IWorkItemTrackingStore
   public Result EnqueueWorkItem(WorkItemRuntimeState workItem, TimeSpan currentTime);
   public Result StartProcessingWorkItem(WorkItemRuntimeState workItem, TimeSpan currentTime);
   public Result StopProcessingWorkItem(WorkItemRuntimeState workItem, TimeSpan currentTime);
+  public Result CompleteProcessingWorkItem(WorkItemRuntimeState workItem, TimeSpan currentTime);
   public Result CompleteWorkItem(TrackingSubjectId trackingSubjectId, TimeSpan completionTime);
 }

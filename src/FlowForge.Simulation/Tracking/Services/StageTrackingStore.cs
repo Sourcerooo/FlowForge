@@ -1,17 +1,23 @@
-using System.Collections.Concurrent;
+using FlowForge.Domain.Process.Entities;
 using FlowForge.Domain.Process.ValueObjects;
 using FlowForge.Domain.SharedKernel.Util;
 using FlowForge.Simulation.Runtime.ValueObjects;
 using FlowForge.Simulation.Tracking.Contracts;
 using FlowForge.Simulation.Tracking.Entities.Stages;
+using FlowForge.Simulation.Tracking.Entities.Stations;
 using static FlowForge.Simulation.Tracking.Entities.Stages.StageTracking;
 
 namespace FlowForge.Simulation.Tracking.Services;
 
-public sealed class StageTrackingStore : IStageTrackingStore
+public sealed class StageTrackingStore(ProcessConfiguration ProcessConfiguration) : IStageTrackingStore
 {
-  private readonly ConcurrentDictionary<StageId, StageTracking> _stageTrackings
-  = new ConcurrentDictionary<StageId, StageTracking>();
+  private readonly Dictionary<StageId, StageTracking> _stageTrackings = ProcessConfiguration.Stages.ToDictionary(
+    stageDefinition => stageDefinition.StageId,
+    stageDefinition => new StageTracking(stageDefinition.StageId, stageDefinition.Stations.ToDictionary(
+      station => station.StationId,
+      station => new StationTracking(station.StationId, stageDefinition.StageId)
+    ))
+  );
 
   public Result<StageTracking> GetStageTracking(StageId stageId)
   {

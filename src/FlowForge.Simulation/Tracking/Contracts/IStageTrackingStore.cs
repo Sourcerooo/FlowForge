@@ -19,7 +19,9 @@ public interface IStageTrackingStore
     StageEntry stageEntry,
     ProcessingKind entryKind);
 
-  public Result<StageTracking> CompleteWorkItem(StageId stageId, StageEntry stageEntry);
+  public Result<StageTracking> CompleteWorkItem(
+    StageId stageId,
+    StageEntry stageEntry);
   public Result<StageTracking> PutOnHoldWorkItem(
     StageId stageId,
     StageEntry stageEntry,

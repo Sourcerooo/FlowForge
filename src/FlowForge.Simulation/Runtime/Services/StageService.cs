@@ -11,6 +11,8 @@ namespace FlowForge.Simulation.Runtime.Services;
 
 internal class StageService(IStageRuntimeStateStore StageRuntimeStateStore, IStageTrackingStore StageTrackingStore) : IStageService
 {
+  private readonly HashSet<(StageId StageId, TrackingSubjectId TrackingSubjectId)> _workItemsSeenOnHold = [];
+
   public Result<StageEntry> CompleteProcessing(StageId stageId, TrackingSubjectId trackingSubjectId, TimeSpan currentTime)
   {
     var result = StageRuntimeStateStore.CompleteProcessing(stageId, trackingSubjectId, currentTime);
@@ -37,9 +39,7 @@ internal class StageService(IStageRuntimeStateStore StageRuntimeStateStore, ISta
     var result = StageRuntimeStateStore.StopAndRequeue(stageId, trackingSubjectId, currentTime);
     if (result.IsSuccess)
     {
-      var onHoldOccurrence = result.Value.StoppedAt == result.Value.RequeuedAt
-        ? OnHoldOccurrence.First
-        : OnHoldOccurrence.Repeated;
+      var onHoldOccurrence = GetOnHoldOccurrence(stageId, trackingSubjectId);
       StageTrackingStore.StopAndRequeueWorkItem(stageId, result.Value, onHoldOccurrence);
     }
     return result;
@@ -50,7 +50,7 @@ internal class StageService(IStageRuntimeStateStore StageRuntimeStateStore, ISta
     var result = StageRuntimeStateStore.PutOnHold(stageId, trackingSubjectId, currentTime);
     if (result.IsSuccess)
     {
-      StageTrackingStore.PutOnHoldWorkItem(stageId, result.Value, OnHoldOccurrence.First);
+      StageTrackingStore.PutOnHoldWorkItem(stageId, result.Value, GetOnHoldOccurrence(stageId, trackingSubjectId));
     }
 
     return result;
@@ -78,5 +78,12 @@ internal class StageService(IStageRuntimeStateStore StageRuntimeStateStore, ISta
       StageTrackingStore.StartProcessingWorkItem(stageId, result.Value, entryKind);
     }
     return result;
+  }
+
+  private OnHoldOccurrence GetOnHoldOccurrence(StageId stageId, TrackingSubjectId trackingSubjectId)
+  {
+    return _workItemsSeenOnHold.Add((stageId, trackingSubjectId))
+      ? OnHoldOccurrence.First
+      : OnHoldOccurrence.Repeated;
   }
 }

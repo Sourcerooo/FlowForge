@@ -7,6 +7,9 @@ namespace FlowForge.Simulation.Tests;
 
 public sealed class StageTrackingTests
 {
+  private static readonly StageId TestStageId = StageId.NewId();
+  private static readonly StationId TestStationId = StationId.NewId();
+
   [Fact]
   public void EnqueueWorkItem_FirstQueueIncrementsQueueCountersAndPeak()
   {
@@ -34,7 +37,7 @@ public sealed class StageTrackingTests
   }
 
   [Fact]
-  public void EnqueueWorkItem_RequeueTracksProcessingTimeAndQueueCounters()
+  public void EnqueueWorkItem_RequeueTracksOnHoldTimeAndQueueCounters()
   {
     var tracking = CreateTracking();
 
@@ -43,8 +46,12 @@ public sealed class StageTrackingTests
       CreateEntry(enqueuedAt: TimeSpan.FromSeconds(1), startedAt: TimeSpan.FromSeconds(6)),
       StageTracking.ProcessingKind.InitialStartFromQueue);
 
+    tracking.PutOnHoldWorkItem(
+      CreateEntry(startedAt: TimeSpan.FromSeconds(6), stoppedAt: TimeSpan.FromSeconds(14)),
+      OnHoldOccurrence.First);
+
     tracking.EnqueueWorkItem(
-      CreateEntry(startedAt: TimeSpan.FromSeconds(6), stoppedAt: TimeSpan.FromSeconds(14), requeuedAt: TimeSpan.FromSeconds(14)),
+      CreateEntry(stoppedAt: TimeSpan.FromSeconds(14), requeuedAt: TimeSpan.FromSeconds(18)),
       OnQueueOccurrence.Requeued);
 
     Assert.Equal(1, tracking.WorkItemsQueuedCount);
@@ -52,7 +59,21 @@ public sealed class StageTrackingTests
     Assert.Equal(1, tracking.CurrentQueueLength);
     Assert.Equal(TimeSpan.FromSeconds(5), tracking.CumulativeQueueWait);
     Assert.Equal(TimeSpan.FromSeconds(8), tracking.CumulativeProcessingTime);
+    Assert.Equal(TimeSpan.FromSeconds(4), tracking.CumulativeOnHoldTime);
     Assert.Equal(0, tracking.CurrentBusyWorkers);
+  }
+
+  [Fact]
+  public void EnqueueWorkItem_RequeueWithoutPriorHoldThrows()
+  {
+    var tracking = CreateTracking();
+
+    void Action() => tracking.EnqueueWorkItem(
+      CreateEntry(requeuedAt: TimeSpan.FromSeconds(18)),
+      OnQueueOccurrence.Requeued);
+
+    var exception = Assert.Throws<InvalidOperationException>(Action);
+    Assert.Equal("StageTracking requeue requires a prior hold/stop timestamp.", exception.Message);
   }
 
   [Fact]
@@ -80,6 +101,9 @@ public sealed class StageTrackingTests
     tracking.StartProcessingWorkItem(
       CreateEntry(enqueuedAt: TimeSpan.Zero, startedAt: TimeSpan.FromSeconds(4)),
       StageTracking.ProcessingKind.InitialStartFromQueue);
+    tracking.PutOnHoldWorkItem(
+      CreateEntry(startedAt: TimeSpan.FromSeconds(4), stoppedAt: TimeSpan.FromSeconds(10)),
+      OnHoldOccurrence.First);
     tracking.EnqueueWorkItem(
       CreateEntry(startedAt: TimeSpan.FromSeconds(4), stoppedAt: TimeSpan.FromSeconds(10), requeuedAt: TimeSpan.FromSeconds(10)),
       OnQueueOccurrence.Requeued);
@@ -91,6 +115,7 @@ public sealed class StageTrackingTests
     Assert.Equal(1, tracking.WorkItemsStartedCount);
     Assert.Equal(TimeSpan.FromSeconds(13), tracking.CumulativeQueueWait);
     Assert.Equal(TimeSpan.FromSeconds(6), tracking.CumulativeProcessingTime);
+    Assert.Equal(TimeSpan.Zero, tracking.CumulativeOnHoldTime);
     Assert.Equal(0, tracking.CurrentQueueLength);
     Assert.Equal(1, tracking.CurrentBusyWorkers);
     Assert.Equal(1, tracking.PeakBusyWorkers);
@@ -288,15 +313,17 @@ public sealed class StageTrackingTests
     var tracking = CreateTracking();
 
     Assert.IsAssignableFrom<IReadOnlyDictionary<StationId, FlowForge.Simulation.Tracking.Entities.Stations.StationTracking>>(tracking.Stations);
-    Assert.Empty(tracking.Stations);
+    Assert.Single(tracking.Stations);
   }
 
   private static StageTracking CreateTracking()
   {
-    return new StageTracking
-    {
-      StageId = StageId.NewId()
-    };
+    return new StageTracking(
+      TestStageId,
+      new Dictionary<StationId, FlowForge.Simulation.Tracking.Entities.Stations.StationTracking>
+      {
+        [TestStationId] = new(TestStationId, TestStageId)
+      });
   }
 
   private static StageEntry CreateEntry(
@@ -312,6 +339,8 @@ public sealed class StageTrackingTests
       startedAt,
       completedAt,
       stoppedAt,
-      requeuedAt);
+      requeuedAt,
+      TestStageId,
+      TestStationId);
   }
 }

@@ -39,8 +39,8 @@ internal class WorkItemService(IWorkItemRuntimeStateStore WorkItemRuntimeStateSt
 
   public void CompleteProcessing(TrackingSubjectId trackingSubjectId, TimeSpan currentTime)
   {
-    WorkItemRuntimeStateStore.CompleteProcessing(trackingSubjectId);
-    WorkItemTrackingStore.CompleteWorkItem(trackingSubjectId, currentTime);
+    var workItem = WorkItemRuntimeStateStore.CompleteProcessing(trackingSubjectId);
+    WorkItemTrackingStore.CompleteProcessingWorkItem(workItem, currentTime);
   }
 
   public void PutOnHold(TrackingSubjectId trackingSubjectId, TimeSpan currentTime)

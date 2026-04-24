@@ -34,7 +34,7 @@ Start simulation
   -> SimulationRunner owns priority queue and main loop
   -> Runner dequeues next event
   -> Advance simulation time
-  -> Dispatcher resolves handler from EventRoutingKey registry
+  -> Dispatcher resolves handler from DI-registered handlers by EventKind
   -> Dispatch handler
   -> Mutate SimulationState
   -> Schedule follow-up events via ISimulationScheduler

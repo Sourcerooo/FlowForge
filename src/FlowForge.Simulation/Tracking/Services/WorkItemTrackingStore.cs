@@ -85,4 +85,13 @@ public sealed class WorkItemTrackingStore(ILogger<WorkItemTrackingStore> logger)
     return Result.Success();
   }
 
+  public Result CompleteProcessingWorkItem(WorkItemRuntimeState workItem, TimeSpan currentTime)
+  {
+    if (!_workItemTrackings.TryGetValue(workItem.TrackingSubjectId, out WorkItemTracking? value))
+    {
+      return Result.Failure(new InvalidOperationException($"TrackingSubjectId {workItem.TrackingSubjectId} does not exist"));
+    }
+    value.CompleteProcessingWorkItem(currentTime);
+    return Result.Success();
+  }
 }
