@@ -14,32 +14,69 @@ internal class StageService(IStageRuntimeStateStore StageRuntimeStateStore, ISta
   public Result<StageEntry> CompleteProcessing(StageId stageId, TrackingSubjectId trackingSubjectId, TimeSpan currentTime)
   {
     var result = StageRuntimeStateStore.CompleteProcessing(stageId, trackingSubjectId, currentTime);
-    StageTrackingStore.CompleteWorkItem(stageId, result.Value.CompletedAt - result.Value.StartedAt);
+    if (result.IsSuccess)
+    {
+      StageTrackingStore.CompleteWorkItem(stageId, result.Value);
+    }
     return result;
   }
   public Result<StageEntry> Enqueue(StageId stageId, TrackingSubjectId trackingSubjectId, TimeSpan currentTime)
   {
     var result = StageRuntimeStateStore.Enqueue(stageId, trackingSubjectId, currentTime);
-    var occurrence = OnQueueOccurrence.First;
-    var time = currentTime;
-    StageTrackingStore.EnqueueWorkItem(stageId, occurrence, time);
+    if (result.IsSuccess)
+    {
+      var occurrence = result.Value.RequeuedAt == default
+        ? OnQueueOccurrence.First
+        : OnQueueOccurrence.Requeued;
+      StageTrackingStore.EnqueueWorkItem(stageId, result.Value, occurrence);
+    }
     return result;
   }
-  public Result<StageEntry> StopProcessing(StageId stageId, TrackingSubjectId trackingSubjectId, TimeSpan currentTime)
+  public Result<StageEntry> StopAndRequeue(StageId stageId, TrackingSubjectId trackingSubjectId, TimeSpan currentTime)
   {
-    var result = StageRuntimeStateStore.StopProcessing(stageId, trackingSubjectId, currentTime);
-    var onHoldOccurrence = OnHoldOccurrence.First;
-    var processingTime = currentTime;
-    StageTrackingStore.StopWorkItem(stageId, processingTime, onHoldOccurrence);
+    var result = StageRuntimeStateStore.StopAndRequeue(stageId, trackingSubjectId, currentTime);
+    if (result.IsSuccess)
+    {
+      var onHoldOccurrence = result.Value.StoppedAt == result.Value.RequeuedAt
+        ? OnHoldOccurrence.First
+        : OnHoldOccurrence.Repeated;
+      StageTrackingStore.StopAndRequeueWorkItem(stageId, result.Value, onHoldOccurrence);
+    }
     return result;
   }
+
+  public Result<StageEntry> PutOnHold(StageId stageId, TrackingSubjectId trackingSubjectId, TimeSpan currentTime)
+  {
+    var result = StageRuntimeStateStore.PutOnHold(stageId, trackingSubjectId, currentTime);
+    if (result.IsSuccess)
+    {
+      StageTrackingStore.PutOnHoldWorkItem(stageId, result.Value, OnHoldOccurrence.First);
+    }
+
+    return result;
+  }
+
+  public Result<StageEntry> ResumeProcessing(StageId stageId, TrackingSubjectId trackingSubjectId, TimeSpan currentTime)
+  {
+    var result = StageRuntimeStateStore.ResumeProcessing(stageId, trackingSubjectId, currentTime);
+    if (result.IsSuccess)
+    {
+      StageTrackingStore.StartProcessingWorkItem(stageId, result.Value, ProcessingKind.ResumeFromOnHold);
+    }
+
+    return result;
+  }
+
   public Result<StageEntry> TryStartProcessing(StageId stageId, TimeSpan startedAt)
   {
     var result = StageRuntimeStateStore.TryStartProcessing(stageId, startedAt);
-    var entryKind = ProcessingKind.InitialStartFromQueue;
-    var queueWaitTime = startedAt;
-    var onHoldTime = startedAt;
-    StageTrackingStore.StartProcessingWorkItem(stageId, entryKind, queueWaitTime, onHoldTime);
+    if (result.IsSuccess)
+    {
+      var entryKind = result.Value.RequeuedAt == default
+        ? ProcessingKind.InitialStartFromQueue
+        : ProcessingKind.ResumeFromQueue;
+      StageTrackingStore.StartProcessingWorkItem(stageId, result.Value, entryKind);
+    }
     return result;
   }
 }

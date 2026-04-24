@@ -59,13 +59,24 @@ internal class WorkItemRuntimeStateStore() : IWorkItemRuntimeStateStore
     return workItemRuntimeState;
   }
 
-  public WorkItemRuntimeState StopProcessing(TrackingSubjectId trackingSubjectId)
+  public WorkItemRuntimeState PutOnHold(TrackingSubjectId trackingSubjectId)
   {
     if (!_workItemRuntimeStates.TryGetValue(trackingSubjectId, out var workItemRuntimeState))
     {
       throw new InvalidOperationException($"WorkItemRuntimeStateStore->QueueForStage: TrackingSubjectId {trackingSubjectId} does not exist.");
     }
-    workItemRuntimeState.StopProcessing();
+    workItemRuntimeState.PutOnHold();
+    return workItemRuntimeState;
+  }
+
+  public WorkItemRuntimeState ResumeProcessing(TrackingSubjectId trackingSubjectId)
+  {
+    if (!_workItemRuntimeStates.TryGetValue(trackingSubjectId, out var workItemRuntimeState))
+    {
+      throw new InvalidOperationException($"WorkItemRuntimeStateStore->QueueForStage: TrackingSubjectId {trackingSubjectId} does not exist.");
+    }
+
+    workItemRuntimeState.ResumeProcessing();
     return workItemRuntimeState;
   }
 

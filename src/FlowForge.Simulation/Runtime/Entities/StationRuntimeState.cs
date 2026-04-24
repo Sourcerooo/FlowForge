@@ -42,6 +42,19 @@ public sealed class StationRuntimeState(
     return false;
   }
 
+  public void PauseWorker(TrackingSubjectId trackingSubjectId, TimeSpan pausedAt)
+  {
+    var processingInfo = GetProcessingInfo(trackingSubjectId);
+    _processingInfo[processingInfo.WorkerSlot] = processingInfo with { StartedAt = pausedAt };
+  }
+
+  public StationProcessingInfo ResumeWorker(TrackingSubjectId trackingSubjectId, TimeSpan resumedAt)
+  {
+    var processingInfo = GetProcessingInfo(trackingSubjectId);
+    _processingInfo[processingInfo.WorkerSlot] = processingInfo with { StartedAt = resumedAt };
+    return processingInfo;
+  }
+
   public void ReleaseWorker(TrackingSubjectId trackingSubjectId)
   {
     try

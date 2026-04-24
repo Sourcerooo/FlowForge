@@ -60,11 +60,27 @@ internal sealed class StageRuntimeStateStore(ProcessConfiguration ProcessConfigu
       : stageRuntimeState.TryStartProcessing(startedAt);
   }
 
-  public Result<StageEntry> StopProcessing(StageId stageId, TrackingSubjectId trackingSubjectId, TimeSpan currentTime)
+  public Result<StageEntry> StopAndRequeue(StageId stageId, TrackingSubjectId trackingSubjectId, TimeSpan currentTime)
   {
     var found = _stageRuntimeStates.TryGetValue(stageId, out var stageRuntimeState);
     return !found || stageRuntimeState == null
       ? Result<StageEntry>.Failure(new InvalidOperationException($"StageRuntimeStateStore->StopProcessing: Process can't be started. StageId {stageId} was not found or is invalid."))
-      : stageRuntimeState.StopProcessing(trackingSubjectId, currentTime);
+      : stageRuntimeState.StopAndRequeue(trackingSubjectId, currentTime);
+  }
+
+  public Result<StageEntry> PutOnHold(StageId stageId, TrackingSubjectId trackingSubjectId, TimeSpan currentTime)
+  {
+    var found = _stageRuntimeStates.TryGetValue(stageId, out var stageRuntimeState);
+    return !found || stageRuntimeState == null
+      ? Result<StageEntry>.Failure(new InvalidOperationException($"StageRuntimeStateStore->PutOnHold: Process can't be put on hold. StageId {stageId} was not found or is invalid."))
+      : stageRuntimeState.PutOnHold(trackingSubjectId, currentTime);
+  }
+
+  public Result<StageEntry> ResumeProcessing(StageId stageId, TrackingSubjectId trackingSubjectId, TimeSpan currentTime)
+  {
+    var found = _stageRuntimeStates.TryGetValue(stageId, out var stageRuntimeState);
+    return !found || stageRuntimeState == null
+      ? Result<StageEntry>.Failure(new InvalidOperationException($"StageRuntimeStateStore->ResumeProcessing: Process can't be resumed. StageId {stageId} was not found or is invalid."))
+      : stageRuntimeState.ResumeProcessing(trackingSubjectId, currentTime);
   }
 }

@@ -1,4 +1,6 @@
+using FlowForge.Domain.Orders.ValueObjects;
 using FlowForge.Domain.Process.ValueObjects;
+using FlowForge.Simulation.Runtime.ValueObjects;
 using FlowForge.Simulation.Tracking.Entities.Stages;
 
 namespace FlowForge.Simulation.Tests;
@@ -10,7 +12,7 @@ public sealed class StageTrackingTests
   {
     var tracking = CreateTracking();
 
-    tracking.EnqueueWorkItem(OnQueueOccurrence.First);
+    tracking.EnqueueWorkItem(CreateEntry(enqueuedAt: TimeSpan.FromSeconds(1)), OnQueueOccurrence.First);
 
     Assert.Equal(1, tracking.WorkItemsQueuedCount);
     Assert.Equal(1, tracking.CurrentQueueLength);
@@ -18,13 +20,13 @@ public sealed class StageTrackingTests
   }
 
   [Fact]
-  public void EnqueueWorkItem_MultipleTimesOnlyCountsFirstQueueButTracksCurrentAndPeakLength()
+  public void EnqueueWorkItem_MultipleTimesCountsAllInitialQueues()
   {
     var tracking = CreateTracking();
 
-    tracking.EnqueueWorkItem(OnQueueOccurrence.First);
-    tracking.EnqueueWorkItem(OnQueueOccurrence.First);
-    tracking.EnqueueWorkItem(OnQueueOccurrence.First);
+    tracking.EnqueueWorkItem(CreateEntry(enqueuedAt: TimeSpan.FromSeconds(1)), OnQueueOccurrence.First);
+    tracking.EnqueueWorkItem(CreateEntry(enqueuedAt: TimeSpan.FromSeconds(2)), OnQueueOccurrence.First);
+    tracking.EnqueueWorkItem(CreateEntry(enqueuedAt: TimeSpan.FromSeconds(3)), OnQueueOccurrence.First);
 
     Assert.Equal(3, tracking.WorkItemsQueuedCount);
     Assert.Equal(3, tracking.CurrentQueueLength);
@@ -32,17 +34,23 @@ public sealed class StageTrackingTests
   }
 
   [Fact]
-  public void RequeueWorkItem_IncrementsQueueLengthWithoutIncreasingUniqueQueuedCount()
+  public void EnqueueWorkItem_RequeueTracksProcessingTimeAndQueueCounters()
   {
     var tracking = CreateTracking();
-    tracking.EnqueueWorkItem(OnQueueOccurrence.First);
-    tracking.StartProcessingWorkItem(StageTracking.ProcessingKind.InitialStartFromQueue, TimeSpan.FromSeconds(5));
 
-    tracking.EnqueueWorkItem(OnQueueOccurrence.Requeued, TimeSpan.FromSeconds(8));
+    tracking.EnqueueWorkItem(CreateEntry(enqueuedAt: TimeSpan.FromSeconds(1)), OnQueueOccurrence.First);
+    tracking.StartProcessingWorkItem(
+      CreateEntry(enqueuedAt: TimeSpan.FromSeconds(1), startedAt: TimeSpan.FromSeconds(6)),
+      StageTracking.ProcessingKind.InitialStartFromQueue);
+
+    tracking.EnqueueWorkItem(
+      CreateEntry(startedAt: TimeSpan.FromSeconds(6), stoppedAt: TimeSpan.FromSeconds(14), requeuedAt: TimeSpan.FromSeconds(14)),
+      OnQueueOccurrence.Requeued);
 
     Assert.Equal(1, tracking.WorkItemsQueuedCount);
     Assert.Equal(1, tracking.WorkItemsRequeuedCount);
     Assert.Equal(1, tracking.CurrentQueueLength);
+    Assert.Equal(TimeSpan.FromSeconds(5), tracking.CumulativeQueueWait);
     Assert.Equal(TimeSpan.FromSeconds(8), tracking.CumulativeProcessingTime);
     Assert.Equal(0, tracking.CurrentBusyWorkers);
   }
@@ -51,9 +59,11 @@ public sealed class StageTrackingTests
   public void StartProcessingWorkItem_InitialStartConsumesQueueWaitAndIncrementsStartedCount()
   {
     var tracking = CreateTracking();
-    tracking.EnqueueWorkItem(OnQueueOccurrence.First);
+    tracking.EnqueueWorkItem(CreateEntry(enqueuedAt: TimeSpan.Zero), OnQueueOccurrence.First);
 
-    tracking.StartProcessingWorkItem(StageTracking.ProcessingKind.InitialStartFromQueue, TimeSpan.FromSeconds(12));
+    tracking.StartProcessingWorkItem(
+      CreateEntry(enqueuedAt: TimeSpan.Zero, startedAt: TimeSpan.FromSeconds(12)),
+      StageTracking.ProcessingKind.InitialStartFromQueue);
 
     Assert.Equal(1, tracking.WorkItemsStartedCount);
     Assert.Equal(TimeSpan.FromSeconds(12), tracking.CumulativeQueueWait);
@@ -66,30 +76,44 @@ public sealed class StageTrackingTests
   public void StartProcessingWorkItem_ResumeFromQueueConsumesQueueWaitButDoesNotIncrementStartedCount()
   {
     var tracking = CreateTracking();
-    tracking.EnqueueWorkItem(OnQueueOccurrence.First);
-    tracking.StartProcessingWorkItem(StageTracking.ProcessingKind.InitialStartFromQueue, TimeSpan.FromSeconds(4));
-    tracking.EnqueueWorkItem(OnQueueOccurrence.Requeued, TimeSpan.FromSeconds(6));
+    tracking.EnqueueWorkItem(CreateEntry(enqueuedAt: TimeSpan.Zero), OnQueueOccurrence.First);
+    tracking.StartProcessingWorkItem(
+      CreateEntry(enqueuedAt: TimeSpan.Zero, startedAt: TimeSpan.FromSeconds(4)),
+      StageTracking.ProcessingKind.InitialStartFromQueue);
+    tracking.EnqueueWorkItem(
+      CreateEntry(startedAt: TimeSpan.FromSeconds(4), stoppedAt: TimeSpan.FromSeconds(10), requeuedAt: TimeSpan.FromSeconds(10)),
+      OnQueueOccurrence.Requeued);
 
-    tracking.StartProcessingWorkItem(StageTracking.ProcessingKind.ResumeFromQueue, TimeSpan.FromSeconds(9));
+    tracking.StartProcessingWorkItem(
+      CreateEntry(requeuedAt: TimeSpan.FromSeconds(10), startedAt: TimeSpan.FromSeconds(19)),
+      StageTracking.ProcessingKind.ResumeFromQueue);
 
     Assert.Equal(1, tracking.WorkItemsStartedCount);
     Assert.Equal(TimeSpan.FromSeconds(13), tracking.CumulativeQueueWait);
+    Assert.Equal(TimeSpan.FromSeconds(6), tracking.CumulativeProcessingTime);
     Assert.Equal(0, tracking.CurrentQueueLength);
     Assert.Equal(1, tracking.CurrentBusyWorkers);
     Assert.Equal(1, tracking.PeakBusyWorkers);
   }
 
   [Fact]
-  public void StartProcessingWorkItem_ResumeFromOnHoldAccumulatesOnHoldTimeWithoutChangingQueueMetrics()
+  public void StartProcessingWorkItem_ResumeFromOnHoldAccumulatesOnHoldTime()
   {
     var tracking = CreateTracking();
-    tracking.EnqueueWorkItem(OnQueueOccurrence.First);
-    tracking.StartProcessingWorkItem(StageTracking.ProcessingKind.InitialStartFromQueue, TimeSpan.FromSeconds(3));
-    tracking.StopWorkItem(TimeSpan.FromSeconds(10), OnHoldOccurrence.First);
+    tracking.EnqueueWorkItem(CreateEntry(enqueuedAt: TimeSpan.Zero), OnQueueOccurrence.First);
+    tracking.StartProcessingWorkItem(
+      CreateEntry(enqueuedAt: TimeSpan.Zero, startedAt: TimeSpan.FromSeconds(3)),
+      StageTracking.ProcessingKind.InitialStartFromQueue);
+    tracking.PutOnHoldWorkItem(
+      CreateEntry(startedAt: TimeSpan.FromSeconds(3), stoppedAt: TimeSpan.FromSeconds(10)),
+      OnHoldOccurrence.First);
 
-    tracking.StartProcessingWorkItem(StageTracking.ProcessingKind.ResumeFromOnHold, onHoldTime: TimeSpan.FromSeconds(7));
+    tracking.StartProcessingWorkItem(
+      CreateEntry(stoppedAt: TimeSpan.FromSeconds(10), startedAt: TimeSpan.FromSeconds(17)),
+      StageTracking.ProcessingKind.ResumeFromOnHold);
 
     Assert.Equal(TimeSpan.FromSeconds(3), tracking.CumulativeQueueWait);
+    Assert.Equal(TimeSpan.FromSeconds(7), tracking.CumulativeProcessingTime);
     Assert.Equal(TimeSpan.FromSeconds(7), tracking.CumulativeOnHoldTime);
     Assert.Equal(0, tracking.CurrentQueueLength);
     Assert.Equal(1, tracking.CurrentBusyWorkers);
@@ -99,13 +123,18 @@ public sealed class StageTrackingTests
   public void StartProcessingWorkItem_TracksPeakBusyWorkersAcrossConcurrentStarts()
   {
     var tracking = CreateTracking();
-    tracking.EnqueueWorkItem(OnQueueOccurrence.First);
-    tracking.EnqueueWorkItem(OnQueueOccurrence.First);
+    tracking.EnqueueWorkItem(CreateEntry(enqueuedAt: TimeSpan.Zero), OnQueueOccurrence.First);
+    tracking.EnqueueWorkItem(CreateEntry(enqueuedAt: TimeSpan.FromSeconds(1)), OnQueueOccurrence.First);
 
-    tracking.StartProcessingWorkItem(StageTracking.ProcessingKind.InitialStartFromQueue, TimeSpan.FromSeconds(1));
-    tracking.StartProcessingWorkItem(StageTracking.ProcessingKind.InitialStartFromQueue, TimeSpan.FromSeconds(2));
+    tracking.StartProcessingWorkItem(
+      CreateEntry(enqueuedAt: TimeSpan.Zero, startedAt: TimeSpan.FromSeconds(1)),
+      StageTracking.ProcessingKind.InitialStartFromQueue);
+    tracking.StartProcessingWorkItem(
+      CreateEntry(enqueuedAt: TimeSpan.FromSeconds(1), startedAt: TimeSpan.FromSeconds(3)),
+      StageTracking.ProcessingKind.InitialStartFromQueue);
 
     Assert.Equal(2, tracking.WorkItemsStartedCount);
+    Assert.Equal(TimeSpan.FromSeconds(3), tracking.CumulativeQueueWait);
     Assert.Equal(0, tracking.CurrentQueueLength);
     Assert.Equal(2, tracking.CurrentBusyWorkers);
     Assert.Equal(2, tracking.PeakBusyWorkers);
@@ -115,10 +144,12 @@ public sealed class StageTrackingTests
   public void CompleteWorkItem_IncrementsCompletedCountAndAddsProcessingTime()
   {
     var tracking = CreateTracking();
-    tracking.EnqueueWorkItem(OnQueueOccurrence.First);
-    tracking.StartProcessingWorkItem(StageTracking.ProcessingKind.InitialStartFromQueue, TimeSpan.FromSeconds(3));
+    tracking.EnqueueWorkItem(CreateEntry(enqueuedAt: TimeSpan.Zero), OnQueueOccurrence.First);
+    tracking.StartProcessingWorkItem(
+      CreateEntry(enqueuedAt: TimeSpan.Zero, startedAt: TimeSpan.FromSeconds(3)),
+      StageTracking.ProcessingKind.InitialStartFromQueue);
 
-    tracking.CompleteWorkItem(TimeSpan.FromSeconds(14));
+    tracking.CompleteWorkItem(CreateEntry(startedAt: TimeSpan.FromSeconds(3), completedAt: TimeSpan.FromSeconds(17)));
 
     Assert.Equal(1, tracking.WorkItemsCompletedCount);
     Assert.Equal(TimeSpan.FromSeconds(14), tracking.CumulativeProcessingTime);
@@ -129,14 +160,18 @@ public sealed class StageTrackingTests
   public void StopWorkItem_FirstOnHoldIncrementsTransactionAndUniqueCounts()
   {
     var tracking = CreateTracking();
-    tracking.EnqueueWorkItem(OnQueueOccurrence.First);
-    tracking.StartProcessingWorkItem(StageTracking.ProcessingKind.InitialStartFromQueue, TimeSpan.FromSeconds(2));
+    tracking.EnqueueWorkItem(CreateEntry(enqueuedAt: TimeSpan.Zero), OnQueueOccurrence.First);
+    tracking.StartProcessingWorkItem(
+      CreateEntry(enqueuedAt: TimeSpan.Zero, startedAt: TimeSpan.FromSeconds(2)),
+      StageTracking.ProcessingKind.InitialStartFromQueue);
 
-    tracking.StopWorkItem(TimeSpan.FromSeconds(11), OnHoldOccurrence.First);
+    tracking.PutOnHoldWorkItem(
+      CreateEntry(startedAt: TimeSpan.FromSeconds(2), stoppedAt: TimeSpan.FromSeconds(11)),
+      OnHoldOccurrence.First);
 
     Assert.Equal(1, tracking.TransactionsOnHoldCount);
     Assert.Equal(1, tracking.WorkItemsUniqueOnHoldCount);
-    Assert.Equal(TimeSpan.FromSeconds(11), tracking.CumulativeProcessingTime);
+    Assert.Equal(TimeSpan.FromSeconds(9), tracking.CumulativeProcessingTime);
     Assert.Equal(0, tracking.CurrentBusyWorkers);
   }
 
@@ -144,28 +179,61 @@ public sealed class StageTrackingTests
   public void StopWorkItem_RepeatedOnHoldIncrementsTransactionCountButNotUniqueCount()
   {
     var tracking = CreateTracking();
-    tracking.EnqueueWorkItem(OnQueueOccurrence.First);
-    tracking.StartProcessingWorkItem(StageTracking.ProcessingKind.InitialStartFromQueue, TimeSpan.FromSeconds(2));
-    tracking.StopWorkItem(TimeSpan.FromSeconds(4), OnHoldOccurrence.First);
-    tracking.StartProcessingWorkItem(StageTracking.ProcessingKind.ResumeFromOnHold, onHoldTime: TimeSpan.FromSeconds(5));
+    tracking.EnqueueWorkItem(CreateEntry(enqueuedAt: TimeSpan.Zero), OnQueueOccurrence.First);
+    tracking.StartProcessingWorkItem(
+      CreateEntry(enqueuedAt: TimeSpan.Zero, startedAt: TimeSpan.FromSeconds(2)),
+      StageTracking.ProcessingKind.InitialStartFromQueue);
+    tracking.PutOnHoldWorkItem(
+      CreateEntry(startedAt: TimeSpan.FromSeconds(2), stoppedAt: TimeSpan.FromSeconds(4)),
+      OnHoldOccurrence.First);
+    tracking.StartProcessingWorkItem(
+      CreateEntry(stoppedAt: TimeSpan.FromSeconds(4), startedAt: TimeSpan.FromSeconds(9)),
+      StageTracking.ProcessingKind.ResumeFromOnHold);
 
-    tracking.StopWorkItem(TimeSpan.FromSeconds(6), OnHoldOccurrence.Repeated);
+    tracking.PutOnHoldWorkItem(
+      CreateEntry(startedAt: TimeSpan.FromSeconds(9), stoppedAt: TimeSpan.FromSeconds(15)),
+      OnHoldOccurrence.Repeated);
 
     Assert.Equal(2, tracking.TransactionsOnHoldCount);
     Assert.Equal(1, tracking.WorkItemsUniqueOnHoldCount);
-    Assert.Equal(TimeSpan.FromSeconds(10), tracking.CumulativeProcessingTime);
+    Assert.Equal(TimeSpan.FromSeconds(8), tracking.CumulativeProcessingTime);
     Assert.Equal(TimeSpan.FromSeconds(5), tracking.CumulativeOnHoldTime);
     Assert.Equal(0, tracking.CurrentBusyWorkers);
+  }
+
+  [Fact]
+  public void ResumeFromOnHold_ReactivatesBusyWorkerWithoutTouchingQueue()
+  {
+    var tracking = CreateTracking();
+    tracking.EnqueueWorkItem(CreateEntry(enqueuedAt: TimeSpan.Zero), OnQueueOccurrence.First);
+    tracking.StartProcessingWorkItem(
+      CreateEntry(enqueuedAt: TimeSpan.Zero, startedAt: TimeSpan.FromSeconds(2)),
+      StageTracking.ProcessingKind.InitialStartFromQueue);
+    tracking.PutOnHoldWorkItem(
+      CreateEntry(startedAt: TimeSpan.FromSeconds(2), stoppedAt: TimeSpan.FromSeconds(6)),
+      OnHoldOccurrence.First);
+
+    tracking.StartProcessingWorkItem(
+      CreateEntry(stoppedAt: TimeSpan.FromSeconds(6), startedAt: TimeSpan.FromSeconds(9)),
+      StageTracking.ProcessingKind.ResumeFromOnHold);
+
+    Assert.Equal(0, tracking.CurrentQueueLength);
+    Assert.Equal(1, tracking.CurrentBusyWorkers);
+    Assert.Equal(TimeSpan.FromSeconds(3), tracking.CumulativeOnHoldTime);
   }
 
   [Fact]
   public void StopAndRequeueWorkItem_FirstOnHoldAndRepeatedQueueUpdatesBothSetsOfCounters()
   {
     var tracking = CreateTracking();
-    tracking.EnqueueWorkItem(OnQueueOccurrence.First);
-    tracking.StartProcessingWorkItem(StageTracking.ProcessingKind.InitialStartFromQueue, TimeSpan.FromSeconds(1));
+    tracking.EnqueueWorkItem(CreateEntry(enqueuedAt: TimeSpan.Zero), OnQueueOccurrence.First);
+    tracking.StartProcessingWorkItem(
+      CreateEntry(enqueuedAt: TimeSpan.Zero, startedAt: TimeSpan.FromSeconds(1)),
+      StageTracking.ProcessingKind.InitialStartFromQueue);
 
-    tracking.StopAndRequeueWorkItem(TimeSpan.FromSeconds(9), OnHoldOccurrence.First);
+    tracking.StopAndRequeueWorkItem(
+      CreateEntry(startedAt: TimeSpan.FromSeconds(1), stoppedAt: TimeSpan.FromSeconds(10), requeuedAt: TimeSpan.FromSeconds(10)),
+      OnHoldOccurrence.First);
 
     Assert.Equal(1, tracking.WorkItemsQueuedCount);
     Assert.Equal(1, tracking.TransactionsOnHoldCount);
@@ -177,36 +245,27 @@ public sealed class StageTrackingTests
   }
 
   [Fact]
-  public void StopAndRequeueWorkItem_RepeatedOnHoldAndFirstQueueIncrementsUniqueQueueCount()
-  {
-    var tracking = CreateTracking();
-    tracking.EnqueueWorkItem(OnQueueOccurrence.First);
-    tracking.StartProcessingWorkItem(StageTracking.ProcessingKind.InitialStartFromQueue, TimeSpan.FromSeconds(1));
-    tracking.StopWorkItem(TimeSpan.FromSeconds(3), OnHoldOccurrence.First);
-    tracking.StartProcessingWorkItem(StageTracking.ProcessingKind.ResumeFromOnHold, onHoldTime: TimeSpan.FromSeconds(2));
-
-    tracking.StopAndRequeueWorkItem(TimeSpan.FromSeconds(7), OnHoldOccurrence.Repeated);
-
-    Assert.Equal(1, tracking.WorkItemsQueuedCount);
-    Assert.Equal(2, tracking.TransactionsOnHoldCount);
-    Assert.Equal(1, tracking.WorkItemsUniqueOnHoldCount);
-    Assert.Equal(1, tracking.WorkItemsRequeuedCount);
-    Assert.Equal(1, tracking.CurrentQueueLength);
-    Assert.Equal(TimeSpan.FromSeconds(10), tracking.CumulativeProcessingTime);
-  }
-
-  [Fact]
   public void MixedQueueAndOnHoldCycles_AccumulateAllRelevantDurationsAndCounters()
   {
     var tracking = CreateTracking();
 
-    tracking.EnqueueWorkItem(OnQueueOccurrence.First);
-    tracking.StartProcessingWorkItem(StageTracking.ProcessingKind.InitialStartFromQueue, TimeSpan.FromSeconds(2));
-    tracking.StopAndRequeueWorkItem(TimeSpan.FromSeconds(5), OnHoldOccurrence.First);
-    tracking.StartProcessingWorkItem(StageTracking.ProcessingKind.ResumeFromQueue, TimeSpan.FromSeconds(4));
-    tracking.StopWorkItem(TimeSpan.FromSeconds(6), OnHoldOccurrence.Repeated);
-    tracking.StartProcessingWorkItem(StageTracking.ProcessingKind.ResumeFromOnHold, onHoldTime: TimeSpan.FromSeconds(3));
-    tracking.CompleteWorkItem(TimeSpan.FromSeconds(7));
+    tracking.EnqueueWorkItem(CreateEntry(enqueuedAt: TimeSpan.Zero), OnQueueOccurrence.First);
+    tracking.StartProcessingWorkItem(
+      CreateEntry(enqueuedAt: TimeSpan.Zero, startedAt: TimeSpan.FromSeconds(2)),
+      StageTracking.ProcessingKind.InitialStartFromQueue);
+    tracking.StopAndRequeueWorkItem(
+      CreateEntry(startedAt: TimeSpan.FromSeconds(2), stoppedAt: TimeSpan.FromSeconds(7), requeuedAt: TimeSpan.FromSeconds(7)),
+      OnHoldOccurrence.First);
+    tracking.StartProcessingWorkItem(
+      CreateEntry(requeuedAt: TimeSpan.FromSeconds(7), startedAt: TimeSpan.FromSeconds(11)),
+      StageTracking.ProcessingKind.ResumeFromQueue);
+    tracking.PutOnHoldWorkItem(
+      CreateEntry(startedAt: TimeSpan.FromSeconds(11), stoppedAt: TimeSpan.FromSeconds(17)),
+      OnHoldOccurrence.Repeated);
+    tracking.StartProcessingWorkItem(
+      CreateEntry(stoppedAt: TimeSpan.FromSeconds(17), startedAt: TimeSpan.FromSeconds(20)),
+      StageTracking.ProcessingKind.ResumeFromOnHold);
+    tracking.CompleteWorkItem(CreateEntry(startedAt: TimeSpan.FromSeconds(20), completedAt: TimeSpan.FromSeconds(27)));
 
     Assert.Equal(1, tracking.WorkItemsQueuedCount);
     Assert.Equal(1, tracking.WorkItemsStartedCount);
@@ -238,5 +297,21 @@ public sealed class StageTrackingTests
     {
       StageId = StageId.NewId()
     };
+  }
+
+  private static StageEntry CreateEntry(
+    TimeSpan enqueuedAt = default,
+    TimeSpan startedAt = default,
+    TimeSpan completedAt = default,
+    TimeSpan stoppedAt = default,
+    TimeSpan requeuedAt = default)
+  {
+    return new StageEntry(
+      TrackingSubjectId.NewId(),
+      enqueuedAt,
+      startedAt,
+      completedAt,
+      stoppedAt,
+      requeuedAt);
   }
 }

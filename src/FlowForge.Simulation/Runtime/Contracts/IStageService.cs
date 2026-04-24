@@ -11,7 +11,17 @@ public interface IStageService
     StageId stageId,
     TimeSpan startedAt);
 
-  public Result<StageEntry> StopProcessing(
+  public Result<StageEntry> StopAndRequeue(
+    StageId stageId,
+    TrackingSubjectId trackingSubjectId,
+    TimeSpan currentTime);
+
+  public Result<StageEntry> PutOnHold(
+    StageId stageId,
+    TrackingSubjectId trackingSubjectId,
+    TimeSpan currentTime);
+
+  public Result<StageEntry> ResumeProcessing(
     StageId stageId,
     TrackingSubjectId trackingSubjectId,
     TimeSpan currentTime);

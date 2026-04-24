@@ -157,11 +157,45 @@ public sealed class WorkItemProcessOrchestrator(
       return Task.CompletedTask;
     }
 
-    StageService.StopProcessing(command.CurrentStageId, command.TrackingSubjectId, command.CurrentTime);
-    WorkItemService.StopProcessing(command.TrackingSubjectId, command.CurrentTime);
+    StageService.PutOnHold(command.CurrentStageId, command.TrackingSubjectId, command.SimulationContext.SimulationState.CurrentTime);
+    WorkItemService.PutOnHold(command.TrackingSubjectId, command.SimulationContext.SimulationState.CurrentTime);
     Logger.LogInformation("Put on hold WorkItem {TrackingSubjectId} at Stage {StageId}", command.TrackingSubjectId, command.CurrentStageId);
     return Task.CompletedTask;
   }
+
+  public Task StopAndRequeueAsync(
+    StopAndRequeueCommand command,
+    CancellationToken cancellationToken)
+  {
+    if (cancellationToken.IsCancellationRequested)
+    {
+      return Task.FromCanceled(cancellationToken);
+    }
+    var workItem = WorkItemService.GetWorkItemRuntimeState(command.TrackingSubjectId);
+
+    if (IsEventOutdated(workItem, WorkItemStatus.Processing, command.ProcessingToken, command.CurrentStageId)
+      || workItem.CurrentStageId is null)
+    {
+      //Event outdated, skip
+      return Task.CompletedTask;
+    }
+
+    StageService.StopAndRequeue(command.CurrentStageId, command.TrackingSubjectId, command.SimulationContext.SimulationState.CurrentTime);
+
+    WorkItemService.PutOnHold(command.TrackingSubjectId, command.SimulationContext.SimulationState.CurrentTime);
+    WorkItemService.QueueForStage(command.TrackingSubjectId, command.CurrentStageId, command.SimulationContext.SimulationState.CurrentTime, command.ProcessingToken);
+    Logger.LogInformation("Put on hold WorkItem {TrackingSubjectId} at Stage {StageId}", command.TrackingSubjectId, command.CurrentStageId);
+    return Task.CompletedTask;
+  }
+
+  public Task CancelProcessingAsync(
+    CancelCommand command,
+    CancellationToken cancellationToken)
+  {
+    throw new NotImplementedException();
+  }
+
+
   public Task QueueForStageAsync(
     QueueForStageCommand command,
     CancellationToken cancellationToken)

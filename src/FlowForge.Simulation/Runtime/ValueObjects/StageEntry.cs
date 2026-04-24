@@ -9,6 +9,7 @@ public readonly record struct StageEntry(
   TimeSpan StartedAt = default,
   TimeSpan CompletedAt = default,
   TimeSpan StoppedAt = default,
+  TimeSpan RequeuedAt = default,
   StageId? StageId = default,
   StationId? StationId = default
   );

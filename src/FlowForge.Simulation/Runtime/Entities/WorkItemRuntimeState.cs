@@ -41,9 +41,14 @@ public sealed class WorkItemRuntimeState(
     CurrentStatus = WorkItemStatus.Completed;
   }
 
-  public void StopProcessing()
+  public void PutOnHold()
   {
     CurrentStatus = WorkItemStatus.OnHold;
+  }
+
+  public void ResumeProcessing()
+  {
+    CurrentStatus = WorkItemStatus.Processing;
   }
 
   public void CompleteWorkItem(TimeSpan completedAt)

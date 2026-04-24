@@ -1,4 +1,5 @@
 using FlowForge.Domain.Process.ValueObjects;
+using FlowForge.Simulation.Runtime.ValueObjects;
 using FlowForge.Simulation.Tracking.Entities.Stations;
 
 namespace FlowForge.Simulation.Tracking.Entities.Stages;
@@ -37,15 +38,13 @@ public sealed record StageTracking
   public int CurrentBusyWorkers { get; private set; }
 
   public void EnqueueWorkItem(
-    OnQueueOccurrence onQueueOccurrence,
-    TimeSpan processingTime = default
-    )
+    StageEntry stageEntry,
+    OnQueueOccurrence onQueueOccurrence)
   {
     EnqueueItem(onQueueOccurrence);
     if (onQueueOccurrence == OnQueueOccurrence.Requeued)
     {
-      CumulativeProcessingTime += processingTime;
-      CurrentBusyWorkers--;
+      CumulativeProcessingTime += GetDuration(stageEntry.StartedAt, stageEntry.StoppedAt, nameof(stageEntry.StoppedAt));
     }
   }
   public enum ProcessingKind
@@ -55,23 +54,21 @@ public sealed record StageTracking
     ResumeFromQueue
   }
 
-  public void StartProcessingWorkItem(ProcessingKind entryKind,
-    TimeSpan queueWaitTime = default,
-    TimeSpan onHoldTime = default)
+  public void StartProcessingWorkItem(StageEntry stageEntry, ProcessingKind entryKind)
   {
     switch (entryKind)
     {
       case ProcessingKind.InitialStartFromQueue:
         WorkItemsStartedCount++;
-        CumulativeQueueWait += queueWaitTime;
+        CumulativeQueueWait += GetDuration(stageEntry.EnqueuedAt, stageEntry.StartedAt, nameof(stageEntry.StartedAt));
         CurrentQueueLength--;
         break;
       case ProcessingKind.ResumeFromQueue:
-        CumulativeQueueWait += queueWaitTime;
+        CumulativeQueueWait += GetDuration(stageEntry.RequeuedAt, stageEntry.StartedAt, nameof(stageEntry.StartedAt));
         CurrentQueueLength--;
         break;
       case ProcessingKind.ResumeFromOnHold:
-        CumulativeOnHoldTime += onHoldTime;
+        CumulativeOnHoldTime += GetDuration(stageEntry.StoppedAt, stageEntry.StartedAt, nameof(stageEntry.StartedAt));
         break;
     }
     CurrentBusyWorkers++;
@@ -81,29 +78,35 @@ public sealed record StageTracking
     }
   }
 
-  public void CompleteWorkItem(TimeSpan processingTime)
+  public void CompleteWorkItem(StageEntry stageEntry)
   {
-    CumulativeProcessingTime += processingTime;
+    CumulativeProcessingTime += GetDuration(stageEntry.StartedAt, stageEntry.CompletedAt, nameof(stageEntry.CompletedAt));
     WorkItemsCompletedCount++;
     CurrentBusyWorkers--;
   }
 
 
-  public void StopWorkItem(TimeSpan processingTime, OnHoldOccurrence onHoldOccurrence)
+  public void PutOnHoldWorkItem(StageEntry stageEntry, OnHoldOccurrence onHoldOccurrence)
   {
-    StopItem(onHoldOccurrence);
-    CumulativeProcessingTime += processingTime;
-
+    PutOnHoldItem(onHoldOccurrence);
+    CumulativeProcessingTime += GetDuration(stageEntry.StartedAt, stageEntry.StoppedAt, nameof(stageEntry.StoppedAt));
   }
 
-  public void StopAndRequeueWorkItem(TimeSpan processingTime, OnHoldOccurrence onHoldOccurrence)
+  public void StopAndRequeueWorkItem(StageEntry stageEntry, OnHoldOccurrence onHoldOccurrence)
   {
-    StopItem(onHoldOccurrence);
+    PutOnHoldItem(onHoldOccurrence);
     EnqueueItem(OnQueueOccurrence.Requeued);
-    CumulativeProcessingTime += processingTime;
+    CumulativeProcessingTime += GetDuration(stageEntry.StartedAt, stageEntry.StoppedAt, nameof(stageEntry.StoppedAt));
   }
 
-  private void StopItem(OnHoldOccurrence onHoldOccurrence)
+  private static TimeSpan GetDuration(TimeSpan from, TimeSpan to, string targetName)
+  {
+    return to < from
+      ? throw new InvalidOperationException($"StageTracking duration is invalid: {targetName} is before source time.")
+      : to - from;
+  }
+
+  private void PutOnHoldItem(OnHoldOccurrence onHoldOccurrence)
   {
     if (onHoldOccurrence == OnHoldOccurrence.First)
     {

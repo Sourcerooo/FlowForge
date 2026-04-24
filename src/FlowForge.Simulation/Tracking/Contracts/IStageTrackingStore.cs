@@ -1,5 +1,6 @@
 using FlowForge.Domain.Process.ValueObjects;
 using FlowForge.Domain.SharedKernel.Util;
+using FlowForge.Simulation.Runtime.ValueObjects;
 using FlowForge.Simulation.Tracking.Entities.Stages;
 using static FlowForge.Simulation.Tracking.Entities.Stages.StageTracking;
 
@@ -10,21 +11,22 @@ public interface IStageTrackingStore
   public Result<StageTracking> GetStageTracking(StageId stageId);
 
   public Result<StageTracking> EnqueueWorkItem(StageId stageId,
-    OnQueueOccurrence onQueueOccurrence,
-    TimeSpan processingTime = default);
+    StageEntry stageEntry,
+    OnQueueOccurrence onQueueOccurrence);
 
   public Result<StageTracking> StartProcessingWorkItem(
     StageId stageId,
-    ProcessingKind entryKind,
-    TimeSpan queueWaitTime = default,
-    TimeSpan onHoldTime = default);
+    StageEntry stageEntry,
+    ProcessingKind entryKind);
 
-  public Result<StageTracking> CompleteWorkItem(StageId stageId, TimeSpan processingTime);
-  public Result<StageTracking> StopWorkItem(
+  public Result<StageTracking> CompleteWorkItem(StageId stageId, StageEntry stageEntry);
+  public Result<StageTracking> PutOnHoldWorkItem(
     StageId stageId,
-    TimeSpan processingTime, OnHoldOccurrence onHoldOccurrence);
+    StageEntry stageEntry,
+    OnHoldOccurrence onHoldOccurrence);
 
   public Result<StageTracking> StopAndRequeueWorkItem(
     StageId stageId,
-    TimeSpan processingTime, OnHoldOccurrence onHoldOccurrence);
+    StageEntry stageEntry,
+    OnHoldOccurrence onHoldOccurrence);
 }

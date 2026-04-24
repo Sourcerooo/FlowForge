@@ -16,6 +16,15 @@ public interface IWorkItemProcessOrchestrator
   public Task PutOnHoldAsync(
     PutOnHoldCommand command,
     CancellationToken cancellationToken);
+
+  public Task StopAndRequeueAsync(
+    StopAndRequeueCommand command,
+    CancellationToken cancellationToken);
+
+  public Task CancelProcessingAsync(
+    CancelCommand command,
+    CancellationToken cancellationToken);
+
   public Task CompleteProcessingAsync(
     CompleteProcessingCommand command,
     CancellationToken cancellationToken);

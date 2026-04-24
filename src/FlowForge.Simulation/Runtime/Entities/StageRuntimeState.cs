@@ -54,10 +54,10 @@ public sealed partial class StageRuntimeState(
       Enqueue(entry);
       return Result<StageEntry>.Failure(new InvalidOperationException("All workers are busy. Task could not be started"));
     }
-    return Result<StageEntry>.Success(new StageEntry(entry.TrackingSubjectId, entry.EnqueuedAt, startedAt, default, default, StageId, stationId.Value));
+    return Result<StageEntry>.Success(new StageEntry(entry.TrackingSubjectId, entry.EnqueuedAt, startedAt, default, default, entry.RequeuedAt, StageId, stationId.Value));
   }
 
-  public Result<StageEntry> StopProcessing(TrackingSubjectId trackingSubjectId, TimeSpan currentTime)
+  public Result<StageEntry> StopAndRequeue(TrackingSubjectId trackingSubjectId, TimeSpan currentTime)
   {
     if (!_processingStation.TryGetValue(trackingSubjectId, out var stationId))
     {
@@ -65,8 +65,35 @@ public sealed partial class StageRuntimeState(
     }
     var station = Stations[stationId];
     var processingInfo = ReleaseStation(station, trackingSubjectId);
-    var stageEntry = new StageEntry(trackingSubjectId, default, processingInfo.StartedAt, default, currentTime, StageId, stationId);
+    var stageEntry = new StageEntry(trackingSubjectId, default, processingInfo.StartedAt, default, currentTime, currentTime, StageId, stationId);
     Enqueue(stageEntry);
+    return Result<StageEntry>.Success(stageEntry);
+  }
+
+  public Result<StageEntry> PutOnHold(TrackingSubjectId trackingSubjectId, TimeSpan currentTime)
+  {
+    if (!_processingStation.TryGetValue(trackingSubjectId, out var stationId))
+    {
+      return Result<StageEntry>.Failure(new InvalidOperationException($"StageRuntimeState->PutOnHold: TrackingSubjectId {trackingSubjectId} is not currently processing at any station."));
+    }
+
+    var station = Stations[stationId];
+    var processingInfo = station.GetProcessingInfo(trackingSubjectId);
+    station.PauseWorker(trackingSubjectId, currentTime);
+    var stageEntry = new StageEntry(trackingSubjectId, default, processingInfo.StartedAt, default, currentTime, default, StageId, stationId);
+    return Result<StageEntry>.Success(stageEntry);
+  }
+
+  public Result<StageEntry> ResumeProcessing(TrackingSubjectId trackingSubjectId, TimeSpan currentTime)
+  {
+    if (!_processingStation.TryGetValue(trackingSubjectId, out var stationId))
+    {
+      return Result<StageEntry>.Failure(new InvalidOperationException($"StageRuntimeState->ResumeProcessing: TrackingSubjectId {trackingSubjectId} is not currently assigned to any station."));
+    }
+
+    var station = Stations[stationId];
+    var processingInfo = station.ResumeWorker(trackingSubjectId, currentTime);
+    var stageEntry = new StageEntry(trackingSubjectId, default, currentTime, default, processingInfo.StartedAt, default, StageId, stationId);
     return Result<StageEntry>.Success(stageEntry);
   }
 
@@ -78,7 +105,7 @@ public sealed partial class StageRuntimeState(
     }
     var station = Stations[stationId];
     var processingInfo = ReleaseStation(station, trackingSubjectId);
-    var stageEntry = new StageEntry(trackingSubjectId, default, processingInfo.StartedAt, currentTime, default, StageId, stationId);
+    var stageEntry = new StageEntry(trackingSubjectId, default, processingInfo.StartedAt, currentTime, default, default, StageId, stationId);
     return Result<StageEntry>.Success(stageEntry);
   }
   //---------------------------------- Private Methods ----------------------------------

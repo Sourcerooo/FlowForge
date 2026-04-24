@@ -14,5 +14,6 @@ public interface IWorkItemRuntimeStateStore
   public bool ContainsWorkItemRuntimeState(TrackingSubjectId trackingSubjectId);
   public WorkItemRuntimeState QueueForStage(TrackingSubjectId trackingSubjectId, StageId stageId, ProcessingToken processingToken = default);
   public WorkItemRuntimeState StartProcessing(TrackingSubjectId trackingSubjectId, StationId stationId);
-  public WorkItemRuntimeState StopProcessing(TrackingSubjectId trackingSubjectId);
+  public WorkItemRuntimeState PutOnHold(TrackingSubjectId trackingSubjectId);
+  public WorkItemRuntimeState ResumeProcessing(TrackingSubjectId trackingSubjectId);
 }

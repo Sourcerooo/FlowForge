@@ -186,8 +186,9 @@ public sealed class SimulationRunnerTests
     public WorkItemRuntimeState CreateFromGeneration(TrackingSubjectId trackingSubjectId, TimeSpan createdAt) => throw new NotImplementedException();
     public WorkItemRuntimeState GetWorkItemRuntimeState(TrackingSubjectId trackingSubjectId) => throw new NotImplementedException();
     public WorkItemRuntimeState QueueForStage(TrackingSubjectId trackingSubjectId, StageId stageId, ProcessingToken processingToken = default) => throw new NotImplementedException();
+    public WorkItemRuntimeState ResumeProcessing(TrackingSubjectId trackingSubjectId) => throw new NotImplementedException();
     public WorkItemRuntimeState StartProcessing(TrackingSubjectId trackingSubjectId, StationId stationId) => throw new NotImplementedException();
-    public WorkItemRuntimeState StopProcessing(TrackingSubjectId trackingSubjectId) => throw new NotImplementedException();
+    public WorkItemRuntimeState PutOnHold(TrackingSubjectId trackingSubjectId) => throw new NotImplementedException();
   }
 
   private sealed class StubStageRuntimeStateStore : IStageRuntimeStateStore
@@ -196,7 +197,9 @@ public sealed class SimulationRunnerTests
     public StageEntry? Dequeue(StageId stageId) => throw new NotImplementedException();
     public Result<StageEntry> Enqueue(StageId stageId, TrackingSubjectId trackingSubjectId, TimeSpan currentTime) => throw new NotImplementedException();
     public bool IsBusy(StageId stageId) => throw new NotImplementedException();
-    public Result<StageEntry> StopProcessing(StageId stageId, TrackingSubjectId trackingSubjectId, TimeSpan currentTime) => throw new NotImplementedException();
+    public Result<StageEntry> PutOnHold(StageId stageId, TrackingSubjectId trackingSubjectId, TimeSpan currentTime) => throw new NotImplementedException();
+    public Result<StageEntry> ResumeProcessing(StageId stageId, TrackingSubjectId trackingSubjectId, TimeSpan currentTime) => throw new NotImplementedException();
+    public Result<StageEntry> StopAndRequeue(StageId stageId, TrackingSubjectId trackingSubjectId, TimeSpan currentTime) => throw new NotImplementedException();
     public Result<StageEntry> TryStartProcessing(StageId stageId, TimeSpan startedAt) => throw new NotImplementedException();
   }
 
@@ -212,7 +215,12 @@ public sealed class SimulationRunnerTests
 
   private sealed class StubStageTrackingStore : IStageTrackingStore
   {
+    public Result<StageTracking> CompleteWorkItem(StageId stageId, StageEntry stageEntry) => throw new NotImplementedException();
+    public Result<StageTracking> EnqueueWorkItem(StageId stageId, StageEntry stageEntry, OnQueueOccurrence onQueueOccurrence) => throw new NotImplementedException();
     public Result<StageTracking> GetStageTracking(StageId stageId) => throw new NotImplementedException();
+    public Result<StageTracking> StartProcessingWorkItem(StageId stageId, StageEntry stageEntry, StageTracking.ProcessingKind entryKind) => throw new NotImplementedException();
+    public Result<StageTracking> StopAndRequeueWorkItem(StageId stageId, StageEntry stageEntry, OnHoldOccurrence onHoldOccurrence) => throw new NotImplementedException();
+    public Result<StageTracking> PutOnHoldWorkItem(StageId stageId, StageEntry stageEntry, OnHoldOccurrence onHoldOccurrence) => throw new NotImplementedException();
   }
 
   private sealed class StubSnapshotStore : ISnapshotStore;
